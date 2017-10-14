@@ -78,8 +78,8 @@ module.exports = React;
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var ReactDOM = __webpack_require__(2);
-var Test_1 = __webpack_require__(3);
-ReactDOM.render(React.createElement(Test_1.TestClass, null), document.getElementById("root"));
+var Map_1 = __webpack_require__(3);
+ReactDOM.render(React.createElement(Map_1.Map, { horizontal: "8", vertical: "10" }), document.getElementById("root"));
 
 
 /***/ }),
@@ -106,18 +106,66 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var TestClass = /** @class */ (function (_super) {
-    __extends(TestClass, _super);
-    function TestClass() {
+var Cell_1 = __webpack_require__(4);
+var Map = /** @class */ (function (_super) {
+    __extends(Map, _super);
+    function Map(props) {
+        return _super.call(this, props) || this;
+    }
+    Map.prototype.render = function () {
+        return (React.createElement("div", { id: "map", className: "map" }, this.generateMap().map(function (a) {
+            return a;
+        })));
+    };
+    Map.prototype.generateMap = function () {
+        var accum = [];
+        for (var i = 0; i < this.props.vertical; i++) {
+            accum.push(this.generateCellRow(i));
+        }
+        return accum;
+    };
+    Map.prototype.generateCellRow = function (num_row) {
+        var accum2 = [];
+        for (var j = 0; j < this.props.horizontal; j++) {
+            accum2.push(React.createElement(Cell_1.Cell, null));
+        }
+        return (React.createElement("div", { className: "cellRow" + (num_row % 2 == 0 ? "" : " cellRowOdd") }, accum2));
+    };
+    return Map;
+}(React.Component));
+exports.Map = Map;
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var Cell = /** @class */ (function (_super) {
+    __extends(Cell, _super);
+    function Cell() {
         return _super.call(this) || this;
     }
-    TestClass.prototype.render = function () {
-        return (React.createElement("div", null,
-            React.createElement("p", null, "Hello World")));
+    Cell.prototype.render = function () {
+        return (React.createElement("div", { className: "cell" },
+            React.createElement("img", { src: "imgs/hex_base.png" })));
     };
-    return TestClass;
+    return Cell;
 }(React.Component));
-exports.TestClass = TestClass;
+exports.Cell = Cell;
 
 
 /***/ })

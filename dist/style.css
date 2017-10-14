@@ -1,0 +1,32 @@
+body {
+    background-color: grey;
+}
+
+.map {
+    background-color: white;
+    padding: 5px;
+    border-style: ridge;
+    border-width: 2px;
+
+    padding-bottom: 84px;
+
+    overflow: hidden;
+}
+
+.cellRow {
+    display: block;
+}
+
+.cellRowOdd {
+    margin-left: 135px;
+}
+
+.cellRowOdd * {
+
+}
+
+.cellRow * {
+    margin-bottom: -39px;
+    display: inline-block;
+    padding-right: 45px;
+}
