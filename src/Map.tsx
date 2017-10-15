@@ -10,12 +10,17 @@ class Map extends React.Component<any, any> {
 
     render() {
         return (
-            <div id="map" className="map">
+            <div id="map" className="map" onClick={this.onClick.bind(this)}>
                 {this.generateMap().map((a: any) => {
                     return a;
                 })}
             </div>
         );
+    }
+
+    onClick(e : React.MouseEvent<HTMLElement>) {
+        console.log("Clicked on: ("+e.clientX+", "+e.clientY+")");
+
     }
 
     generateMap() {
@@ -31,7 +36,7 @@ class Map extends React.Component<any, any> {
         var accum2 = [];
         for(var j = 0; j < this.props.horizontal; j++) {
             accum2.push(
-                <Cell />
+                <Cell horizontal={j} vertical={num_row} />
             );
         }
 

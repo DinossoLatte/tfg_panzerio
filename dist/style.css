@@ -3,18 +3,21 @@ body {
 }
 
 .map {
+    user-select: none;
     background-color: white;
-    padding: 5px;
+    padding: 10px;
     border-style: ridge;
     border-width: 2px;
 
     padding-bottom: 84px;
 
-    overflow: hidden;
+    overflow: scroll;
+    transform: scale(0.8);
+    transform-origin: 0% 0%;
 }
 
 .cellRow {
-    display: block;
+    display: flex;
 }
 
 .cellRowOdd {
@@ -22,10 +25,11 @@ body {
 }
 
 .cellRowOdd * {
-
 }
 
 .cellRow * {
+    width: auto;
+    display: inline-block;
     margin-bottom: -39px;
     display: inline-block;
     padding-right: 45px;

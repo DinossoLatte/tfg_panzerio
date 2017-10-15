@@ -79,7 +79,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var ReactDOM = __webpack_require__(2);
 var Map_1 = __webpack_require__(3);
-ReactDOM.render(React.createElement(Map_1.Map, { horizontal: "8", vertical: "10" }), document.getElementById("root"));
+ReactDOM.render(React.createElement(Map_1.Map, { horizontal: "9", vertical: "12" }), document.getElementById("root"));
 
 
 /***/ }),
@@ -113,9 +113,12 @@ var Map = /** @class */ (function (_super) {
         return _super.call(this, props) || this;
     }
     Map.prototype.render = function () {
-        return (React.createElement("div", { id: "map", className: "map" }, this.generateMap().map(function (a) {
+        return (React.createElement("div", { id: "map", className: "map", onClick: this.onClick.bind(this) }, this.generateMap().map(function (a) {
             return a;
         })));
+    };
+    Map.prototype.onClick = function (e) {
+        console.log("Clicked on: (" + e.offsetX + ", " + e.offsetY + ")");
     };
     Map.prototype.generateMap = function () {
         var accum = [];
@@ -127,7 +130,7 @@ var Map = /** @class */ (function (_super) {
     Map.prototype.generateCellRow = function (num_row) {
         var accum2 = [];
         for (var j = 0; j < this.props.horizontal; j++) {
-            accum2.push(React.createElement(Cell_1.Cell, null));
+            accum2.push(React.createElement(Cell_1.Cell, { horizontal: j, vertical: num_row }));
         }
         return (React.createElement("div", { className: "cellRow" + (num_row % 2 == 0 ? "" : " cellRowOdd") }, accum2));
     };
@@ -156,12 +159,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var Cell = /** @class */ (function (_super) {
     __extends(Cell, _super);
-    function Cell() {
-        return _super.call(this) || this;
+    function Cell(props) {
+        return _super.call(this, props) || this;
     }
     Cell.prototype.render = function () {
         return (React.createElement("div", { className: "cell" },
-            React.createElement("img", { src: "imgs/hex_base.png" })));
+            React.createElement("img", { id: "hex" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/hex_base.png" })));
+    };
+    Cell.prototype.onClick = function () {
+        window.alert("Clicked on (" + this.props.horizontal + ", " + this.props.vertical + ")");
     };
     return Cell;
 }(React.Component));
