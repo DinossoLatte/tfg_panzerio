@@ -1,11 +1,15 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
+import { store, saveState } from './Store';
+import { Actions, State, InitialState, Reducer } from './GameState';
 import { Cell } from './Cell';
+import { Unit } from './Unit';
 
-class Map extends React.Component<any, any> {
+export class Map extends React.Component<any, any> {
     constructor(props: any) {
         super(props);
+        store.dispatch(Actions.generateSetListener(this));
     }
 
     render() {
@@ -35,9 +39,17 @@ class Map extends React.Component<any, any> {
     generateCellRow(num_row: number) {
         var accum2 = [];
         for(var j = 0; j < this.props.horizontal; j++) {
-            accum2.push(
-                <Cell horizontal={j} vertical={num_row} />
-            );
+            if(j == store.getState().position.x && num_row == store.getState().position.y){
+                accum2.push(
+                    <div className={"cell"}>
+                        <Unit horizontal={j} vertical={num_row} />
+                    </div>
+                );
+            }else{
+                accum2.push(
+                    <Cell horizontal={j} vertical={num_row} />
+                );
+            }
         }
 
         return (
@@ -47,5 +59,3 @@ class Map extends React.Component<any, any> {
         );
     }
 }
-
-export { Map };
