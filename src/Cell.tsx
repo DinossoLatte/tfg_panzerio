@@ -23,7 +23,7 @@ class Cell extends React.Component<any, any> {
     }
 
     /** Placeholder, contendrá la lógica de movimiento y otros **/
-    onClick() {
+    public onClick() {
         window.alert("Clicked on ("+this.props.horizontal+", "+this.props.vertical+")");
     }
 }
