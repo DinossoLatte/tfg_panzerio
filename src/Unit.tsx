@@ -13,7 +13,6 @@ export class Unit extends React.Component<any, any> {
     render() {
         return (
             <img id={"hex"+this.props.horizontal+"_"+this.props.vertical} src="imgs/unit.png" />
-
         );
     }
 
