@@ -34,9 +34,10 @@ export class Map extends React.Component<any, any> {
         var dimensions = document.getElementById("hex0_0").getBoundingClientRect();
 
         // Para soportar mejor los cambios de pantalla, obtenemos las dimensiones del hex primero, para los demás será igual.
-        console.log("Dimensions: "+dimensions);
-        var height = 180; // Hardcoded, se deberían realizar más pruebas
-        var width = 156;
+        var height = 156; // Hardcoded, se deberían realizar más pruebas
+        var width = 180;
+
+        console.log("Height: "+height+"\nWidth: "+width);
 
         var x = event.clientX - dimensions.left; // A las coordenadas absolutas les restamos las dimensiones en el extremo superior izquierdo del primer hex.
         var y = event.clientY - dimensions.top;
@@ -99,9 +100,11 @@ export class Map extends React.Component<any, any> {
 
         // Finalmente, llamamos al método correspondiente:
         // TODO: POR AÑADIR SEGÚN COMO SE REALICE LA ACTIVIDAD DEL USUARIO
+        console.log("Row: "+row+"\nColumn: "+column);
+        this.setState({ horizontal: column, vertical: row });
     }
 
-    // Calcula si dado los datos del circulo y un punto cualquiuera, el punto cualquiera está dentro del círculo
+    // Calcula si dado los datos del circulo y  un punto cualquiuera, el punto cualquiera está dentro del círculo
     getInCircle(centerX: number, centerY: number, radius: number, x: number, y: number) {
         // Raiz cuadrada de la distancia vectorial entre el centro y el punto debe ser menor al radio
         return this.calculateDistance(centerX, centerY, x, y) < radius;
@@ -116,7 +119,7 @@ export class Map extends React.Component<any, any> {
     generateMap() {
         var accum = [];
         // Repetirá este for hasta que se llegue al número de columnas especificado
-        for(var i = 0; i < this.props.vertical; i++) {
+        for(var i = 0; i <= this.props.horizontal*2 + 1; i++) { // Necesitamos 2*verticales para ordenarlos correctamente
             // Este método retornará una lista con las casillas en fila
             accum.push(this.generateCellRow.bind(this)(i));
         }
@@ -129,16 +132,17 @@ export class Map extends React.Component<any, any> {
         var accum2 = [];
         this.state.cells[num_row] = new Array<Cell>(this.props.horizontal);
         // Este bucle iterará hasta el número de celdas horizontales especificado en el props.
-        for(var j = 0; j <= this.props.horizontal; j++) {
+        for(var j = num_row%2==0?0:1; j <= this.props.horizontal; j = j+2) { // Incrementamos en 2 porque el elemento entre cada hex tendrá el valor j + 1.
             if(j == store.getState().position.x && num_row == store.getState().position.y){
+                this.state.cells[num_row][j] =
                 accum2.push(
-                    <div className={"cell"}>
+                    <div className="cell">
                         <Unit horizontal={j} vertical={num_row} />
                     </div>
                 );
             }else{
                 // Se introducirá el elemento en una lista
-                var cell = <Cell horizontal={j} vertical={num_row} />;
+                var cell = <Cell vertical={j} horizontal={num_row%2==0?num_row/2:Math.floor(num_row/2)} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                 this.state.cells[num_row][j] = cell;
                 accum2.push(cell);
             }
