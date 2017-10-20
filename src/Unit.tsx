@@ -10,9 +10,15 @@ export class Unit extends React.Component<any, any> {
         super(props);
     }
 
+    //Con una variable externa se podría hacer que haya o no sprite de montaña etc
     render() {
         return (
-            <img id={"hex"+this.props.horizontal+"_"+this.props.vertical} src="imgs/unit.png" />
+            <div className={"cell"}>
+                <img id={"hex"+this.props.horizontal+"_"+this.props.vertical} src="imgs/hex_base.png" />
+                <div className ={"unit"}>
+                    <img id={"hex"+this.props.horizontal+"_"+this.props.vertical} src="imgs/unit.png" />
+                </div>
+            </div>
 
         );
     }

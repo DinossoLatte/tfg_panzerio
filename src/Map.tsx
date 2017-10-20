@@ -99,6 +99,18 @@ export class Map extends React.Component<any, any> {
 
         // Finalmente, llamamos al método correspondiente:
         // TODO: POR AÑADIR SEGÚN COMO SE REALICE LA ACTIVIDAD DEL USUARIO
+
+        let actualPosition : Pair = store.getState().position;
+        let newPosition: Pair = new Pair(column,row);
+        console.log("posicion anterior:"+actualPosition.x+","+actualPosition.y);
+        console.log("posicion nueva (clic):"+newPosition.x+","+newPosition.y);
+        if(actualPosition.x == newPosition.x && actualPosition.y == newPosition.y && store.getState().type == "SET_LISTENER"){
+            saveState(Actions.generateMove(0));
+        }else if((actualPosition.x != newPosition.x || actualPosition.y != newPosition.y) && store.getState().type == "MOVE"){
+            saveState(Actions.generateChangeUnitPos(0, newPosition));
+        }else{
+            saveState(Actions.generateSetListener(this));
+        }
     }
 
     // Calcula si dado los datos del circulo y un punto cualquiuera, el punto cualquiera está dentro del círculo
@@ -130,11 +142,12 @@ export class Map extends React.Component<any, any> {
         this.state.cells[num_row] = new Array<Cell>(this.props.horizontal);
         // Este bucle iterará hasta el número de celdas horizontales especificado en el props.
         for(var j = 0; j <= this.props.horizontal; j++) {
+            //SImplemente he añadido que se añada la celda al estado y en cuanto a lo grafico (accum que se muestre la Unidad)
             if(j == store.getState().position.x && num_row == store.getState().position.y){
+                var cell = <Cell horizontal={j} vertical={num_row} />;
+                this.state.cells[num_row][j] = cell;
                 accum2.push(
-                    <div className={"cell"}>
-                        <Unit horizontal={j} vertical={num_row} />
-                    </div>
+                    <Unit horizontal={j} vertical={num_row} />
                 );
             }else{
                 // Se introducirá el elemento en una lista

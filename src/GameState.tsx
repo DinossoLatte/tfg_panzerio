@@ -13,6 +13,13 @@ export class Actions {
         };
     }
 
+    static generateMove(unit_id: number) : Redux.AnyAction {
+        return {
+            type: "MOVE",
+            unit_id: unit_id
+        };
+    }
+
     static generateSetListener(map: Map) : Redux.AnyAction {
         return {
             type: "SET_LISTENER",
@@ -23,12 +30,14 @@ export class Actions {
 
 export type State = {
     readonly position: Pair,
-    readonly map: Map
+    readonly map: Map,
+    readonly type: string
 }
 
 export const InitialState: State = {
     position: new Pair(0,0),
-    map: null
+    map: null,
+    type: "SET_LISTENER"
 }
 
 export const Reducer : Redux.Reducer<State> =
@@ -37,12 +46,20 @@ export const Reducer : Redux.Reducer<State> =
             case "CHANGE_UNIT_POS":
                 return {
                     position: action.new_position,
-                    map: state.map
+                    map: state.map,
+                    type: "SET_LISTENER"
+                };
+            case "MOVE":
+                return {
+                    position: state.position,
+                    map: state.map,
+                    type: "MOVE"
                 };
             case "SET_LISTENER":
                 return {
                     position: state.position,
-                    map: action.map
+                    map: action.map,
+                    type: "SET_LISTENER"
                 };
             default:
                 return state;
