@@ -11,6 +11,7 @@ export class Unit extends React.Component<any, any> {
     }
 
     //Con una variable externa se podría hacer que haya o no sprite de montaña etc
+    //TODO En la id de unit debería ir la id de unit pero más adelante se añadirá
     render() {
         return (
             <div className={"cell"}>
@@ -23,23 +24,4 @@ export class Unit extends React.Component<any, any> {
         );
     }
 
-    /*
-    onMouseOver(event: React.MouseEvent<HTMLElement>) {
-        let actualPosition : Pair = store.getState().position;
-        let newPosition: Pair;
-        if(actualPosition.x == 2) {
-            if(actualPosition.y == 2) {
-                newPosition = new Pair(0,0);
-            } else {
-                newPosition = new Pair(0, actualPosition.y+1);
-            }
-        } else {
-            newPosition = new Pair(actualPosition.x+1, actualPosition.y);
-        }
-
-        console.log("X: "+newPosition.x);
-        console.log("Y: "+newPosition.y);
-        saveState(Actions.generateChangeUnitPos(0, newPosition));
-    }
-    */
 }

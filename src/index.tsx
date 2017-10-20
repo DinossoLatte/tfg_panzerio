@@ -3,4 +3,4 @@ import * as ReactDOM from 'react-dom';
 import { Map } from './Map';
 
 // Representa la aplicación, por ahora únicamente el mapa
-ReactDOM.render(<Map horizontal="5" vertical="8" />, document.getElementById("root"));
+ReactDOM.render(<Map horizontal="4" vertical="5" />, document.getElementById("root"));

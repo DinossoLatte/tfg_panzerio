@@ -13,7 +13,7 @@ export var store = Redux.createStore<State>(Reducer);
 
 export function saveState(action: Redux.AnyAction) {
     store.dispatch(action);
-    // Refresh Map:
+    // Refresca el mapa y el resto de variables del estado
     var map: Map = store.getState().map;
     var position: Pair = store.getState().position;
     var type: string = store.getState().type;

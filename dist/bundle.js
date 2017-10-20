@@ -709,7 +709,9 @@ var Utils_1 = __webpack_require__(9);
 var Actions = /** @class */ (function () {
     function Actions() {
     }
+    //Estos son los estados posibles
     Actions.generateChangeUnitPos = function (unit_id, new_position) {
+        //Este estado es el de cambiar la posición (justo cuando hace clic de a donde quiere ir)
         return {
             type: "CHANGE_UNIT_POS",
             unit_id: unit_id,
@@ -717,12 +719,14 @@ var Actions = /** @class */ (function () {
         };
     };
     Actions.generateMove = function (unit_id) {
+        //ESte estado es el de mantener la unidad seleccionada
         return {
             type: "MOVE",
             unit_id: unit_id
         };
     };
     Actions.generateSetListener = function (map) {
+        //Este es el estado de espera para seleccionar una unidad
         return {
             type: "SET_LISTENER",
             map: map
@@ -731,13 +735,16 @@ var Actions = /** @class */ (function () {
     return Actions;
 }());
 exports.Actions = Actions;
+//El estado inicial será este
 exports.InitialState = {
     position: new Utils_1.Pair(0, 0),
     map: null,
     type: "SET_LISTENER"
 };
+//Y aquí se producirá el cambio
 exports.Reducer = function (state, action) {
     if (state === void 0) { state = exports.InitialState; }
+    //Dependiendo del tipo se cambiarán las variables del estado
     switch (action.type) {
         case "CHANGE_UNIT_POS":
             return {
@@ -803,7 +810,7 @@ var React = __webpack_require__(0);
 var ReactDOM = __webpack_require__(11);
 var Map_1 = __webpack_require__(12);
 // Representa la aplicación, por ahora únicamente el mapa
-ReactDOM.render(React.createElement(Map_1.Map, { horizontal: "5", vertical: "8" }), document.getElementById("root"));
+ReactDOM.render(React.createElement(Map_1.Map, { horizontal: "4", vertical: "5" }), document.getElementById("root"));
 
 
 /***/ }),
@@ -918,14 +925,19 @@ var Map = /** @class */ (function (_super) {
                 }
             }
         }
-        // Finalmente, llamamos al método correspondiente:
-        // TODO: POR AÑADIR SEGÚN COMO SE REALICE LA ACTIVIDAD DEL USUARIO
+        //Guardamos la posición actual y la nueva posición
         var actualPosition = Store_1.store.getState().position;
         var newPosition = new Utils_1.Pair(row, column);
         console.log("posicion anterior:" + actualPosition.x + "," + actualPosition.y);
         console.log("posicion nueva (clic):" + newPosition.x + "," + newPosition.y);
+        //Realizamos comprobaciones en función del estado en que se encuentre y donde haga clic
         if (actualPosition.x == newPosition.x && actualPosition.y == newPosition.y && Store_1.store.getState().type == "SET_LISTENER") {
             Store_1.saveState(GameState_1.Actions.generateMove(0));
+            //Hacemos una comprobación extra para ver que no supera los límites manteniendo el estado de movimiento si es así
+        }
+        else if ((newPosition.x < 0 || newPosition.x > this.props.horizontal || newPosition.y < 0 || newPosition.y > this.props.vertical) && Store_1.store.getState().type == "MOVE") {
+            Store_1.saveState(GameState_1.Actions.generateMove(0));
+            //En caso de que no se cumpla la condicion anterior entonces es válida y por tanto será un movimiento válido que se ejecutará
         }
         else if ((actualPosition.x != newPosition.x || actualPosition.y != newPosition.y) && Store_1.store.getState().type == "MOVE") {
             Store_1.saveState(GameState_1.Actions.generateChangeUnitPos(0, newPosition));
@@ -958,7 +970,7 @@ var Map = /** @class */ (function (_super) {
         var accum2 = [];
         this.state.cells[num_row] = new Array(this.props.horizontal);
         // Este bucle iterará hasta el número de celdas horizontales especificado en el props.
-        for (var j = num_row % 2 == 0 ? 0 : 1; j <= this.props.horizontal; j = j + 2) {
+        for (var j = num_row % 2 == 0 ? 0 : 1; j <= this.props.vertical; j = j + 2) {
             var column = j;
             var row = num_row % 2 == 0 ? num_row / 2 : Math.floor(num_row / 2);
             if (column == Store_1.store.getState().position.y && row == Store_1.store.getState().position.x) {
@@ -992,7 +1004,7 @@ var GameState_1 = __webpack_require__(8);
 exports.store = Redux.createStore(GameState_1.Reducer);
 function saveState(action) {
     exports.store.dispatch(action);
-    // Refresh Map:
+    // Refresca el mapa y el resto de variables del estado
     var map = exports.store.getState().map;
     var position = exports.store.getState().position;
     var type = exports.store.getState().type;
@@ -1678,6 +1690,7 @@ var Unit = /** @class */ (function (_super) {
         return _super.call(this, props) || this;
     }
     //Con una variable externa se podría hacer que haya o no sprite de montaña etc
+    //TODO En la id de unit debería ir la id de unit pero más adelante se añadirá
     Unit.prototype.render = function () {
         return (React.createElement("div", { className: "cell" },
             React.createElement("img", { id: "hex" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/hex_base.png" }),

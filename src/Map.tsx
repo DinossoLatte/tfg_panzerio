@@ -100,15 +100,19 @@ export class Map extends React.Component<any, any> {
             }
         }
 
-        // Finalmente, llamamos al método correspondiente:
-        // TODO: POR AÑADIR SEGÚN COMO SE REALICE LA ACTIVIDAD DEL USUARIO
 
+        //Guardamos la posición actual y la nueva posición
         let actualPosition : Pair = store.getState().position;
         let newPosition: Pair = new Pair(row,column);
         console.log("posicion anterior:"+actualPosition.x+","+actualPosition.y);
         console.log("posicion nueva (clic):"+newPosition.x+","+newPosition.y);
+        //Realizamos comprobaciones en función del estado en que se encuentre y donde haga clic
         if(actualPosition.x == newPosition.x && actualPosition.y == newPosition.y && store.getState().type == "SET_LISTENER"){
             saveState(Actions.generateMove(0));
+        //Hacemos una comprobación extra para ver que no supera los límites manteniendo el estado de movimiento si es así
+        }else if((newPosition.x<0 || newPosition.x>this.props.horizontal || newPosition.y<0 || newPosition.y>this.props.vertical) && store.getState().type == "MOVE"){
+            saveState(Actions.generateMove(0));
+        //En caso de que no se cumpla la condicion anterior entonces es válida y por tanto será un movimiento válido que se ejecutará
         }else if((actualPosition.x != newPosition.x || actualPosition.y != newPosition.y) && store.getState().type == "MOVE"){
             saveState(Actions.generateChangeUnitPos(0, newPosition));
         }else{
@@ -144,7 +148,7 @@ export class Map extends React.Component<any, any> {
         var accum2 = [];
         this.state.cells[num_row] = new Array<Cell>(this.props.horizontal);
         // Este bucle iterará hasta el número de celdas horizontales especificado en el props.
-        for(var j = num_row%2==0?0:1; j <= this.props.horizontal; j = j+2) { // Incrementamos en 2 porque el elemento entre cada hex tendrá el valor j + 1.
+        for(var j = num_row%2==0?0:1; j <= this.props.vertical; j = j+2) { // Incrementamos en 2 porque el elemento entre cada hex tendrá el valor j + 1.
             let column = j;
             let row = num_row%2==0?num_row/2:Math.floor(num_row/2);
             if(column == store.getState().position.y && row == store.getState().position.x){
