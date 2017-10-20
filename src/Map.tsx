@@ -34,14 +34,14 @@ export class Map extends React.Component<any, any> {
         var dimensions = document.getElementById("hex0_0").getBoundingClientRect();
 
         // Para soportar mejor los cambios de pantalla, obtenemos las dimensiones del hex primero, para los demás será igual.
-        var height = 156; // Hardcoded, se deberían realizar más pruebas
-        var width = 180;
+        var height = dimensions.bottom - dimensions.top; // Hardcoded, se deberían realizar más pruebas
+        var width = Math.round(height*1.153846154); // El valor que se multiplica es la proporción entre el height y width
 
-        console.log("Height: "+height+"\nWidth: "+width);
+        var x = event.pageX; // A las coordenadas absolutas les restamos las dimensiones en el extremo superior izquierdo del primer hex.
+        var y = event.pageY;
 
-        var x = event.clientX - dimensions.left; // A las coordenadas absolutas les restamos las dimensiones en el extremo superior izquierdo del primer hex.
-        var y = event.clientY - dimensions.top;
         var column: number = Math.floor(x/(3/4*width)); // Primero, encontramos la columna aproximada, dividiendo la posición por 3/4 la anchura (debido a los siguientes cálculos)
+        console.log("Div: "+x/width);
         var row: number; // Definimos el número de fila.
         var isOdd = column%2==1; // Comprobamos si la columna de hexes es impar, ya que estará bajada por la mitad de la altura
         switch(isOdd) {
@@ -68,6 +68,8 @@ export class Map extends React.Component<any, any> {
         }
         var radius = height/2; // Tomamos el radio más pequeño, siendo este la mitad de la altura del hex.
 
+        console.log("CenterX: "+centerX+", centerY: "+centerY);
+
         // Comprobación de si está el punto en el círculo
         if(!this.getInCircle(centerX, centerY, radius, x, y)) {
             // Debemos calcular la distancia entre los otros hexágonos:
@@ -75,9 +77,9 @@ export class Map extends React.Component<any, any> {
             // Primero comprobamos si debemos escoger el hexágono superior o inferior
             var isUpper = y < centerY;
             // Recogemos la posición del hex horizontal siguiente:
-            var comparingHexX = centerX - (height*3/4);
+            var comparingHexX = centerX - (width*3/4);
             // Y dependiendo de que esté arriba o debajo, la posición vertical del hex posible:
-            var comparingHexY = isUpper?(centerY - (width/2)):(centerY + (width/2));
+            var comparingHexY = isUpper?(centerY - (height/2)):(centerY + (height/2));
             // Calculamos la distancia entre todos los posibles hexes:
             var distanceCircle = this.calculateDistance(centerX, centerY, x, y);
             var distancePossibleHex = this.calculateDistance(comparingHexX, comparingHexY, x, y);
