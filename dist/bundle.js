@@ -857,9 +857,9 @@ var Map = /** @class */ (function (_super) {
         // Para obtener las posiciones relativas al mapa, obtenemos las posiciones absolutas del primer objeto, que es el hexágono primero.
         var dimensions = document.getElementById("hex0_0").getBoundingClientRect();
         // Para soportar mejor los cambios de pantalla, obtenemos las dimensiones del hex primero, para los demás será igual.
-        console.log("Dimensions: " + dimensions);
-        var height = 180; // Hardcoded, se deberían realizar más pruebas
-        var width = 156;
+        var height = 156; // Hardcoded, se deberían realizar más pruebas
+        var width = 180;
+        console.log("Height: " + height + "\nWidth: " + width);
         var x = event.clientX - dimensions.left; // A las coordenadas absolutas les restamos las dimensiones en el extremo superior izquierdo del primer hex.
         var y = event.clientY - dimensions.top;
         var column = Math.floor(x / (3 / 4 * width)); // Primero, encontramos la columna aproximada, dividiendo la posición por 3/4 la anchura (debido a los siguientes cálculos)
@@ -920,7 +920,7 @@ var Map = /** @class */ (function (_super) {
         // Finalmente, llamamos al método correspondiente:
         // TODO: POR AÑADIR SEGÚN COMO SE REALICE LA ACTIVIDAD DEL USUARIO
         var actualPosition = Store_1.store.getState().position;
-        var newPosition = new Utils_1.Pair(column, row);
+        var newPosition = new Utils_1.Pair(row, column);
         console.log("posicion anterior:" + actualPosition.x + "," + actualPosition.y);
         console.log("posicion nueva (clic):" + newPosition.x + "," + newPosition.y);
         if (actualPosition.x == newPosition.x && actualPosition.y == newPosition.y && Store_1.store.getState().type == "SET_LISTENER") {
@@ -933,7 +933,7 @@ var Map = /** @class */ (function (_super) {
             Store_1.saveState(GameState_1.Actions.generateSetListener(this));
         }
     };
-    // Calcula si dado los datos del circulo y un punto cualquiuera, el punto cualquiera está dentro del círculo
+    // Calcula si dado los datos del circulo y  un punto cualquiuera, el punto cualquiera está dentro del círculo
     Map.prototype.getInCircle = function (centerX, centerY, radius, x, y) {
         // Raiz cuadrada de la distancia vectorial entre el centro y el punto debe ser menor al radio
         return this.calculateDistance(centerX, centerY, x, y) < radius;
@@ -946,7 +946,7 @@ var Map = /** @class */ (function (_super) {
     Map.prototype.generateMap = function () {
         var accum = [];
         // Repetirá este for hasta que se llegue al número de columnas especificado
-        for (var i = 0; i < this.props.vertical; i++) {
+        for (var i = 0; i <= this.props.horizontal * 2 + 1; i++) {
             // Este método retornará una lista con las casillas en fila
             accum.push(this.generateCellRow.bind(this)(i));
         }
@@ -957,17 +957,17 @@ var Map = /** @class */ (function (_super) {
         var accum2 = [];
         this.state.cells[num_row] = new Array(this.props.horizontal);
         // Este bucle iterará hasta el número de celdas horizontales especificado en el props.
-        for (var j = 0; j <= this.props.horizontal; j++) {
-            //SImplemente he añadido que se añada la celda al estado y en cuanto a lo grafico (accum que se muestre la Unidad)
-            if (j == Store_1.store.getState().position.x && num_row == Store_1.store.getState().position.y) {
-                var cell = React.createElement(Cell_1.Cell, { horizontal: j, vertical: num_row });
-                this.state.cells[num_row][j] = cell;
+        for (var j = num_row % 2 == 0 ? 0 : 1; j <= this.props.horizontal; j = j + 2) {
+            var column = j;
+            var row = num_row % 2 == 0 ? num_row / 2 : Math.floor(num_row / 2);
+            if (column == Store_1.store.getState().position.y && row == Store_1.store.getState().position.x) {
+                this.state.cells[row][column] = React.createElement(Cell_1.Cell, { vertical: column, horizontal: row });
                 accum2.push(React.createElement(Unit_1.Unit, { horizontal: j, vertical: num_row }));
             }
             else {
                 // Se introducirá el elemento en una lista
-                var cell = React.createElement(Cell_1.Cell, { horizontal: j, vertical: num_row });
-                this.state.cells[num_row][j] = cell;
+                var cell = React.createElement(Cell_1.Cell, { vertical: column, horizontal: row }); // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                this.state.cells[row][column] = cell;
                 accum2.push(cell);
             }
         }
@@ -1681,7 +1681,7 @@ var Unit = /** @class */ (function (_super) {
         return (React.createElement("div", { className: "cell" },
             React.createElement("img", { id: "hex" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/hex_base.png" }),
             React.createElement("div", { className: "unit" },
-                React.createElement("img", { id: "hex" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/unit.png" }))));
+                React.createElement("img", { id: "unit" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/unit.png" }))));
     };
     return Unit;
 }(React.Component));

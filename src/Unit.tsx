@@ -16,7 +16,7 @@ export class Unit extends React.Component<any, any> {
             <div className={"cell"}>
                 <img id={"hex"+this.props.horizontal+"_"+this.props.vertical} src="imgs/hex_base.png" />
                 <div className ={"unit"}>
-                    <img id={"hex"+this.props.horizontal+"_"+this.props.vertical} src="imgs/unit.png" />
+                    <img id={"unit"+this.props.horizontal+"_"+this.props.vertical} src="imgs/unit.png" />
                 </div>
             </div>
 

@@ -146,11 +146,9 @@ export class Map extends React.Component<any, any> {
             let column = j;
             let row = num_row%2==0?num_row/2:Math.floor(num_row/2);
             if(column == store.getState().position.y && row == store.getState().position.x){
-                this.state.cells[row][column] =
+                this.state.cells[row][column] = <Cell vertical={column} horizontal={row} />
                 accum2.push(
-                    <div className="cell">
-                        <Unit horizontal={j} vertical={num_row} />
-                    </div>
+                    <Unit horizontal={j} vertical={num_row} />
                 );
             }else{
                 // Se introducirá el elemento en una lista
