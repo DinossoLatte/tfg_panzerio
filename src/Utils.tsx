@@ -23,3 +23,14 @@ export class Pair {
         this.y = y;
     }
 }
+
+//Debido a que indexOf de los array iguala con ===, no es posible saber si un objeto está dentro de un array sino es identicamente el mismo objeto
+//por eso se ha creado este método auxiliar para ayudar al cálculo
+export function myIndexOf(arr: Array<Pair>, o: Pair) {
+    for (var i = 0; i < arr.length; i++) {
+        if (arr[i].x == o.x && arr[i].y == o.y) {
+            return i;
+        }
+    }
+    return -1;
+}

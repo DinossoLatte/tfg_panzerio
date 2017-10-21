@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 10);
+/******/ 	return __webpack_require__(__webpack_require__.s = 11);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -267,7 +267,7 @@ process.umask = function() { return 0; };
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ActionTypes; });
 /* harmony export (immutable) */ __webpack_exports__["b"] = createStore;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_es_isPlainObject__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_symbol_observable__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_symbol_observable__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_symbol_observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_symbol_observable__);
 
 
@@ -523,9 +523,9 @@ var ActionTypes = {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__baseGetTag_js__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getPrototype_js__ = __webpack_require__(20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__isObjectLike_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__baseGetTag_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getPrototype_js__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__isObjectLike_js__ = __webpack_require__(23);
 
 
 
@@ -595,7 +595,7 @@ function isPlainObject(value) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__root_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__root_js__ = __webpack_require__(17);
 
 
 /** Built-in value references. */
@@ -710,12 +710,13 @@ var Actions = /** @class */ (function () {
     function Actions() {
     }
     //Estos son los estados posibles
-    Actions.generateChangeUnitPos = function (unit_id, new_position) {
+    Actions.generateChangeUnitPos = function (unit_id, new_position, selectedUnit) {
         //Este estado es el de cambiar la posición (justo cuando hace clic de a donde quiere ir)
         return {
             type: "CHANGE_UNIT_POS",
             unit_id: unit_id,
-            new_position: new_position
+            new_position: new_position,
+            selectedUnit: selectedUnit
         };
     };
     Actions.generateMove = function (unit_id) {
@@ -735,10 +736,11 @@ var Actions = /** @class */ (function () {
     return Actions;
 }());
 exports.Actions = Actions;
-//El estado inicial será este
+//El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
 exports.InitialState = {
-    position: new Utils_1.Pair(0, 0),
+    position: [new Utils_1.Pair(0, 0), new Utils_1.Pair(0, 1), new Utils_1.Pair(1, 0)],
     map: null,
+    selectedUnit: null,
     type: "SET_LISTENER"
 };
 //Y aquí se producirá el cambio
@@ -747,21 +749,25 @@ exports.Reducer = function (state, action) {
     //Dependiendo del tipo se cambiarán las variables del estado
     switch (action.type) {
         case "CHANGE_UNIT_POS":
+            state.position[action.unit_id] = action.new_position;
             return {
-                position: action.new_position,
+                position: state.position,
                 map: state.map,
+                selectedUnit: action.selectedUnit,
                 type: "SET_LISTENER"
             };
         case "MOVE":
             return {
                 position: state.position,
                 map: state.map,
+                selectedUnit: action.unit_id,
                 type: "MOVE"
             };
         case "SET_LISTENER":
             return {
                 position: state.position,
                 map: action.map,
+                selectedUnit: state.selectedUnit,
                 type: "SET_LISTENER"
             };
         default:
@@ -797,30 +803,21 @@ var Pair = /** @class */ (function () {
     return Pair;
 }());
 exports.Pair = Pair;
+//Debido a que indexOf de los array iguala con ===, no es posible saber si un objeto está dentro de un array sino es identicamente el mismo objeto
+//por eso se ha creado este método auxiliar para ayudar al cálculo
+function myIndexOf(arr, o) {
+    for (var i = 0; i < arr.length; i++) {
+        if (arr[i].x == o.x && arr[i].y == o.y) {
+            return i;
+        }
+    }
+    return -1;
+}
+exports.myIndexOf = myIndexOf;
 
 
 /***/ }),
 /* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var ReactDOM = __webpack_require__(11);
-var Map_1 = __webpack_require__(12);
-// Representa la aplicación, por ahora únicamente el mapa
-ReactDOM.render(React.createElement(Map_1.Map, { horizontal: "4", vertical: "5" }), document.getElementById("root"));
-
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports) {
-
-module.exports = ReactDOM;
-
-/***/ }),
-/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -837,10 +834,85 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var Store_1 = __webpack_require__(13);
+var Unit = /** @class */ (function (_super) {
+    __extends(Unit, _super);
+    function Unit(props) {
+        return _super.call(this, props) || this;
+    }
+    //Con una variable externa se podría hacer que haya o no sprite de montaña etc
+    //TODO En la id de unit debería ir la id de unit pero más adelante se añadirá
+    Unit.prototype.render = function () {
+        return (React.createElement("div", { className: "cell" },
+            React.createElement("img", { id: "hex" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/hex_base.png" }),
+            React.createElement("div", { className: "unit" },
+                React.createElement("img", { id: "unit" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/unit.png" }))));
+    };
+    return Unit;
+}(React.Component));
+exports.Unit = Unit;
+//Al inicio serán estos, el tipo nos sirve para identificar la situacion, ejemplo, con buffo de ataque etc.
+exports.InitialStats = {
+    movement: 2,
+    type: "NONE"
+};
+//En principio no se realizarán cambios ya que solo nos centraremos en que el movimiento funcione
+exports.ReducerStats = function (state, action) {
+    if (state === void 0) { state = exports.InitialStats; }
+    //Dependiendo del tipo se cambiarán las variables del estado
+    switch (action.type) {
+        case "NONE":
+            return {
+                movement: state.movement,
+                type: "NONE"
+            };
+        default:
+            return state;
+    }
+};
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var ReactDOM = __webpack_require__(12);
+var Map_1 = __webpack_require__(13);
+// Representa la aplicación, por ahora únicamente el mapa
+ReactDOM.render(React.createElement(Map_1.Map, { horizontal: "4", vertical: "5" }), document.getElementById("root"));
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports) {
+
+module.exports = ReactDOM;
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var Store_1 = __webpack_require__(14);
 var GameState_1 = __webpack_require__(8);
-var Cell_1 = __webpack_require__(30);
-var Unit_1 = __webpack_require__(31);
+var Cell_1 = __webpack_require__(31);
+var Unit_1 = __webpack_require__(10);
 var Utils_1 = __webpack_require__(9);
 /** Representa el mapa que contendrá las unidades y las casillas **/
 var Map = /** @class */ (function (_super) {
@@ -926,21 +998,25 @@ var Map = /** @class */ (function (_super) {
             }
         }
         //Guardamos la posición actual y la nueva posición
-        var actualPosition = Store_1.store.getState().position;
         var newPosition = new Utils_1.Pair(row, column);
-        console.log("posicion anterior:" + actualPosition.x + "," + actualPosition.y);
-        console.log("posicion nueva (clic):" + newPosition.x + "," + newPosition.y);
-        //Realizamos comprobaciones en función del estado en que se encuentre y donde haga clic
-        if (actualPosition.x == newPosition.x && actualPosition.y == newPosition.y && Store_1.store.getState().type == "SET_LISTENER") {
-            Store_1.saveState(GameState_1.Actions.generateMove(0));
-            //Hacemos una comprobación extra para ver que no supera los límites manteniendo el estado de movimiento si es así
+        var unitIndex = Utils_1.myIndexOf(Store_1.store.getState().position, newPosition);
+        //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
+        if (unitIndex != -1 && Store_1.store.getState().type == "SET_LISTENER") {
+            Store_1.saveState(GameState_1.Actions.generateMove(unitIndex));
+            //Si hace clic en una possición exterior, mantieene el estado de en movimiento (seleccionado) y sigue almacenando la unidad seleccionada
         }
         else if ((newPosition.x < 0 || newPosition.x > this.props.horizontal || newPosition.y < 0 || newPosition.y > this.props.vertical) && Store_1.store.getState().type == "MOVE") {
-            Store_1.saveState(GameState_1.Actions.generateMove(0));
-            //En caso de que no se cumpla la condicion anterior entonces es válida y por tanto será un movimiento válido que se ejecutará
+            Store_1.saveState(GameState_1.Actions.generateMove(Store_1.store.getState().selectedUnit));
+            //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
         }
-        else if ((actualPosition.x != newPosition.x || actualPosition.y != newPosition.y) && Store_1.store.getState().type == "MOVE") {
-            Store_1.saveState(GameState_1.Actions.generateChangeUnitPos(0, newPosition));
+        else if (unitIndex == -1 && Store_1.store.getState().type == "MOVE") {
+            var actualPosition = Store_1.store.getState().position[Store_1.store.getState().selectedUnit];
+            var distance = Math.floor(Math.sqrt(Math.pow(actualPosition.x - newPosition.x, 2) + Math.pow(actualPosition.y - newPosition.y, 2)));
+            //Si la distancia entre la nueva posición y la actual es menor al limite de movimiento entonces se realizará el movimieento
+            if (distance <= Store_1.storeStats.getState().movement) {
+                //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
+                Store_1.saveState(GameState_1.Actions.generateChangeUnitPos(Store_1.store.getState().selectedUnit, newPosition, null));
+            }
         }
         else {
             Store_1.saveState(GameState_1.Actions.generateSetListener(this));
@@ -973,9 +1049,31 @@ var Map = /** @class */ (function (_super) {
         for (var j = num_row % 2 == 0 ? 0 : 1; j <= this.props.vertical; j = j + 2) {
             var column = j;
             var row = num_row % 2 == 0 ? num_row / 2 : Math.floor(num_row / 2);
-            if (column == Store_1.store.getState().position.y && row == Store_1.store.getState().position.x) {
+            var pos = new Utils_1.Pair(row, column);
+            //Si está incluida en la lista de posiciones de unidades (el indice obtenido es -1) entonces se añade una casilla de unidad
+            if (Utils_1.myIndexOf(Store_1.store.getState().position, pos) != -1) {
                 this.state.cells[row][column] = React.createElement(Cell_1.Cell, { vertical: column, horizontal: row });
                 accum2.push(React.createElement(Unit_1.Unit, { horizontal: j, vertical: num_row }));
+                //Si está en modo seleccionado se usará otra lógica es necesario llamarlo despues de la unidad sino las casillas de unidades al generarse se pondran en amarillo
+            }
+            else if (Store_1.store.getState().selectedUnit != null) {
+                var actualPosition = Store_1.store.getState().position[Store_1.store.getState().selectedUnit];
+                var distance = Math.floor(Math.sqrt(Math.pow(actualPosition.x - pos.x, 2) + Math.pow(actualPosition.y - pos.y, 2)));
+                //Si la distancia es menor o igual a la distancia máxima entonces son posiciones validas y se seleccionaran
+                if (distance <= Store_1.storeStats.getState().movement) {
+                    var cell = React.createElement(Cell_1.Cell, { vertical: column, horizontal: row }); // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                    this.state.cells[row][column] = cell;
+                    //Para no añadir una nueva clase de celda seleccionada simplemente hacemos esto
+                    accum2.push(React.createElement("div", { className: "cell" },
+                        React.createElement("img", { id: "hex" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/hex_base_selected.png" })));
+                    //Es necesario hacer este else porque al entrar en este else if no podrá ejecutar el else exterior
+                }
+                else {
+                    var cell = React.createElement(Cell_1.Cell, { vertical: column, horizontal: row }); // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                    this.state.cells[row][column] = cell;
+                    accum2.push(cell);
+                }
+                //En caso de que no sea nada de lo anterior se añadirá una casilla normal y corriente
             }
             else {
                 // Se introducirá el elemento en una lista
@@ -993,20 +1091,24 @@ exports.Map = Map;
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Redux = __webpack_require__(14);
+var Redux = __webpack_require__(15);
 var GameState_1 = __webpack_require__(8);
+var Unit_1 = __webpack_require__(10);
 exports.store = Redux.createStore(GameState_1.Reducer);
+//Guardaremos el estado de stats (en un futuro podremos guardar el estado y modificarlo y será como buffos o incluso restricciones de mapa)
+exports.storeStats = Redux.createStore(Unit_1.ReducerStats);
 function saveState(action) {
     exports.store.dispatch(action);
     // Refresca el mapa y el resto de variables del estado
     var map = exports.store.getState().map;
     var position = exports.store.getState().position;
+    var selectedUnit = exports.store.getState().selectedUnit;
     var type = exports.store.getState().type;
     map.setState({});
 }
@@ -1014,15 +1116,15 @@ exports.saveState = saveState;
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* WEBPACK VAR INJECTION */(function(process) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__createStore__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__combineReducers__ = __webpack_require__(27);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__bindActionCreators__ = __webpack_require__(28);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__applyMiddleware__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__combineReducers__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__bindActionCreators__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__applyMiddleware__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__compose__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_warning__ = __webpack_require__(6);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "createStore", function() { return __WEBPACK_IMPORTED_MODULE_0__createStore__["b"]; });
@@ -1051,13 +1153,13 @@ if (process.env.NODE_ENV !== 'production' && typeof isCrushed.name === 'string' 
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(1)))
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Symbol_js__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getRawTag_js__ = __webpack_require__(18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__objectToString_js__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getRawTag_js__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__objectToString_js__ = __webpack_require__(20);
 
 
 
@@ -1089,11 +1191,11 @@ function baseGetTag(value) {
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__freeGlobal_js__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__freeGlobal_js__ = __webpack_require__(18);
 
 
 /** Detect free variable `self`. */
@@ -1106,7 +1208,7 @@ var root = __WEBPACK_IMPORTED_MODULE_0__freeGlobal_js__["a" /* default */] || fr
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1118,7 +1220,7 @@ var freeGlobal = typeof global == 'object' && global && global.Object === Object
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(5)))
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1172,7 +1274,7 @@ function getRawTag(value) {
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1201,11 +1303,11 @@ function objectToString(value) {
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__overArg_js__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__overArg_js__ = __webpack_require__(22);
 
 
 /** Built-in value references. */
@@ -1215,7 +1317,7 @@ var getPrototype = Object(__WEBPACK_IMPORTED_MODULE_0__overArg_js__["a" /* defau
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1237,7 +1339,7 @@ function overArg(func, transform) {
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1273,14 +1375,14 @@ function isObjectLike(value) {
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(24);
+module.exports = __webpack_require__(25);
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1290,7 +1392,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _ponyfill = __webpack_require__(26);
+var _ponyfill = __webpack_require__(27);
 
 var _ponyfill2 = _interopRequireDefault(_ponyfill);
 
@@ -1313,10 +1415,10 @@ if (typeof self !== 'undefined') {
 
 var result = (0, _ponyfill2['default'])(root);
 exports['default'] = result;
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5), __webpack_require__(25)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5), __webpack_require__(26)(module)))
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -1344,7 +1446,7 @@ module.exports = function(module) {
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1373,7 +1475,7 @@ function symbolObservablePonyfill(root) {
 };
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1514,7 +1616,7 @@ function combineReducers(reducers) {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(1)))
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1568,7 +1670,7 @@ function bindActionCreators(actionCreators, dispatch) {
 }
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1624,7 +1726,7 @@ function applyMiddleware() {
 }
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1664,42 +1766,6 @@ var Cell = /** @class */ (function (_super) {
     return Cell;
 }(React.Component));
 exports.Cell = Cell;
-
-
-/***/ }),
-/* 31 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var Unit = /** @class */ (function (_super) {
-    __extends(Unit, _super);
-    function Unit(props) {
-        return _super.call(this, props) || this;
-    }
-    //Con una variable externa se podría hacer que haya o no sprite de montaña etc
-    //TODO En la id de unit debería ir la id de unit pero más adelante se añadirá
-    Unit.prototype.render = function () {
-        return (React.createElement("div", { className: "cell" },
-            React.createElement("img", { id: "hex" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/hex_base.png" }),
-            React.createElement("div", { className: "unit" },
-                React.createElement("img", { id: "unit" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/unit.png" }))));
-    };
-    return Unit;
-}(React.Component));
-exports.Unit = Unit;
 
 
 /***/ })

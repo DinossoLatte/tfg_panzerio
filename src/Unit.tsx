@@ -25,3 +25,30 @@ export class Unit extends React.Component<any, any> {
     }
 
 }
+
+//Estos son los stats de las unidades
+export type Stats = {
+    readonly movement: number,
+    readonly type: string
+}
+
+//Al inicio serán estos, el tipo nos sirve para identificar la situacion, ejemplo, con buffo de ataque etc.
+export const InitialStats: Stats = {
+    movement: 2,
+    type: "NONE"
+}
+
+//En principio no se realizarán cambios ya que solo nos centraremos en que el movimiento funcione
+export const ReducerStats : Redux.Reducer<Stats> =
+    (state: Stats = InitialStats, action: Redux.AnyAction) => {
+        //Dependiendo del tipo se cambiarán las variables del estado
+        switch(action.type) {
+            case "NONE":
+                return {
+                    movement: state.movement,
+                    type: "NONE"
+                };
+            default:
+                return state;
+    }
+}

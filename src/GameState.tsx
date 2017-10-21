@@ -6,12 +6,13 @@ import { Pair } from './Utils';
 
 export class Actions {
     //Estos son los estados posibles
-    static generateChangeUnitPos(unit_id: number, new_position: Pair) : Redux.AnyAction {
+    static generateChangeUnitPos(unit_id: number, new_position: Pair, selectedUnit: number) : Redux.AnyAction {
         //Este estado es el de cambiar la posición (justo cuando hace clic de a donde quiere ir)
         return {
             type: "CHANGE_UNIT_POS",
             unit_id: unit_id,
-            new_position: new_position
+            new_position: new_position,
+            selectedUnit: selectedUnit
         };
     }
 
@@ -34,15 +35,17 @@ export class Actions {
 
 //Aquí declaramos las variables del estado
 export type State = {
-    readonly position: Pair,
+    readonly position: Array<Pair>,
     readonly map: Map,
+    readonly selectedUnit: number,
     readonly type: string
 }
 
-//El estado inicial será este
+//El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
 export const InitialState: State = {
-    position: new Pair(0,0),
+    position: [new Pair (0,0), new Pair(0,1), new Pair (1,0)],
     map: null,
+    selectedUnit: null,
     type: "SET_LISTENER"
 }
 
@@ -52,21 +55,25 @@ export const Reducer : Redux.Reducer<State> =
         //Dependiendo del tipo se cambiarán las variables del estado
         switch(action.type) {
             case "CHANGE_UNIT_POS":
+                state.position[action.unit_id] = action.new_position;
                 return {
-                    position: action.new_position,
+                    position: state.position,
                     map: state.map,
+                    selectedUnit: action.selectedUnit,
                     type: "SET_LISTENER"
                 };
             case "MOVE":
                 return {
                     position: state.position,
                     map: state.map,
+                    selectedUnit: action.unit_id,
                     type: "MOVE"
                 };
             case "SET_LISTENER":
                 return {
                     position: state.position,
                     map: action.map,
+                    selectedUnit: state.selectedUnit,
                     type: "SET_LISTENER"
                 };
             default:
