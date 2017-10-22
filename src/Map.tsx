@@ -54,16 +54,16 @@ export class Map extends React.Component<any, any> {
         }
 
         // En este momento, tendrémos la casilla correcta aproximada.
-        var centerX = Math.round(column * (3/4*width) + width/2); // Para encontrar el punto central del hex más cercano. 3/4 ya que los hexes están solapados.
+        var centerX = Math.round(column*(3/4*width)+width/2); // Para encontrar el punto central del hex más cercano. 3/4 ya que los hexes están solapados.
         var centerY;
         switch(isOdd) {
             case true:
                 // El punto central equivale a la fila por el tamaño del hex más la mitad (punto medio) más el offset por la fila impar
-                centerY = Math.round(row*height + height);
+                centerY = Math.round(row*height+height);
                 break;
             case false:
                 // En otro caso, no existirá el offset por la fila impar.
-                centerY = Math.round(row*height + (height/2));
+                centerY = Math.round(row*height+(height/2));
         }
         var radius = Math.round(height/4); // Tomamos el radio más pequeño, siendo este la mitad de la altura del hex.
 
@@ -81,6 +81,8 @@ export class Map extends React.Component<any, any> {
             var distanceCircle = this.calculateDistance(centerX, centerY, x, y);
             var distancePossibleHex = this.calculateDistance(comparingHexX, comparingHexY, x, y);
             // Si la distancia del hex posible es menor al del círculo, entonces cambiamos el row y column
+            console.log("Dist. original: "+distanceCircle);
+            console.log("Dist. posible: "+distancePossibleHex);
             if(distancePossibleHex < distanceCircle) {
                 // Debido al sistema de identificación usado, es necesario añadir reglas si el hex es impar o par.
                 if(isOdd) {
