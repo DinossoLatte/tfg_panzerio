@@ -20,12 +20,18 @@ export class Map extends React.Component<any, any> {
     render() {
         // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
         return (
-            <div id="map" className="map" onClick={this.onClick.bind(this)}>
+            <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)}>
                 {this.generateMap.bind(this)().map((a: any) => {
                     return a;
                 })}
             </div>
         );
+    }
+
+    onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
+        if(keyEvent.keyCode == 27) { // Esc == 27
+            this.props.parentObject.changeGameState(0); // Retornamos al menu.
+        }
     }
 
     /** Placeholder, contendrá la lógica de selección de la casilla correcta. **/
