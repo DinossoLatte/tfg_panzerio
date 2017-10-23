@@ -24,6 +24,24 @@ export class Pair {
     }
 }
 
+/* Representación cúbica del hexágono */
+export class Cubic {
+    x : number;
+    y : number;
+    z : number;
+
+    constructor(pair : Pair) {
+        this.x = pair.y;
+        this.z = pair.x - (pair.y - (pair.y&1))/2
+        this.y = -this.x-this.z;
+    }
+
+    /* Calcula la distancia Manhattan */
+    distanceTo(cubic : Cubic) {
+        return Math.max(Math.abs(this.x - cubic.x), Math.abs(this.y - cubic.y), Math.abs(this.z - cubic.z));
+    }
+}
+
 //Debido a que indexOf de los array iguala con ===, no es posible saber si un objeto está dentro de un array sino es identicamente el mismo objeto
 //por eso se ha creado este método auxiliar para ayudar al cálculo
 export function myIndexOf(arr: Array<Pair>, o: Pair) {

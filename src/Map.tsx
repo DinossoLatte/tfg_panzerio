@@ -5,7 +5,7 @@ import { store, storeStats, saveState } from './Store';
 import { Actions, State, InitialState, Reducer } from './GameState';
 import { Cell } from './Cell';
 import { Unit, Stats, InitialStats} from './Unit';
-import { Pair, myIndexOf } from './Utils';
+import { Pair, Cubic, myIndexOf } from './Utils';
 
 /** Representa el mapa que contendrá las unidades y las casillas **/
 export class Map extends React.Component<any, any> {
@@ -37,12 +37,12 @@ export class Map extends React.Component<any, any> {
         var height = dimensions.bottom - dimensions.top; // Hardcoded, se deberían realizar más pruebas
         var width = Math.round(height*1.153846154); // El valor que se multiplica es la proporción entre el height y width
 
-        var x = event.pageX; // A las coordenadas absolutas les restamos las dimensiones en el extremo superior izquierdo del primer hex.
-        var y = event.pageY;
+        var x = event.clientX - dimensions.left; // A las coordenadas absolutas les restamos las dimensiones en el extremo superior izquierdo del primer hex.
+        var y = event.clientY - dimensions.top;
 
         var column: number = Math.floor(x/(3/4*width)); // Primero, encontramos la columna aproximada, dividiendo la posición por 3/4 la anchura (debido a los siguientes cálculos)
-        console.log("Div: "+x/width);
         var row: number; // Definimos el número de fila.
+
         var isOdd = column%2==1; // Comprobamos si la columna de hexes es impar, ya que estará bajada por la mitad de la altura
         switch(isOdd) {
             case true:
@@ -67,8 +67,6 @@ export class Map extends React.Component<any, any> {
                 centerY = row*height+(height/2);
         }
         var radius = height/2; // Tomamos el radio más pequeño, siendo este la mitad de la altura del hex.
-
-        console.log("CenterX: "+centerX+", centerY: "+centerY);
 
         // Comprobación de si está el punto en el círculo
         if(!this.getInCircle(centerX, centerY, radius, x, y)) {
@@ -114,9 +112,11 @@ export class Map extends React.Component<any, any> {
         //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
         }else if(unitIndex==-1 && store.getState().type == "MOVE"){
             let actualPosition: Pair = store.getState().position[store.getState().selectedUnit];
-            let distance: number = Math.floor(Math.sqrt(Math.pow(actualPosition.x-newPosition.x,2)+Math.pow(actualPosition.y-newPosition.y,2)));
-            //Si la distancia entre la nueva posición y la actual es menor al limite de movimiento entonces se realizará el movimieento
-            if(distance<=storeStats.getState().movement){
+            // Transformamos primero a cúbica la posición de ambos:
+            let cubicActual : Cubic = new Cubic(actualPosition);
+            let cubicNew : Cubic = new Cubic(newPosition);
+            //Si la distancia entre la nueva posición y la actual es menor al limite de movimiento entonces se realizará el movimiento
+            if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement){
                 //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
                 saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null));
             }
@@ -159,34 +159,36 @@ export class Map extends React.Component<any, any> {
             let pos = new Pair(row, column);
             //Si está incluida en la lista de posiciones de unidades (el indice obtenido es -1) entonces se añade una casilla de unidad
             if (myIndexOf(store.getState().position, pos)!=-1){
-                this.state.cells[row][column] = <Cell vertical={column} horizontal={row} />
+                this.state.cells[row][column] = <Cell vertical={row} horizontal={column} />
                 accum2.push(
-                    <Unit horizontal={j} vertical={num_row}/>
+                    <Unit horizontal={column} vertical={row}/>
                 );
             //Si está en modo seleccionado se usará otra lógica es necesario llamarlo despues de la unidad sino las casillas de unidades al generarse se pondran en amarillo
             }else if(store.getState().selectedUnit!=null){
                 let actualPosition: Pair = store.getState().position[store.getState().selectedUnit];
-                let distance: number = Math.floor(Math.sqrt(Math.pow(actualPosition.x-pos.x,2)+Math.pow(actualPosition.y-pos.y,2)));
+                // Convertimos la posición en cúbica
+                let cubicActual : Cubic = new Cubic(actualPosition);
+                let cubicNew : Cubic = new Cubic(pos);
                 //Si la distancia es menor o igual a la distancia máxima entonces son posiciones validas y se seleccionaran
-                if(distance<=storeStats.getState().movement){
-                    var cell = <Cell vertical={column} horizontal={row} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement){
+                    var cell = <Cell vertical={row} horizontal={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                     this.state.cells[row][column] = cell;
                     //Para no añadir una nueva clase de celda seleccionada simplemente hacemos esto
                     accum2.push(
                         <div className="cell">
-                            <img id={"hex"+this.props.horizontal+"_"+this.props.vertical} src="imgs/hex_base_selected.png" />
+                            <img id={"hex"+column+"_"+row} src="imgs/hex_base_selected.png" />
                         </div>
                     );
                 //Es necesario hacer este else porque al entrar en este else if no podrá ejecutar el else exterior
                 }else{
-                    var cell = <Cell vertical={column} horizontal={row} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                    var cell = <Cell vertical={row} horizontal={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                     this.state.cells[row][column] = cell;
                     accum2.push(cell);
                 }
             //En caso de que no sea nada de lo anterior se añadirá una casilla normal y corriente
             }else{
                 // Se introducirá el elemento en una lista
-                var cell = <Cell vertical={column} horizontal={row} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                var cell = <Cell vertical={row} horizontal={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                 this.state.cells[row][column] = cell;
                 accum2.push(cell);
             }
