@@ -20,12 +20,19 @@ export class Map extends React.Component<any, any> {
     render() {
         // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
         return (
-            <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)}>
-                {this.generateMap.bind(this)().map((a: any) => {
-                    return a;
-                })}
+            <div>
+                <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
+                <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)}>
+                    {this.generateMap.bind(this)().map((a: any) => {
+                        return a;
+                    })}
+                </div>
             </div>
         );
+    }
+
+    onClickExit(event : React.MouseEvent<HTMLElement>) {
+        this.props.parentObject.changeGameState(0); // Salir de la partida.
     }
 
     onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as Redux from 'redux';
 import { Map } from './Map';
+import { store } from './Store';
 
 class EnterGameButton extends React.Component<any, any> {
     constructor(props: any) {
@@ -37,9 +38,9 @@ class OptionsMenu extends React.Component<any, any> {
 
     render() {
         return <div className="optionsMenu">
-            <button />
-            <button />
-            <button id="exitButton" name="exitButton" onClick={this.onClick.bind(this)} />
+            <button>Test</button>
+            <button>Test</button>
+            <button id="exitButton" name="exitButton" onClick={this.onClick.bind(this)}>Volver al menu</button>
         </div>
     }
 
@@ -57,14 +58,14 @@ class Game extends React.Component<any, any> {
     render() {
         let result: any;
         if(this.state.gameState == 2) {
-            result = <Map horizontal="8" vertical="8" parentObject={this} />
+            result = <Map horizontal="5" vertical="8" parentObject={this} />
         } else if(this.state.gameState == 1) {
             result = <OptionsMenu parentObject={this} />
         } else {
             result = (
             <div className="menu">
-                <EnterGameButton parentObject={this} />
-                <OptionsMenuButton parentObject={this} />
+                <EnterGameButton parentObject={this} /><br/>
+                <OptionsMenuButton parentObject={this} /><br/>
             </div>
             );
         }
