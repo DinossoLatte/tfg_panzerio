@@ -20,12 +20,25 @@ export class Map extends React.Component<any, any> {
     render() {
         // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
         return (
-            <div id="map" className="map" onClick={this.onClick.bind(this)}>
-                {this.generateMap.bind(this)().map((a: any) => {
-                    return a;
-                })}
+            <div>
+                <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
+                <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)}>
+                    {this.generateMap.bind(this)().map((a: any) => {
+                        return a;
+                    })}
+                </div>
             </div>
         );
+    }
+
+    onClickExit(event : React.MouseEvent<HTMLElement>) {
+        this.props.parentObject.changeGameState(0); // Salir de la partida.
+    }
+
+    onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
+        if(keyEvent.keyCode == 27) { // Esc == 27
+            this.props.parentObject.changeGameState(0); // Retornamos al menu.
+        }
     }
 
     /** Placeholder, contendrá la lógica de selección de la casilla correcta. **/
@@ -39,9 +52,6 @@ export class Map extends React.Component<any, any> {
 
         var x = event.clientX - dimensions.left; // A las coordenadas absolutas les restamos las dimensiones en el extremo superior izquierdo del primer hex.
         var y = event.clientY - dimensions.top;
-
-        console.log("X: "+x);
-        console.log("Y: "+y);
 
         var column: number = Math.floor(x/(3/4*width)); // Primero, encontramos la columna aproximada, dividiendo la posición por 3/4 la anchura (debido a los siguientes cálculos)
         var row: number; // Definimos el número de fila.
@@ -57,7 +67,7 @@ export class Map extends React.Component<any, any> {
         }
 
         // En este momento, tendrémos la casilla correcta aproximada.
-        var centerX = Math.round(column*(3/4*width) + width/2); // Para encontrar el punto central del hex más cercano. 3/4 ya que los hexes están solapados.
+        var centerX = Math.round(column*(3/4*width)+width/2); // Para encontrar el punto central del hex más cercano. 3/4 ya que los hexes están solapados.
         var centerY;
         switch(isOdd) {
             case true:
@@ -70,8 +80,6 @@ export class Map extends React.Component<any, any> {
         }
         var radius = Math.round(height/4); // Tomamos el radio más pequeño, siendo este la mitad de la altura del hex.
 
-        console.log("CenterX: "+centerX+", centerY: "+centerY);
-
         // Comprobación de si está el punto en el círculo
         if(!this.getInCircle(centerX, centerY, radius, x, y)) {
             // Debemos calcular la distancia entre los otros hexágonos:
@@ -82,9 +90,6 @@ export class Map extends React.Component<any, any> {
             var comparingHexX = Math.round(centerX - (width*3/4));
             // Y dependiendo de que esté arriba o debajo, la posición vertical del hex posible:
             var comparingHexY = Math.round(isUpper?(centerY - (height/2)):(centerY + (height/2)));
-
-            console.log("X new: "+comparingHexX);
-            console.log("Y new: "+comparingHexY);
             // Calculamos la distancia entre todos los posibles hexes:
             var distanceCircle = this.calculateDistance(centerX, centerY, x, y);
             var distancePossibleHex = this.calculateDistance(comparingHexX, comparingHexY, x, y);
@@ -108,8 +113,6 @@ export class Map extends React.Component<any, any> {
         }
 
         // Finalmente, llamamos al método correspondiente:
-        // TODO: POR AÑADIR SEGÚN COMO SE REALICE LA ACTIVIDAD DEL USUARIO
-        console.log("Row: "+row+"\nColumn: "+column);
 
         store.dispatch(Actions.generateChangeUnitPos(0, new Pair(row, column)));
         // Forzamos una actualización del estado para que se renderize el mapa.
