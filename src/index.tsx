@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { Map } from './Map';
+import { Game } from './Game';
 
 // Representa la aplicación, por ahora únicamente el mapa
-ReactDOM.render(<Map horizontal="4" vertical="5" />, document.getElementById("root"));
+ReactDOM.render(<Game />, document.getElementById("root"));

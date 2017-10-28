@@ -20,12 +20,25 @@ export class Map extends React.Component<any, any> {
     render() {
         // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
         return (
-            <div id="map" className="map" onClick={this.onClick.bind(this)}>
-                {this.generateMap.bind(this)().map((a: any) => {
-                    return a;
-                })}
+            <div>
+                <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
+                <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)}>
+                    {this.generateMap.bind(this)().map((a: any) => {
+                        return a;
+                    })}
+                </div>
             </div>
         );
+    }
+
+    onClickExit(event : React.MouseEvent<HTMLElement>) {
+        this.props.parentObject.changeGameState(0); // Salir de la partida.
+    }
+
+    onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
+        if(keyEvent.keyCode == 27) { // Esc == 27
+            this.props.parentObject.changeGameState(0); // Retornamos al menu.
+        }
     }
 
     /** Placeholder, contendrá la lógica de selección de la casilla correcta. **/
@@ -55,18 +68,18 @@ export class Map extends React.Component<any, any> {
         }
 
         // En este momento, tendrémos la casilla correcta aproximada.
-        var centerX = column*(3/4*width) + width/2; // Para encontrar el punto central del hex más cercano. 3/4 ya que los hexes están solapados.
+        var centerX = Math.round(column*(3/4*width)+width/2); // Para encontrar el punto central del hex más cercano. 3/4 ya que los hexes están solapados.
         var centerY;
         switch(isOdd) {
             case true:
                 // El punto central equivale a la fila por el tamaño del hex más la mitad (punto medio) más el offset por la fila impar
-                centerY = row*height+height;
+                centerY = Math.round(row*height+height);
                 break;
             case false:
                 // En otro caso, no existirá el offset por la fila impar.
-                centerY = row*height+(height/2);
+                centerY = Math.round(row*height+(height/2));
         }
-        var radius = height/2; // Tomamos el radio más pequeño, siendo este la mitad de la altura del hex.
+        var radius = Math.round(height/4); // Tomamos el radio más pequeño, siendo este la mitad de la altura del hex.
 
         // Comprobación de si está el punto en el círculo
         if(!this.getInCircle(centerX, centerY, radius, x, y)) {
@@ -75,13 +88,15 @@ export class Map extends React.Component<any, any> {
             // Primero comprobamos si debemos escoger el hexágono superior o inferior
             var isUpper = y < centerY;
             // Recogemos la posición del hex horizontal siguiente:
-            var comparingHexX = centerX - (width*3/4);
+            var comparingHexX = Math.round(centerX - (width*3/4));
             // Y dependiendo de que esté arriba o debajo, la posición vertical del hex posible:
-            var comparingHexY = isUpper?(centerY - (height/2)):(centerY + (height/2));
+            var comparingHexY = Math.round(isUpper?(centerY - (height/2)):(centerY + (height/2)));
             // Calculamos la distancia entre todos los posibles hexes:
             var distanceCircle = this.calculateDistance(centerX, centerY, x, y);
             var distancePossibleHex = this.calculateDistance(comparingHexX, comparingHexY, x, y);
             // Si la distancia del hex posible es menor al del círculo, entonces cambiamos el row y column
+            console.log("Dist. original: "+distanceCircle);
+            console.log("Dist. posible: "+distancePossibleHex);
             if(distancePossibleHex < distanceCircle) {
                 // Debido al sistema de identificación usado, es necesario añadir reglas si el hex es impar o par.
                 if(isOdd) {
