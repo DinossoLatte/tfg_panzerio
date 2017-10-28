@@ -80,9 +80,10 @@ export function myIndexOf(arr: Array<Pair>, o: Pair) {
     return -1;
 }
 
+//IGual que el de arriba pero para cúbica
 export function myIndexOfCubic(arr: Array<Cubic>, o: Cubic) {
     for (var i = 0; i < arr.length; i++) {
-        if (arr[i].x == o.x && arr[i].y == o.y && arr[i].z == o.z) {
+        if (arr[i].getX() == o.getX() && arr[i].getY() == o.getY() && arr[i].getZ() == o.getZ()) {
             return i;
         }
     }

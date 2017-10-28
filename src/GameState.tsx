@@ -1,9 +1,10 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
-import { store, storeStats, saveState } from './Store';
+import { store, saveState } from './Store';
 import { Map } from './Map';
 import { Pair, Cubic, cubic_directions, myIndexOf, myIndexOfCubic} from './Utils';
+import { Unit } from './Unit';
 
 export class Actions {
     //Estos son los estados posibles
@@ -38,7 +39,6 @@ export class Actions {
 export type State = {
     readonly position: Array<Pair>,
     readonly obstacles: Array<Pair>,
-    readonly validPositions: Array<Array<Cubic>>,
     readonly map: Map,
     readonly selectedUnit: number,
     readonly type: string
@@ -48,45 +48,9 @@ export type State = {
 export const InitialState: State = {
     position: [new Pair (0,0), new Pair(0,1), new Pair (1,0)],
     obstacles: [new Pair (2,2), new Pair (2,1)],
-    validPositions: getValid([new Pair (0,0), new Pair(0,1), new Pair (1,0)]),
     map: null,
     selectedUnit: null,
     type: "SET_LISTENER"
-}
-
-export function getValidPosition(actual: Cubic){
-    let valid: Array<Cubic> = [];
-    let last: Cubic = actual;
-    let pos: Cubic;
-    var row = [];
-    for(var k = 1; k <= storeStats.getState().movement; k++) {
-        row[k] = [];
-        for(var j = 0; k-1==0?j<1:j < row[k-1].length; j++){
-            if(k-1!=0){
-                last = row[k-1][j];
-            }
-            console.log("last: "+last.x+","+last.y+","+last.z);
-            for (var i = 0; i < cubic_directions.length; i++) {
-                pos = last;
-                pos.sum(cubic_directions[i]);
-                console.log("pos: "+pos.getPair().x+","+pos.getPair().y);
-                if(myIndexOf(store.getState().obstacles,pos.getPair())==-1 && myIndexOfCubic(valid,pos)==-1){
-                    row[k].push(pos);
-                    valid.push(pos);
-                    console.log("introduce "+valid[0].x+","+valid[0].y+","+valid[0].z);
-                }
-            }
-        }
-    }
-    return valid;
-}
-
-export function getValid(actual: Pair[]){
-    var valid = [];
-    for(var k = 0; k<actual.length; k++){
-        valid[k]=getValidPosition(new Cubic(actual[k]));
-    }
-    return valid;
 }
 
 //Y aquí se producirá el cambio
@@ -99,7 +63,6 @@ export const Reducer : Redux.Reducer<State> =
                 return {
                     position: state.position,
                     obstacles: state.obstacles,
-                    validPositions: getValid(state.position),
                     map: state.map,
                     selectedUnit: action.selectedUnit,
                     type: "SET_LISTENER"
@@ -108,7 +71,6 @@ export const Reducer : Redux.Reducer<State> =
                 return {
                     position: state.position,
                     obstacles: state.obstacles,
-                    validPositions: state.validPositions,
                     map: state.map,
                     selectedUnit: action.unit_id,
                     type: "MOVE"
@@ -117,7 +79,6 @@ export const Reducer : Redux.Reducer<State> =
                 return {
                     position: state.position,
                     obstacles: state.obstacles,
-                    validPositions: state.validPositions,
                     map: action.map,
                     selectedUnit: state.selectedUnit,
                     type: "SET_LISTENER"
