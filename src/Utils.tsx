@@ -40,13 +40,49 @@ export class Cubic {
     distanceTo(cubic : Cubic) {
         return Math.max(Math.abs(this.x - cubic.x), Math.abs(this.y - cubic.y), Math.abs(this.z - cubic.z));
     }
+
+    getPair(){
+        return new Pair(this.z+(this.x-(this.x&1))/2,this.x);
+    }
+
+    getX() {
+        return this.x;
+    }
+
+    getY() {
+        return this.y;
+    }
+
+    getZ(){
+        return this.z;
+    }
+
+    sum(cubic: Cubic){
+        this.x = this.x+cubic.getX();
+        this.y = this.y+cubic.getY();
+        this.z = this.z+cubic.getZ();
+    }
 }
+
+export var cubic_directions = [
+   new Cubic(new Pair(0,1)), new Cubic(new Pair(-1,1)), new Cubic(new Pair(-1,0)),
+   new Cubic(new Pair(-1,-1)), new Cubic(new Pair(0,-1)), new Cubic(new Pair(1,0))
+]
 
 //Debido a que indexOf de los array iguala con ===, no es posible saber si un objeto está dentro de un array sino es identicamente el mismo objeto
 //por eso se ha creado este método auxiliar para ayudar al cálculo
 export function myIndexOf(arr: Array<Pair>, o: Pair) {
     for (var i = 0; i < arr.length; i++) {
         if (arr[i].x == o.x && arr[i].y == o.y) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+export function myIndexOfCubic(arr: Array<Cubic>, o: Cubic) {
+    for (var i = 0; i < arr.length; i++) {
+        if (arr[i].x == o.x && arr[i].y == o.y && arr[i].z == o.z) {
             return i;
         }
     }
