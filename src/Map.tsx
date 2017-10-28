@@ -1,11 +1,11 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
-import { store, saveState } from './Store';
+import { store, storeStats, saveState } from './Store';
 import { Actions, State, InitialState, Reducer } from './GameState';
 import { Cell } from './Cell';
-import { Unit } from './Unit';
-import { Pair } from './Utils';
+import { Unit, Stats, InitialStats} from './Unit';
+import { Pair, Cubic, myIndexOf } from './Utils';
 
 /** Representa el mapa que contendrá las unidades y las casillas **/
 export class Map extends React.Component<any, any> {
@@ -55,6 +55,7 @@ export class Map extends React.Component<any, any> {
 
         var column: number = Math.floor(x/(3/4*width)); // Primero, encontramos la columna aproximada, dividiendo la posición por 3/4 la anchura (debido a los siguientes cálculos)
         var row: number; // Definimos el número de fila.
+
         var isOdd = column%2==1; // Comprobamos si la columna de hexes es impar, ya que estará bajada por la mitad de la altura
         switch(isOdd) {
             case true:
@@ -112,11 +113,31 @@ export class Map extends React.Component<any, any> {
             }
         }
 
-        // Finalmente, llamamos al método correspondiente:
 
-        store.dispatch(Actions.generateChangeUnitPos(0, new Pair(row, column)));
-        // Forzamos una actualización del estado para que se renderize el mapa.
-        this.setState(this.state);
+        //Guardamos la posición actual y la nueva posición
+
+        let newPosition: Pair = new Pair(row,column);
+        let unitIndex: number = myIndexOf(store.getState().position, newPosition);
+        //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
+        if(unitIndex!= -1 && store.getState().type == "SET_LISTENER"){
+            saveState(Actions.generateMove(unitIndex));
+        //Si hace clic en una possición exterior, mantieene el estado de en movimiento (seleccionado) y sigue almacenando la unidad seleccionada
+        }else if((newPosition.x<0 || newPosition.x>this.props.horizontal || newPosition.y<0 || newPosition.y>this.props.vertical) && store.getState().type == "MOVE"){
+            saveState(Actions.generateMove(store.getState().selectedUnit));
+        //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
+        }else if(unitIndex==-1 && store.getState().type == "MOVE"){
+            let actualPosition: Pair = store.getState().position[store.getState().selectedUnit];
+            // Transformamos primero a cúbica la posición de ambos:
+            let cubicActual : Cubic = new Cubic(actualPosition);
+            let cubicNew : Cubic = new Cubic(newPosition);
+            //Si la distancia entre la nueva posición y la actual es menor al limite de movimiento entonces se realizará el movimiento
+            if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement){
+                //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
+                saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null));
+            }
+        }else{
+            saveState(Actions.generateSetListener(this));
+        }
     }
 
     // Calcula si dado los datos del circulo y  un punto cualquiuera, el punto cualquiera está dentro del círculo
@@ -147,19 +168,42 @@ export class Map extends React.Component<any, any> {
         var accum2 = [];
         this.state.cells[num_row] = new Array<Cell>(this.props.horizontal);
         // Este bucle iterará hasta el número de celdas horizontales especificado en el props.
-        for(var j = num_row%2==0?0:1; j <= this.props.horizontal; j = j+2) { // Incrementamos en 2 porque el elemento entre cada hex tendrá el valor j + 1.
+        for(var j = num_row%2==0?0:1; j <= this.props.vertical; j = j+2) { // Incrementamos en 2 porque el elemento entre cada hex tendrá el valor j + 1.
             let column = j;
             let row = num_row%2==0?num_row/2:Math.floor(num_row/2);
-            if(column == store.getState().position.y && row == store.getState().position.x){
-                this.state.cells[row][column] =
+            let pos = new Pair(row, column);
+            //Si está incluida en la lista de posiciones de unidades (el indice obtenido es -1) entonces se añade una casilla de unidad
+            if (myIndexOf(store.getState().position, pos)!=-1){
+                this.state.cells[row][column] = <Cell vertical={row} horizontal={column} />
                 accum2.push(
-                    <div className="cell">
-                        <Unit horizontal={j} vertical={num_row} />
-                    </div>
+                    <Unit horizontal={column} vertical={row}/>
                 );
+            //Si está en modo seleccionado se usará otra lógica es necesario llamarlo despues de la unidad sino las casillas de unidades al generarse se pondran en amarillo
+            }else if(store.getState().selectedUnit!=null){
+                let actualPosition: Pair = store.getState().position[store.getState().selectedUnit];
+                // Convertimos la posición en cúbica
+                let cubicActual : Cubic = new Cubic(actualPosition);
+                let cubicNew : Cubic = new Cubic(pos);
+                //Si la distancia es menor o igual a la distancia máxima entonces son posiciones validas y se seleccionaran
+                if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement){
+                    var cell = <Cell vertical={row} horizontal={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                    this.state.cells[row][column] = cell;
+                    //Para no añadir una nueva clase de celda seleccionada simplemente hacemos esto
+                    accum2.push(
+                        <div className="cell">
+                            <img id={"hex"+column+"_"+row} src="imgs/hex_base_selected.png" />
+                        </div>
+                    );
+                //Es necesario hacer este else porque al entrar en este else if no podrá ejecutar el else exterior
+                }else{
+                    var cell = <Cell vertical={row} horizontal={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                    this.state.cells[row][column] = cell;
+                    accum2.push(cell);
+                }
+            //En caso de que no sea nada de lo anterior se añadirá una casilla normal y corriente
             }else{
                 // Se introducirá el elemento en una lista
-                var cell = <Cell vertical={column} horizontal={row} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                var cell = <Cell vertical={row} horizontal={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                 this.state.cells[row][column] = cell;
                 accum2.push(cell);
             }

@@ -10,29 +10,45 @@ export class Unit extends React.Component<any, any> {
         super(props);
     }
 
+    //Con una variable externa se podría hacer que haya o no sprite de montaña etc
+    //TODO En la id de unit debería ir la id de unit pero más adelante se añadirá
     render() {
         return (
-            <img id={"hex"+this.props.horizontal+"_"+this.props.vertical} src="imgs/unit.png" />
+            <div className={"cell"}>
+                <img id={"hex"+this.props.horizontal+"_"+this.props.vertical} src="imgs/hex_base.png" />
+                <div className ={"unit"}>
+                    <img id={"unit"+this.props.horizontal+"_"+this.props.vertical} src="imgs/unit.png" />
+                </div>
+            </div>
+
         );
     }
 
-    /*
-    onMouseOver(event: React.MouseEvent<HTMLElement>) {
-        let actualPosition : Pair = store.getState().position;
-        let newPosition: Pair;
-        if(actualPosition.x == 2) {
-            if(actualPosition.y == 2) {
-                newPosition = new Pair(0,0);
-            } else {
-                newPosition = new Pair(0, actualPosition.y+1);
-            }
-        } else {
-            newPosition = new Pair(actualPosition.x+1, actualPosition.y);
-        }
+}
 
-        console.log("X: "+newPosition.x);
-        console.log("Y: "+newPosition.y);
-        saveState(Actions.generateChangeUnitPos(0, newPosition));
+//Estos son los stats de las unidades
+export type Stats = {
+    readonly movement: number,
+    readonly type: string
+}
+
+//Al inicio serán estos, el tipo nos sirve para identificar la situacion, ejemplo, con buffo de ataque etc.
+export const InitialStats: Stats = {
+    movement: 1,
+    type: "NONE"
+}
+
+//En principio no se realizarán cambios ya que solo nos centraremos en que el movimiento funcione
+export const ReducerStats : Redux.Reducer<Stats> =
+    (state: Stats = InitialStats, action: Redux.AnyAction) => {
+        //Dependiendo del tipo se cambiarán las variables del estado
+        switch(action.type) {
+            case "NONE":
+                return {
+                    movement: state.movement,
+                    type: "NONE"
+                };
+            default:
+                return state;
     }
-    */
 }
