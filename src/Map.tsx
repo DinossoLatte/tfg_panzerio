@@ -6,6 +6,7 @@ import { Actions, State, InitialState, Reducer } from './GameState';
 import { Cell } from './Cell';
 import { Unit, Stats, InitialStats} from './Unit';
 import { Pair, Cubic, myIndexOf } from './Utils';
+import { Cursor } from './Cursor';
 
 /** Representa el mapa que contendrá las unidades y las casillas **/
 export class Map extends React.Component<any, any> {
@@ -36,8 +37,53 @@ export class Map extends React.Component<any, any> {
     }
 
     onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
-        if(keyEvent.keyCode == 27) { // Esc == 27
-            this.props.parentObject.changeGameState(0); // Retornamos al menu.
+        let keyCode = keyEvent.keyCode;
+        let cursorPosition, newCursorPosition : Pair;
+        console.log("KeyCode: "+keyCode);
+        switch(keyCode) {
+            case 27:
+                this.props.parentObject.changeGameState(0); // Retornamos al menu.
+                break;
+            // Los siguientes casos corresponden con las teclas del numpad, para mover el cursor
+            case 97:
+                // La tecla 1 del numpad (-1,+1)
+                // Primero, obtenemos la posición de la casilla
+                cursorPosition = store.getState().cursorPosition;
+                // Crearemos una nueva posición resultado
+                newCursorPosition = new Pair(cursorPosition.x - 1, cursorPosition.y + (cursorPosition.x&1?1:0));
+                // Llamamos a la acción para cambiarlo
+                saveState(Actions.generateCursorMovement(newCursorPosition));
+                break;
+            case 98:
+                // La tecla 2 del numpad (0,+1)
+                cursorPosition = store.getState().cursorPosition;
+                newCursorPosition = new Pair(cursorPosition.x, cursorPosition.y + 1);
+                saveState(Actions.generateCursorMovement(newCursorPosition));
+                break;
+            case 99:
+                // La tecla 3 del numpad (+1,+1)
+                cursorPosition = store.getState().cursorPosition;
+                newCursorPosition = new Pair(cursorPosition.x + 1, cursorPosition.y + (cursorPosition.x&1?1:0));
+                saveState(Actions.generateCursorMovement(newCursorPosition));
+                break;
+            case 103:
+                // La tecla 7 del numpad (-1,-1)
+                cursorPosition = store.getState().cursorPosition;
+                newCursorPosition = new Pair(cursorPosition.x - 1, cursorPosition.y - (cursorPosition.x&1?0:1));
+                saveState(Actions.generateCursorMovement(newCursorPosition));
+                break;
+            case 104:
+                // La tecla 8 del numpad (0, -1)
+                cursorPosition = store.getState().cursorPosition;
+                newCursorPosition = new Pair(cursorPosition.x, cursorPosition.y - 1);
+                saveState(Actions.generateCursorMovement(newCursorPosition));
+                break;
+            case 105:
+                // La tecla 9 del numpad (+1, -1)
+                cursorPosition = store.getState().cursorPosition;
+                newCursorPosition = new Pair(cursorPosition.x + 1, cursorPosition.y - (cursorPosition.x&1?0:1));
+                saveState(Actions.generateCursorMovement(newCursorPosition));
+                break;
         }
     }
 
@@ -171,7 +217,8 @@ export class Map extends React.Component<any, any> {
         for(var j = num_row%2==0?0:1; j <= this.props.vertical; j = j+2) { // Incrementamos en 2 porque el elemento entre cada hex tendrá el valor j + 1.
             let column = j;
             let row = num_row%2==0?num_row/2:Math.floor(num_row/2);
-            let pos = new Pair(row, column);
+            let pos = new Pair(column, row);
+            console.log("CursorPosition: ("+store.getState().cursorPosition.x+", "+store.getState().cursorPosition.y+")");
             //Si está incluida en la lista de posiciones de unidades (el indice obtenido es -1) entonces se añade una casilla de unidad
             if (myIndexOf(store.getState().position, pos)!=-1){
                 this.state.cells[row][column] = <Cell vertical={row} horizontal={column} />
@@ -200,7 +247,6 @@ export class Map extends React.Component<any, any> {
                     this.state.cells[row][column] = cell;
                     accum2.push(cell);
                 }
-            //En caso de que no sea nada de lo anterior se añadirá una casilla normal y corriente
             }else{
                 // Se introducirá el elemento en una lista
                 var cell = <Cell vertical={row} horizontal={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.

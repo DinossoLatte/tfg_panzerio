@@ -2,6 +2,9 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
 
+import { Cursor } from './Cursor';
+import { store } from './Store';
+
 /**
     Esta clase consiste en la representación de una casilla dentro del mapa
     @constructor Incluye los atributos HTML: horizontal y vertical.
@@ -15,16 +18,17 @@ class Cell extends React.Component<any, any> {
 
     /** Renderiza el objeto **/
     render() {
+        // Comprobamos si la casilla actual contiene el cursor, primero obteniendo su posición
+        let positionCursor = store.getState().cursorPosition;
+        // Despues comprobando que esta casilla esté en esa posición
+        let cursor = positionCursor.x == this.props.horizontal && positionCursor.y == this.props.vertical?<Cursor />:null;
+        // Le añadiremos el resultado de la comprobación anterior.
         return (
-            <div className="cell">
-                <img id={"hex"+this.props.horizontal+"_"+this.props.vertical} src="imgs/hex_base.png" />
-            </div>
+                <div className="div_cell">
+                    <img className="cell" id={"hex"+this.props.horizontal+"_"+this.props.vertical} src="imgs/hex_base.png" />
+                    {cursor}
+                </div>
         );
-    }
-
-    /** Placeholder, contendrá la lógica de movimiento y otros **/
-    public onClick() {
-        window.alert("Clicked on ("+this.props.horizontal+", "+this.props.vertical+")");
     }
 }
 

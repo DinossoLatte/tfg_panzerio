@@ -22,6 +22,10 @@ export class Pair {
     setY(y: any) {
         this.y = y;
     }
+
+    public equals(pair: Pair): boolean {
+        return this.x == pair.x && this.y == pair.y;
+    }
 }
 
 /* Representación cúbica del hexágono */
