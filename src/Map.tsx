@@ -6,6 +6,7 @@ import { Actions, State, InitialState, Reducer } from './GameState';
 import { Cell } from './Cell';
 import { Unit, Stats, InitialStats} from './Unit';
 import { Pair, Cubic, myIndexOf } from './Utils';
+import { Cursor } from './Cursor';
 
 /** Representa el mapa que contendrá las unidades y las casillas **/
 export class Map extends React.Component<any, any> {
@@ -36,8 +37,58 @@ export class Map extends React.Component<any, any> {
     }
 
     onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
-        if(keyEvent.keyCode == 27) { // Esc == 27
-            this.props.parentObject.changeGameState(0); // Retornamos al menu.
+        let keyCode = keyEvent.keyCode;
+        let cursorPosition, newCursorPosition : Pair;
+        console.log("KeyCode: "+keyCode);
+        switch(keyCode) {
+            case 27:
+                this.props.parentObject.changeGameState(0); // Retornamos al menu.
+                break;
+            // Los siguientes casos corresponden con las teclas del numpad, para mover el cursor
+            case 97:
+                // La tecla 1 del numpad (-1,+1)
+                // Primero, obtenemos la posición de la casilla
+                cursorPosition = store.getState().cursorPosition;
+                // Crearemos una nueva posición resultado
+                newCursorPosition = new Pair(cursorPosition.x - 1, cursorPosition.y + (cursorPosition.x&1?1:0));
+                // Llamamos a la acción para cambiarlo
+                saveState(Actions.generateCursorMovement(newCursorPosition));
+                break;
+            case 98:
+                // La tecla 2 del numpad (0,+1)
+                cursorPosition = store.getState().cursorPosition;
+                newCursorPosition = new Pair(cursorPosition.x, cursorPosition.y + 1);
+                saveState(Actions.generateCursorMovement(newCursorPosition));
+                break;
+            case 99:
+                // La tecla 3 del numpad (+1,+1)
+                cursorPosition = store.getState().cursorPosition;
+                newCursorPosition = new Pair(cursorPosition.x + 1, cursorPosition.y + (cursorPosition.x&1?1:0));
+                saveState(Actions.generateCursorMovement(newCursorPosition));
+                break;
+            case 103:
+                // La tecla 7 del numpad (-1,-1)
+                cursorPosition = store.getState().cursorPosition;
+                newCursorPosition = new Pair(cursorPosition.x - 1, cursorPosition.y - (cursorPosition.x&1?0:1));
+                saveState(Actions.generateCursorMovement(newCursorPosition));
+                break;
+            case 104:
+                // La tecla 8 del numpad (0, -1)
+                cursorPosition = store.getState().cursorPosition;
+                newCursorPosition = new Pair(cursorPosition.x, cursorPosition.y - 1);
+                saveState(Actions.generateCursorMovement(newCursorPosition));
+                break;
+            case 105:
+                // La tecla 9 del numpad (+1, -1)
+                cursorPosition = store.getState().cursorPosition;
+                newCursorPosition = new Pair(cursorPosition.x + 1, cursorPosition.y - (cursorPosition.x&1?0:1));
+                saveState(Actions.generateCursorMovement(newCursorPosition));
+                break;
+            case 32:
+                // Realizar el click en la posición
+                cursorPosition = store.getState().cursorPosition;
+                this.clickAction(cursorPosition.x, cursorPosition.y);
+                break;
         }
     }
 
@@ -95,8 +146,6 @@ export class Map extends React.Component<any, any> {
             var distanceCircle = this.calculateDistance(centerX, centerY, x, y);
             var distancePossibleHex = this.calculateDistance(comparingHexX, comparingHexY, x, y);
             // Si la distancia del hex posible es menor al del círculo, entonces cambiamos el row y column
-            console.log("Dist. original: "+distanceCircle);
-            console.log("Dist. posible: "+distancePossibleHex);
             if(distancePossibleHex < distanceCircle) {
                 // Debido al sistema de identificación usado, es necesario añadir reglas si el hex es impar o par.
                 if(isOdd) {
@@ -116,8 +165,13 @@ export class Map extends React.Component<any, any> {
 
         //Guardamos la posición actual y la nueva posición
 
-        let newPosition: Pair = new Pair(row,column);
+        this.clickAction(column, row); // TODO Solucionar esto!
+    }
+
+    clickAction(row: number, column: number) {
+        let newPosition: Pair = new Pair(column,row);
         let unitIndex: number = myIndexOf(store.getState().position, newPosition);
+
         //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
         if(unitIndex!= -1 && store.getState().type == "SET_LISTENER"){
             saveState(Actions.generateMove(unitIndex));
@@ -186,21 +240,16 @@ export class Map extends React.Component<any, any> {
                 let cubicNew : Cubic = new Cubic(pos);
                 //Si la distancia es menor o igual a la distancia máxima entonces son posiciones validas y se seleccionaran
                 if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement){
-                    var cell = <Cell vertical={row} horizontal={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                    var cell = <Cell vertical={row} horizontal={column} selected={true} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                     this.state.cells[row][column] = cell;
                     //Para no añadir una nueva clase de celda seleccionada simplemente hacemos esto
-                    accum2.push(
-                        <div className="cell">
-                            <img id={"hex"+column+"_"+row} src="imgs/hex_base_selected.png" />
-                        </div>
-                    );
+                    accum2.push(cell);
                 //Es necesario hacer este else porque al entrar en este else if no podrá ejecutar el else exterior
                 }else{
                     var cell = <Cell vertical={row} horizontal={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                     this.state.cells[row][column] = cell;
                     accum2.push(cell);
                 }
-            //En caso de que no sea nada de lo anterior se añadirá una casilla normal y corriente
             }else{
                 // Se introducirá el elemento en una lista
                 var cell = <Cell vertical={row} horizontal={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.

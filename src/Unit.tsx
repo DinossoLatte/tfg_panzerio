@@ -1,9 +1,11 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
+
 import { Pair } from './Utils';
 import { Actions } from './GameState';
 import { store, saveState } from './Store';
+import { Cursor } from './Cursor';
 
 export class Unit extends React.Component<any, any> {
     constructor(props: any) {
@@ -13,14 +15,19 @@ export class Unit extends React.Component<any, any> {
     //Con una variable externa se podría hacer que haya o no sprite de montaña etc
     //TODO En la id de unit debería ir la id de unit pero más adelante se añadirá
     render() {
+        // Al igual que en Cell, primero obtenemos la posición del cursor
+        let positionCursor = store.getState().cursorPosition;
+        // Despues comprobando que esta casilla esté en esa posición
+        let cursor = positionCursor.x == this.props.horizontal && positionCursor.y == this.props.vertical?<Cursor />:null;
+        // Le añadiremos el resultado de la comprobación anterior.
         return (
-            <div className={"cell"}>
-                <img id={"hex"+this.props.horizontal+"_"+this.props.vertical} src="imgs/hex_base.png" />
-                <div className ={"unit"}>
+            <div className="div_cell">
+                <img className="cell" id={"hex"+this.props.horizontal+"_"+this.props.vertical} src="imgs/hex_base.png" />
+                <div className ="unit">
                     <img id={"unit"+this.props.horizontal+"_"+this.props.vertical} src="imgs/unit.png" />
                 </div>
+                {cursor}
             </div>
-
         );
     }
 
