@@ -84,6 +84,11 @@ export class Map extends React.Component<any, any> {
                 newCursorPosition = new Pair(cursorPosition.x + 1, cursorPosition.y - (cursorPosition.x&1?0:1));
                 saveState(Actions.generateCursorMovement(newCursorPosition));
                 break;
+            case 32:
+                // Realizar el click en la posición
+                cursorPosition = store.getState().cursorPosition;
+                this.clickAction(cursorPosition.x, cursorPosition.y);
+                break;
         }
     }
 
@@ -141,8 +146,6 @@ export class Map extends React.Component<any, any> {
             var distanceCircle = this.calculateDistance(centerX, centerY, x, y);
             var distancePossibleHex = this.calculateDistance(comparingHexX, comparingHexY, x, y);
             // Si la distancia del hex posible es menor al del círculo, entonces cambiamos el row y column
-            console.log("Dist. original: "+distanceCircle);
-            console.log("Dist. posible: "+distancePossibleHex);
             if(distancePossibleHex < distanceCircle) {
                 // Debido al sistema de identificación usado, es necesario añadir reglas si el hex es impar o par.
                 if(isOdd) {
@@ -162,8 +165,16 @@ export class Map extends React.Component<any, any> {
 
         //Guardamos la posición actual y la nueva posición
 
+        this.clickAction(column, row); // TODO Solucionar esto!
+    }
+
+    clickAction(row: number, column: number) {
         let newPosition: Pair = new Pair(row,column);
         let unitIndex: number = myIndexOf(store.getState().position, newPosition);
+        console.log("Units: "+store.getState().position);
+        console.log("Selected: "+store.getState().selectedUnit);
+        console.log("Position: ("+newPosition.x+", "+newPosition.y+")");
+
         //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
         if(unitIndex!= -1 && store.getState().type == "SET_LISTENER"){
             saveState(Actions.generateMove(unitIndex));
@@ -218,7 +229,6 @@ export class Map extends React.Component<any, any> {
             let column = j;
             let row = num_row%2==0?num_row/2:Math.floor(num_row/2);
             let pos = new Pair(column, row);
-            console.log("CursorPosition: ("+store.getState().cursorPosition.x+", "+store.getState().cursorPosition.y+")");
             //Si está incluida en la lista de posiciones de unidades (el indice obtenido es -1) entonces se añade una casilla de unidad
             if (myIndexOf(store.getState().position, pos)!=-1){
                 this.state.cells[row][column] = <Cell vertical={row} horizontal={column} />
@@ -233,14 +243,10 @@ export class Map extends React.Component<any, any> {
                 let cubicNew : Cubic = new Cubic(pos);
                 //Si la distancia es menor o igual a la distancia máxima entonces son posiciones validas y se seleccionaran
                 if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement){
-                    var cell = <Cell vertical={row} horizontal={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                    var cell = <Cell vertical={row} horizontal={column} selected={true} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                     this.state.cells[row][column] = cell;
                     //Para no añadir una nueva clase de celda seleccionada simplemente hacemos esto
-                    accum2.push(
-                        <div className="cell">
-                            <img id={"hex"+column+"_"+row} src="imgs/hex_base_selected.png" />
-                        </div>
-                    );
+                    accum2.push(cell);
                 //Es necesario hacer este else porque al entrar en este else if no podrá ejecutar el else exterior
                 }else{
                     var cell = <Cell vertical={row} horizontal={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.

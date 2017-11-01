@@ -25,7 +25,7 @@ class Cell extends React.Component<any, any> {
         // Le añadiremos el resultado de la comprobación anterior.
         return (
                 <div className="div_cell">
-                    <img className="cell" id={"hex"+this.props.horizontal+"_"+this.props.vertical} src="imgs/hex_base.png" />
+                    <img className="cell" id={"hex"+this.props.horizontal+"_"+this.props.vertical} src={this.props.selected?"imgs/hex_base_selected.png":"imgs/hex_base.png"} />
                     {cursor}
                 </div>
         );

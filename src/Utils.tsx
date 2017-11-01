@@ -26,6 +26,10 @@ export class Pair {
     public equals(pair: Pair): boolean {
         return this.x == pair.x && this.y == pair.y;
     }
+
+    public toString() : string {
+        return "("+this.x+", "+this.y+")";
+    }
 }
 
 /* Representación cúbica del hexágono */
@@ -43,6 +47,10 @@ export class Cubic {
     /* Calcula la distancia Manhattan */
     distanceTo(cubic : Cubic) {
         return Math.max(Math.abs(this.x - cubic.x), Math.abs(this.y - cubic.y), Math.abs(this.z - cubic.z));
+    }
+
+    public toString() : string {
+        return "("+this.x+", "+this.y+", "+this.z+")";
     }
 }
 
