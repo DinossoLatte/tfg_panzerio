@@ -24,10 +24,7 @@ body {
     margin-left: 135px;
 }
 
-.cellRowOdd * {
-}
-
-.cellRow .div_cell .cell{
+.cellRow .div_cell *{
     width: auto;
     display: inline-block;
     margin-bottom: -39px;
@@ -47,11 +44,9 @@ body {
 }
 
 .selector {
-    display: inline;
-    margin-bottom: 0px;
-    padding-right: 0px;
+    display: block;
     position: relative;
-    left: -269px;
+    left: -224px;
     top: -1px;
-    margin-right: -268px;
+    margin-right: -223.7px;
 }

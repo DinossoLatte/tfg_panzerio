@@ -169,11 +169,8 @@ export class Map extends React.Component<any, any> {
     }
 
     clickAction(row: number, column: number) {
-        let newPosition: Pair = new Pair(row,column);
+        let newPosition: Pair = new Pair(column,row);
         let unitIndex: number = myIndexOf(store.getState().position, newPosition);
-        console.log("Units: "+store.getState().position);
-        console.log("Selected: "+store.getState().selectedUnit);
-        console.log("Position: ("+newPosition.x+", "+newPosition.y+")");
 
         //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
         if(unitIndex!= -1 && store.getState().type == "SET_LISTENER"){
@@ -228,7 +225,7 @@ export class Map extends React.Component<any, any> {
         for(var j = num_row%2==0?0:1; j <= this.props.vertical; j = j+2) { // Incrementamos en 2 porque el elemento entre cada hex tendrá el valor j + 1.
             let column = j;
             let row = num_row%2==0?num_row/2:Math.floor(num_row/2);
-            let pos = new Pair(column, row);
+            let pos = new Pair(row, column);
             //Si está incluida en la lista de posiciones de unidades (el indice obtenido es -1) entonces se añade una casilla de unidad
             if (myIndexOf(store.getState().position, pos)!=-1){
                 this.state.cells[row][column] = <Cell vertical={row} horizontal={column} />
