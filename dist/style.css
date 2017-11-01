@@ -24,14 +24,17 @@ body {
     margin-left: 135px;
 }
 
-.cellRowOdd * {
-}
-
-.cellRow * {
+.cellRow .div_cell *{
     width: auto;
     display: inline-block;
     margin-bottom: -39px;
+    padding-right: 45px;
+}
+
+.cellRow .div_cell {
+    width: auto;
     display: inline-block;
+    margin-bottom: -39px;
     padding-right: 45px;
 }
 
@@ -43,4 +46,12 @@ body {
 .obstacle {
     margin-left: -230px;
     margin-right: -40px;
+}
+
+.selector {
+    display: block;
+    position: relative;
+    left: -224px;
+    top: -1px;
+    margin-right: -223.7px;
 }

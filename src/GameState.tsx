@@ -26,6 +26,13 @@ export class Actions {
         };
     }
 
+    static generateCursorMovement(new_position: Pair) : Redux.AnyAction {
+        return {
+            type: "CURSOR_MOVE",
+            position: new_position
+        }
+    }
+
     static generateSetListener(map: Map) : Redux.AnyAction {
         //Este es el estado de espera para seleccionar una unidad
         return {
@@ -39,6 +46,7 @@ export class Actions {
 export type State = {
     readonly position: Array<Pair>,
     readonly obstacles: Array<Pair>,
+    readonly cursorPosition: Pair,
     readonly map: Map,
     readonly selectedUnit: number,
     readonly type: string
@@ -48,6 +56,7 @@ export type State = {
 export const InitialState: State = {
     position: [new Pair (0,0), new Pair(0,1), new Pair (1,0)],
     obstacles: [new Pair (2,2), new Pair (2,1)],
+    cursorPosition: new Pair(0,0),
     map: null,
     selectedUnit: null,
     type: "SET_LISTENER"
@@ -65,6 +74,7 @@ export const Reducer : Redux.Reducer<State> =
                     obstacles: state.obstacles,
                     map: state.map,
                     selectedUnit: action.selectedUnit,
+                    cursorPosition: state.cursorPosition,
                     type: "SET_LISTENER"
                 };
             case "MOVE":
@@ -73,6 +83,7 @@ export const Reducer : Redux.Reducer<State> =
                     obstacles: state.obstacles,
                     map: state.map,
                     selectedUnit: action.unit_id,
+                    cursorPosition: state.cursorPosition,
                     type: "MOVE"
                 };
             case "SET_LISTENER":
@@ -81,7 +92,16 @@ export const Reducer : Redux.Reducer<State> =
                     obstacles: state.obstacles,
                     map: action.map,
                     selectedUnit: state.selectedUnit,
+                    cursorPosition: state.cursorPosition,
                     type: "SET_LISTENER"
+                };
+            case "CURSOR_MOVE":
+                return {
+                    position: state.position,
+                    map: state.map,
+                    cursorPosition: action.position,
+                    selectedUnit: state.selectedUnit,
+                    type: state.type,
                 };
             default:
                 return state;

@@ -22,6 +22,14 @@ export class Pair {
     setY(y: any) {
         this.y = y;
     }
+
+    public equals(pair: Pair): boolean {
+        return this.x == pair.x && this.y == pair.y;
+    }
+
+    public toString() : string {
+        return "("+this.x+", "+this.y+")";
+    }
 }
 
 /* Representación cúbica del hexágono */
@@ -62,6 +70,10 @@ export class Cubic {
         this.y = this.y+cubic.getY();
         this.z = this.z+cubic.getZ();
     }
+
+    public toString() : string {
+        return "("+this.x+", "+this.y+", "+this.z+")";
+    }
 }
 
 export var cubic_directions = [
@@ -80,7 +92,7 @@ export function myIndexOf(arr: Array<Pair>, o: Pair) {
     return -1;
 }
 
-//IGual que el de arriba pero para cúbica
+//Igual que el de arriba pero para cúbica
 export function myIndexOfCubic(arr: Array<Cubic>, o: Cubic) {
     for (var i = 0; i < arr.length; i++) {
         if (arr[i].getX() == o.getX() && arr[i].getY() == o.getY() && arr[i].getZ() == o.getZ()) {
