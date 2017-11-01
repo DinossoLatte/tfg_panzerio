@@ -1,9 +1,12 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
-import { store, storeStats, saveState } from './Store';
+import { store, saveState, storeStats } from './Store';
 import { Actions, State, InitialState, Reducer } from './GameState';
 import { Cell } from './Cell';
+import { Obstacle } from './Obstacle';
+import { Unit } from './Unit';
+import { Pair, Cubic, myIndexOf, cubic_directions, myIndexOfCubic } from './Utils';
 import { Unit, Stats, InitialStats} from './Unit';
 import { Pair, Cubic, myIndexOf } from './Utils';
 import { Cursor } from './Cursor';
@@ -184,7 +187,9 @@ export class Map extends React.Component<any, any> {
             // Transformamos primero a cúbica la posición de ambos:
             let cubicActual : Cubic = new Cubic(actualPosition);
             let cubicNew : Cubic = new Cubic(newPosition);
+            //let validPositions: Array<Cubic> = this.getValidPosition(cubicActual);
             //Si la distancia entre la nueva posición y la actual es menor al limite de movimiento entonces se realizará el movimiento
+            //if(myIndexOfCubic(validPositions,cubicNew)!=-1){
             if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement){
                 //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
                 saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null));
@@ -193,7 +198,60 @@ export class Map extends React.Component<any, any> {
             saveState(Actions.generateSetListener(this));
         }
     }
+/*
+    getValidPosition(actual: Cubic){
+        let valid: Array<Cubic> = [];
+        let last: Cubic = actual;
+        let pos: Cubic;
+        let r: number = 0;
+        var row = [];
+        for(var k = 1; k <= storeStats.getState().movement; k++) {
+            row[k] = [];
+            console.log("k="+k);
+            if(k-1>0){
+                for(var j = 0; j < row[k-1].length; j++){
+                    last = row[k-1][j];
+                    console.log("j="+j);
+                    console.log("last: "+last.x+","+last.y+","+last.z);
+                    for (var i = 0; i < cubic_directions.length; i++) {
+                        console.log("i="+i);
+                        pos = last;
+                        pos.sum(cubic_directions[i]);
+                        console.log("pos: "+pos.getPair().x+","+pos.getPair().y);
+                        console.log("posCubic: "+pos.x+","+pos.y+","+pos.z);
+                        if(myIndexOf(store.getState().obstacles,pos.getPair())==-1 && myIndexOfCubic(valid,pos)==-1){
+                            console.log("obstacles: "+myIndexOf(store.getState().obstacles,pos.getPair()));
+                            console.log("valid: "+myIndexOfCubic(valid,pos));
+                            row[k].push(pos);
+                            valid.push(pos);
+                            console.log("introduceCubic "+valid[r].x+","+valid[r].y+","+valid[r].z);
+                            console.log("introduce "+valid[r].getPair().x+","+valid[r].getPair().y);
+                            r++;
+                        }
+                    }
+                }
+            }else{
+                for (var i = 0; i < cubic_directions.length; i++) {
+                    console.log("i="+i);
+                    pos = last;
+                    pos.sum(cubic_directions[i]);
+                    console.log("pos: "+pos.getPair().x+","+pos.getPair().y);
+                    console.log("posCubic: "+pos.x+","+pos.y+","+pos.z);
+                    console.log("obstacles: "+myIndexOf(store.getState().obstacles,pos.getPair()));
+                    console.log("valid: "+myIndexOfCubic(valid,pos));
+                    if(myIndexOf(store.getState().obstacles,pos.getPair())==-1 && myIndexOfCubic(valid,pos)==-1){
+                        row[k].push(pos);
+                        valid.push(pos);
+                        console.log("introduceCubic "+valid[r].x+","+valid[r].y+","+valid[r].z);
+                        console.log("introduce "+valid[0].x+","+valid[0].y+","+valid[0].z);
+                    }
+                }
+            }
 
+        }
+        return valid;
+    }
+*/
     // Calcula si dado los datos del circulo y  un punto cualquiuera, el punto cualquiera está dentro del círculo
     getInCircle(centerX: number, centerY: number, radius: number, x: number, y: number) {
         // Raiz cuadrada de la distancia vectorial entre el centro y el punto debe ser menor al radio
@@ -232,14 +290,20 @@ export class Map extends React.Component<any, any> {
                 accum2.push(
                     <Unit horizontal={column} vertical={row}/>
                 );
+            //Si es un obstáculo se colocará ahí
+            }else if(myIndexOf(store.getState().obstacles, pos)!=-1){
+                this.state.cells[row][column] = <Cell vertical={row} horizontal={column} />
+                accum2.push(
+                    <Obstacle horizontal={column} vertical={row}/>
+                );
             //Si está en modo seleccionado se usará otra lógica es necesario llamarlo despues de la unidad sino las casillas de unidades al generarse se pondran en amarillo
             }else if(store.getState().selectedUnit!=null){
                 let actualPosition: Pair = store.getState().position[store.getState().selectedUnit];
                 // Convertimos la posición en cúbica
                 let cubicActual : Cubic = new Cubic(actualPosition);
                 let cubicNew : Cubic = new Cubic(pos);
-                //Si la distancia es menor o igual a la distancia máxima entonces son posiciones validas y se seleccionaran
-                if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement){
+                //Si la distancia es menor o igual a la distancia máxima entonces son posiciones validas y se seleccionaran, además se comprueba que no sea un obstáculo
+                if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement && myIndexOf(store.getState().obstacles,pos)==-1){
                     var cell = <Cell vertical={row} horizontal={column} selected={true} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                     this.state.cells[row][column] = cell;
                     //Para no añadir una nueva clase de celda seleccionada simplemente hacemos esto

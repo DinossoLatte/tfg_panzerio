@@ -1,8 +1,10 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
+import { store, saveState } from './Store';
 import { Map } from './Map';
-import { Pair } from './Utils';
+import { Pair, Cubic, cubic_directions, myIndexOf, myIndexOfCubic} from './Utils';
+import { Unit } from './Unit';
 
 export class Actions {
     //Estos son los estados posibles
@@ -43,6 +45,7 @@ export class Actions {
 //Aquí declaramos las variables del estado
 export type State = {
     readonly position: Array<Pair>,
+    readonly obstacles: Array<Pair>,
     readonly cursorPosition: Pair,
     readonly map: Map,
     readonly selectedUnit: number,
@@ -52,6 +55,7 @@ export type State = {
 //El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
 export const InitialState: State = {
     position: [new Pair (0,0), new Pair(0,1), new Pair (1,0)],
+    obstacles: [new Pair (2,2), new Pair (2,1)],
     cursorPosition: new Pair(0,0),
     map: null,
     selectedUnit: null,
@@ -67,6 +71,7 @@ export const Reducer : Redux.Reducer<State> =
                 state.position[action.unit_id] = action.new_position;
                 return {
                     position: state.position,
+                    obstacles: state.obstacles,
                     map: state.map,
                     selectedUnit: action.selectedUnit,
                     cursorPosition: state.cursorPosition,
@@ -75,6 +80,7 @@ export const Reducer : Redux.Reducer<State> =
             case "MOVE":
                 return {
                     position: state.position,
+                    obstacles: state.obstacles,
                     map: state.map,
                     selectedUnit: action.unit_id,
                     cursorPosition: state.cursorPosition,
@@ -83,6 +89,7 @@ export const Reducer : Redux.Reducer<State> =
             case "SET_LISTENER":
                 return {
                     position: state.position,
+                    obstacles: state.obstacles,
                     map: action.map,
                     selectedUnit: state.selectedUnit,
                     cursorPosition: state.cursorPosition,

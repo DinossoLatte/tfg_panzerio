@@ -3,8 +3,8 @@ import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
 import { Map } from './Map';
 import { InitialState, Reducer, State } from './GameState';
-import { Pair } from './Utils';
-import { Unit, Stats, InitialStats, ReducerStats} from './Unit';
+import { Pair, Cubic } from './Utils';
+import { Unit, Stats, ReducerStats } from './Unit';
 
 export interface Store extends Redux.Store<State> {
     dispatch: Redux.Dispatch<State>
@@ -20,6 +20,7 @@ export function saveState(action: Redux.AnyAction) {
     // Refresca el mapa y el resto de variables del estado
     var map: Map = store.getState().map;
     var position: Array<Pair> = store.getState().position;
+    var obstacles: Array<Pair> = store.getState().obstacles;
     var selectedUnit: number = store.getState().selectedUnit;
     var cursorPosition: Pair = store.getState().cursorPosition;
     var type: string = store.getState().type;
