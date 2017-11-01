@@ -5,10 +5,8 @@ import { store, saveState, storeStats } from './Store';
 import { Actions, State, InitialState, Reducer } from './GameState';
 import { Cell } from './Cell';
 import { Obstacle } from './Obstacle';
-import { Unit } from './Unit';
 import { Pair, Cubic, myIndexOf, cubic_directions, myIndexOfCubic } from './Utils';
 import { Unit, Stats, InitialStats} from './Unit';
-import { Pair, Cubic, myIndexOf } from './Utils';
 import { Cursor } from './Cursor';
 
 /** Representa el mapa que contendrá las unidades y las casillas **/
@@ -168,11 +166,11 @@ export class Map extends React.Component<any, any> {
 
         //Guardamos la posición actual y la nueva posición
 
-        this.clickAction(column, row); // TODO Solucionar esto!
+        this.clickAction(row, column); // TODO Solucionar esto!
     }
 
     clickAction(row: number, column: number) {
-        let newPosition: Pair = new Pair(column,row);
+        let newPosition: Pair = new Pair(row,column);
         let unitIndex: number = myIndexOf(store.getState().position, newPosition);
 
         //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
@@ -190,7 +188,7 @@ export class Map extends React.Component<any, any> {
             //let validPositions: Array<Cubic> = this.getValidPosition(cubicActual);
             //Si la distancia entre la nueva posición y la actual es menor al limite de movimiento entonces se realizará el movimiento
             //if(myIndexOfCubic(validPositions,cubicNew)!=-1){
-            if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement){
+            if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement && myIndexOf(store.getState().obstacles, newPosition) == -1){
                 //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
                 saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null));
             }
@@ -286,15 +284,9 @@ export class Map extends React.Component<any, any> {
             let pos = new Pair(row, column);
             //Si está incluida en la lista de posiciones de unidades (el indice obtenido es -1) entonces se añade una casilla de unidad
             if (myIndexOf(store.getState().position, pos)!=-1){
-                this.state.cells[row][column] = <Cell vertical={row} horizontal={column} />
+                this.state.cells[row][column] = <Cell vertical={column} horizontal={row} />
                 accum2.push(
                     <Unit horizontal={column} vertical={row}/>
-                );
-            //Si es un obstáculo se colocará ahí
-            }else if(myIndexOf(store.getState().obstacles, pos)!=-1){
-                this.state.cells[row][column] = <Cell vertical={row} horizontal={column} />
-                accum2.push(
-                    <Obstacle horizontal={column} vertical={row}/>
                 );
             //Si está en modo seleccionado se usará otra lógica es necesario llamarlo despues de la unidad sino las casillas de unidades al generarse se pondran en amarillo
             }else if(store.getState().selectedUnit!=null){
@@ -304,19 +296,19 @@ export class Map extends React.Component<any, any> {
                 let cubicNew : Cubic = new Cubic(pos);
                 //Si la distancia es menor o igual a la distancia máxima entonces son posiciones validas y se seleccionaran, además se comprueba que no sea un obstáculo
                 if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement && myIndexOf(store.getState().obstacles,pos)==-1){
-                    var cell = <Cell vertical={row} horizontal={column} selected={true} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                    var cell = <Cell vertical={column} horizontal={row} selected={true} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                     this.state.cells[row][column] = cell;
                     //Para no añadir una nueva clase de celda seleccionada simplemente hacemos esto
                     accum2.push(cell);
                 //Es necesario hacer este else porque al entrar en este else if no podrá ejecutar el else exterior
                 }else{
-                    var cell = <Cell vertical={row} horizontal={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                    var cell = <Cell vertical={column} horizontal={row} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                     this.state.cells[row][column] = cell;
                     accum2.push(cell);
                 }
             }else{
                 // Se introducirá el elemento en una lista
-                var cell = <Cell vertical={row} horizontal={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                var cell = <Cell vertical={column} horizontal={row} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                 this.state.cells[row][column] = cell;
                 accum2.push(cell);
             }

@@ -98,6 +98,7 @@ export const Reducer : Redux.Reducer<State> =
             case "CURSOR_MOVE":
                 return {
                     position: state.position,
+                    obstacles: state.obstacles,
                     map: state.map,
                     cursorPosition: action.position,
                     selectedUnit: state.selectedUnit,
