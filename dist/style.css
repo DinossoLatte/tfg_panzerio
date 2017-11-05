@@ -44,10 +44,10 @@ body {
 }
 
 .obstacle {
+    position: relative;
     margin-left: -230px;
     margin-right: -40px;
 }
-
 .selector {
     display: block;
     position: relative;

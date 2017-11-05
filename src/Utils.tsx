@@ -1,34 +1,34 @@
 export class Pair {
-    x : any;
-    y : any;
+    row : any;
+    column : any;
 
     constructor(x: any, y: any) {
-        this.x = x;
-        this.y = y;
+        this.row = x;
+        this.column = y;
     }
 
-    getX() {
-        return this.x;
+    getColumn() {
+        return this.column;
     }
 
-    getY() {
-        return this.y;
+    getRow() {
+        return this.row;
     }
 
-    setX(x: any) {
-        this.x = x;
+    setColumn(x: any) {
+        this.column = x;
     }
 
-    setY(y: any) {
-        this.y = y;
+    setRow(y: any) {
+        this.row = y;
     }
 
     public equals(pair: Pair): boolean {
-        return this.x == pair.x && this.y == pair.y;
+        return this.row == pair.row && this.column == pair.column;
     }
 
     public toString() : string {
-        return "("+this.x+", "+this.y+")";
+        return "("+this.row+", "+this.column+")";
     }
 }
 
@@ -39,8 +39,8 @@ export class Cubic {
     z : number;
 
     constructor(pair : Pair) {
-        this.x = pair.y;
-        this.z = pair.x - (pair.y - (pair.y&1))/2
+        this.x = pair.row;
+        this.z = pair.column - (pair.row - (pair.row&1))/2
         this.y = -this.x-this.z;
     }
 
@@ -85,7 +85,7 @@ export var cubic_directions = [
 //por eso se ha creado este método auxiliar para ayudar al cálculo
 export function myIndexOf(arr: Array<Pair>, o: Pair) {
     for (var i = 0; i < arr.length; i++) {
-        if (arr[i].x == o.x && arr[i].y == o.y) {
+        if (arr[i].column == o.column && arr[i].row == o.row) {
             return i;
         }
     }
