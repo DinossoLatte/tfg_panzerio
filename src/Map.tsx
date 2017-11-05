@@ -51,45 +51,43 @@ export class Map extends React.Component<any, any> {
                 // Primero, obtenemos la posición de la casilla
                 cursorPosition = store.getState().cursorPosition;
                 // Crearemos una nueva posición resultado
-                newCursorPosition = new Pair(cursorPosition.column - 1, cursorPosition.row + (cursorPosition.column&1?1:0));
+                newCursorPosition = new Pair(cursorPosition.row + (cursorPosition.column&1?1:0), cursorPosition.column - 1);
                 // Llamamos a la acción para cambiarlo
-                saveState(Actions.generateCursorMovement(newCursorPosition));
                 break;
             case 98:
                 // La tecla 2 del numpad (0,+1)
                 cursorPosition = store.getState().cursorPosition;
-                newCursorPosition = new Pair(cursorPosition.column, cursorPosition.row + 1);
-                saveState(Actions.generateCursorMovement(newCursorPosition));
+                newCursorPosition = new Pair(cursorPosition.row + 1, cursorPosition.column);
                 break;
             case 99:
                 // La tecla 3 del numpad (+1,+1)
                 cursorPosition = store.getState().cursorPosition;
-                newCursorPosition = new Pair(cursorPosition.column + 1, cursorPosition.row + (cursorPosition.column&1?1:0));
-                saveState(Actions.generateCursorMovement(newCursorPosition));
+                newCursorPosition = new Pair(cursorPosition.row + (cursorPosition.column&1?1:0), cursorPosition.column + 1);
                 break;
             case 103:
                 // La tecla 7 del numpad (-1,-1)
                 cursorPosition = store.getState().cursorPosition;
-                newCursorPosition = new Pair(cursorPosition.column - 1, cursorPosition.row - (cursorPosition.column&1?0:1));
-                saveState(Actions.generateCursorMovement(newCursorPosition));
+                newCursorPosition = new Pair(cursorPosition.row - (cursorPosition.column&1?0:1), cursorPosition.column - 1);
                 break;
             case 104:
                 // La tecla 8 del numpad (0, -1)
                 cursorPosition = store.getState().cursorPosition;
-                newCursorPosition = new Pair(cursorPosition.column, cursorPosition.row - 1);
-                saveState(Actions.generateCursorMovement(newCursorPosition));
+                newCursorPosition = new Pair(cursorPosition.row - 1, cursorPosition.column);
                 break;
             case 105:
                 // La tecla 9 del numpad (+1, -1)
                 cursorPosition = store.getState().cursorPosition;
-                newCursorPosition = new Pair(cursorPosition.column + 1, cursorPosition.row - (cursorPosition.column&1?0:1));
-                saveState(Actions.generateCursorMovement(newCursorPosition));
+                newCursorPosition = new Pair(cursorPosition.row - (cursorPosition.column&1?0:1), cursorPosition.column + 1);
                 break;
             case 32:
                 // Realizar el click en la posición
                 cursorPosition = store.getState().cursorPosition;
-                this.clickAction(cursorPosition.column, cursorPosition.row);
+                this.clickAction(cursorPosition.row, cursorPosition.column);
                 break;
+        }
+        // Si puede hacerse el movimiento, realiza la acción
+        if(newCursorPosition.row >= 0 && newCursorPosition.column >= 0 && newCursorPosition.column <= this.props.vertical && newCursorPosition.row <= this.props.horizontal) {
+            saveState(Actions.generateCursorMovement(newCursorPosition));
         }
     }
 
@@ -166,10 +164,10 @@ export class Map extends React.Component<any, any> {
 
         //Guardamos la posición actual y la nueva posición
 
-        this.clickAction(column, row); // TODO Solucionar esto!
+        this.clickAction(row, column); // TODO Solucionar esto!
     }
 
-    clickAction(column: number, row: number) {
+    clickAction(row: number, column: number) {
         let newPosition: Pair = new Pair(column,row);
         let unitIndex: number = myIndexOf(store.getState().position, newPosition);
 
