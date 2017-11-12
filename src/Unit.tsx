@@ -41,7 +41,7 @@ export type Stats = {
 
 //Al inicio serán estos, el tipo nos sirve para identificar la situacion, ejemplo, con buffo de ataque etc.
 export const InitialStats: Stats = {
-    movement: 1,
+    movement: 2,
     type: "NONE"
 }
 

@@ -4,7 +4,7 @@ import * as Redux from 'redux';
 import { store, saveState } from './Store';
 import { Map } from './Map';
 import { Pair, Cubic, cubic_directions, myIndexOf, myIndexOfCubic} from './Utils';
-import { Unit } from './Unit';
+import { Unit, InitialStats } from './Unit';
 
 export class Actions {
     //Estos son los estados posibles
@@ -45,6 +45,7 @@ export class Actions {
 //Aquí declaramos las variables del estado
 export type State = {
     readonly position: Array<Pair>,
+    readonly visitables: Array<Pair>,
     readonly obstacles: Array<Pair>,
     readonly cursorPosition: Pair,
     readonly map: Map,
@@ -55,7 +56,8 @@ export type State = {
 //El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
 export const InitialState: State = {
     position: [new Pair (0,0), new Pair(0,1), new Pair (1,0)],
-    obstacles: [new Pair (2,1), new Pair (2,1)],
+    visitables: null,
+    obstacles: [new Pair (2,1), new Pair (2,2), new Pair(3,1), new Pair(4,2)],
     cursorPosition: new Pair(0,0),
     map: null,
     selectedUnit: null,
@@ -71,6 +73,7 @@ export const Reducer : Redux.Reducer<State> =
                 state.position[action.unit_id] = action.new_position;
                 return {
                     position: state.position,
+                    visitables: state.visitables,
                     obstacles: state.obstacles,
                     map: state.map,
                     selectedUnit: action.selectedUnit,
@@ -78,8 +81,37 @@ export const Reducer : Redux.Reducer<State> =
                     type: "SET_LISTENER"
                 };
             case "MOVE":
+                // Para reducir los cálculos del movimiento, vamos a realizar en este punto el cálculo de las celdas visitables
+                var visitables_cubic : Array<Cubic> = [new Cubic(state.position[action.unit_id])];
+                var movements : number = InitialStats.movement;
+                var neighbours : Array<Cubic> = [];
+                // Primero, iteraremos desde 0 hasta el número de movimientos
+                for(var i = 0 ; i <= movements ; i++) {
+                    // Primero, filtramos de los vecinos los que sean obstáculos
+                    neighbours.filter(possible_cubic => myIndexOf(state.obstacles, possible_cubic.getPair()) == -1);
+                    // Añadimos los vecinos que queden, son celdas visitables:
+                    visitables_cubic = visitables_cubic.concat(neighbours);
+                    // Calculamos los próximos vecinos:
+                    var new_neighbours: Array<Cubic> = [];
+                    for(var index_directions = 0; index_directions < cubic_directions.length; index_directions++) {
+                        console.log(index_directions);
+                        visitables_cubic.forEach(cubic => {
+                            var new_cubic = cubic.add(cubic_directions[index_directions]);
+                            if(myIndexOf(state.obstacles, new_cubic.getPair()) == -1 && myIndexOfCubic(visitables_cubic, new_cubic)
+                                && myIndexOf(state.position, new_cubic.getPair()) == -1) {
+                                new_neighbours.push(new_cubic);
+                            }
+                        });
+                    }
+                    neighbours = new_neighbours;
+                }
+
+                // Finalmente convertimos el resultado a Pair:
+                var visitables_pair : Array<Pair> = visitables_cubic.map(cubic => cubic.getPair());
+
                 return {
                     position: state.position,
+                    visitables: visitables_pair,
                     obstacles: state.obstacles,
                     map: state.map,
                     selectedUnit: action.unit_id,
@@ -89,6 +121,7 @@ export const Reducer : Redux.Reducer<State> =
             case "SET_LISTENER":
                 return {
                     position: state.position,
+                    visitables: state.visitables,
                     obstacles: state.obstacles,
                     map: action.map,
                     selectedUnit: state.selectedUnit,
@@ -98,6 +131,7 @@ export const Reducer : Redux.Reducer<State> =
             case "CURSOR_MOVE":
                 return {
                     position: state.position,
+                    visitables: state.visitables,
                     obstacles: state.obstacles,
                     map: state.map,
                     cursorPosition: action.position,

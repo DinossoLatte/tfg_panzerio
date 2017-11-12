@@ -5,7 +5,7 @@ import { store } from './Store';
 
 class EnterGameButton extends React.Component<any, any> {
     constructor(props: any) {
-        super();
+        super(props);
     }
 
     render() {
@@ -19,7 +19,7 @@ class EnterGameButton extends React.Component<any, any> {
 
 class OptionsMenuButton extends React.Component<any, any> {
     constructor(props : any) {
-        super();
+        super(props);
     }
 
     render() {
@@ -32,8 +32,8 @@ class OptionsMenuButton extends React.Component<any, any> {
 }
 
 class OptionsMenu extends React.Component<any, any> {
-    constructor() {
-        super();
+    constructor(props : any) {
+        super(props);
     }
 
     render() {
@@ -50,15 +50,15 @@ class OptionsMenu extends React.Component<any, any> {
 }
 
 class Game extends React.Component<any, any> {
-    constructor() {
-        super();
+    constructor(props : any) {
+        super(props);
         this.state = { gameState: 0 }; // 0 es el menu del juego, 1 será el menú de opciones y 2 será el juego
     }
 
     render() {
         let result: any;
         if(this.state.gameState == 2) {
-            result = <Map horizontal="5" vertical="8" parentObject={this} />
+            result = <Map horizontal="6" vertical="6" parentObject={this} />
         } else if(this.state.gameState == 1) {
             result = <OptionsMenu parentObject={this} />
         } else {
