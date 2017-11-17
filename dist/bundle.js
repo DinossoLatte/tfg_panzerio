@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 11);
+/******/ 	return __webpack_require__(__webpack_require__.s = 13);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -71,6 +71,127 @@ module.exports = React;
 
 /***/ }),
 /* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Redux = __webpack_require__(17);
+var GameState_1 = __webpack_require__(10);
+var Unit_1 = __webpack_require__(11);
+exports.store = Redux.createStore(GameState_1.Reducer);
+//Guardaremos el estado de stats (en un futuro podremos guardar el estado y modificarlo y será como buffos o incluso restricciones de mapa)
+exports.storeStats = Redux.createStore(Unit_1.ReducerStats);
+function saveState(action) {
+    exports.store.dispatch(action);
+    // Refresca el mapa y el resto de variables del estado
+    var map = exports.store.getState().map;
+    var position = exports.store.getState().position;
+    var obstacles = exports.store.getState().obstacles;
+    var selectedUnit = exports.store.getState().selectedUnit;
+    var cursorPosition = exports.store.getState().cursorPosition;
+    var type = exports.store.getState().type;
+    map.setState({});
+}
+exports.saveState = saveState;
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Pair = /** @class */ (function () {
+    function Pair(x, y) {
+        this.row = x;
+        this.column = y;
+    }
+    Pair.prototype.getColumn = function () {
+        return this.column;
+    };
+    Pair.prototype.getRow = function () {
+        return this.row;
+    };
+    Pair.prototype.setColumn = function (x) {
+        this.column = x;
+    };
+    Pair.prototype.setRow = function (y) {
+        this.row = y;
+    };
+    Pair.prototype.equals = function (pair) {
+        return this.row == pair.row && this.column == pair.column;
+    };
+    Pair.prototype.toString = function () {
+        return "(" + this.row + ", " + this.column + ")";
+    };
+    return Pair;
+}());
+exports.Pair = Pair;
+/* Representación cúbica del hexágono */
+var Cubic = /** @class */ (function () {
+    function Cubic(pair) {
+        this.x = pair.row;
+        this.z = pair.column - (pair.row - (pair.row & 1)) / 2;
+        this.y = -this.x - this.z;
+    }
+    /* Calcula la distancia Manhattan */
+    Cubic.prototype.distanceTo = function (cubic) {
+        return Math.max(Math.abs(this.x - cubic.x), Math.abs(this.y - cubic.y), Math.abs(this.z - cubic.z));
+    };
+    Cubic.prototype.getPair = function () {
+        return new Pair(this.z + (this.x - (this.x & 1)) / 2, this.x);
+    };
+    Cubic.prototype.getX = function () {
+        return this.x;
+    };
+    Cubic.prototype.getY = function () {
+        return this.y;
+    };
+    Cubic.prototype.getZ = function () {
+        return this.z;
+    };
+    Cubic.prototype.sum = function (cubic) {
+        this.x = this.x + cubic.getX();
+        this.y = this.y + cubic.getY();
+        this.z = this.z + cubic.getZ();
+    };
+    Cubic.prototype.toString = function () {
+        return "(" + this.x + ", " + this.y + ", " + this.z + ")";
+    };
+    return Cubic;
+}());
+exports.Cubic = Cubic;
+exports.cubic_directions = [
+    new Cubic(new Pair(0, 1)), new Cubic(new Pair(-1, 1)), new Cubic(new Pair(-1, 0)),
+    new Cubic(new Pair(-1, -1)), new Cubic(new Pair(0, -1)), new Cubic(new Pair(1, 0))
+];
+//Debido a que indexOf de los array iguala con ===, no es posible saber si un objeto está dentro de un array sino es identicamente el mismo objeto
+//por eso se ha creado este método auxiliar para ayudar al cálculo
+function myIndexOf(arr, o) {
+    for (var i = 0; i < arr.length; i++) {
+        if (arr[i].column == o.column && arr[i].row == o.row) {
+            return i;
+        }
+    }
+    return -1;
+}
+exports.myIndexOf = myIndexOf;
+//Igual que el de arriba pero para cúbica
+function myIndexOfCubic(arr, o) {
+    for (var i = 0; i < arr.length; i++) {
+        if (arr[i].getX() == o.getX() && arr[i].getY() == o.getY() && arr[i].getZ() == o.getZ()) {
+            return i;
+        }
+    }
+    return -1;
+}
+exports.myIndexOfCubic = myIndexOfCubic;
+
+
+/***/ }),
+/* 3 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -260,14 +381,14 @@ process.umask = function() { return 0; };
 
 
 /***/ }),
-/* 2 */
+/* 4 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ActionTypes; });
 /* harmony export (immutable) */ __webpack_exports__["b"] = createStore;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_es_isPlainObject__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_symbol_observable__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_es_isPlainObject__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_symbol_observable__ = __webpack_require__(26);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_symbol_observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_symbol_observable__);
 
 
@@ -519,13 +640,13 @@ var ActionTypes = {
 }
 
 /***/ }),
-/* 3 */
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__baseGetTag_js__ = __webpack_require__(17);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getPrototype_js__ = __webpack_require__(22);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__isObjectLike_js__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__baseGetTag_js__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getPrototype_js__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__isObjectLike_js__ = __webpack_require__(25);
 
 
 
@@ -591,11 +712,11 @@ function isPlainObject(value) {
 
 
 /***/ }),
-/* 4 */
+/* 6 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__root_js__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__root_js__ = __webpack_require__(19);
 
 
 /** Built-in value references. */
@@ -605,7 +726,7 @@ var Symbol = __WEBPACK_IMPORTED_MODULE_0__root_js__["a" /* default */].Symbol;
 
 
 /***/ }),
-/* 5 */
+/* 7 */
 /***/ (function(module, exports) {
 
 var g;
@@ -632,7 +753,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 6 */
+/* 8 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -660,7 +781,7 @@ function warning(message) {
 }
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -699,13 +820,13 @@ function compose() {
 }
 
 /***/ }),
-/* 8 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Utils_1 = __webpack_require__(9);
+var Utils_1 = __webpack_require__(2);
 var Actions = /** @class */ (function () {
     function Actions() {
     }
@@ -726,6 +847,12 @@ var Actions = /** @class */ (function () {
             unit_id: unit_id
         };
     };
+    Actions.generateCursorMovement = function (new_position) {
+        return {
+            type: "CURSOR_MOVE",
+            position: new_position
+        };
+    };
     Actions.generateSetListener = function (map) {
         //Este es el estado de espera para seleccionar una unidad
         return {
@@ -739,7 +866,8 @@ exports.Actions = Actions;
 //El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
 exports.InitialState = {
     position: [new Utils_1.Pair(0, 0), new Utils_1.Pair(0, 1), new Utils_1.Pair(1, 0)],
-    obstacles: [new Utils_1.Pair(2, 2), new Utils_1.Pair(2, 1)],
+    obstacles: [new Utils_1.Pair(2, 1), new Utils_1.Pair(2, 1)],
+    cursorPosition: new Utils_1.Pair(0, 0),
     map: null,
     selectedUnit: null,
     type: "SET_LISTENER"
@@ -756,6 +884,7 @@ exports.Reducer = function (state, action) {
                 obstacles: state.obstacles,
                 map: state.map,
                 selectedUnit: action.selectedUnit,
+                cursorPosition: state.cursorPosition,
                 type: "SET_LISTENER"
             };
         case "MOVE":
@@ -764,6 +893,7 @@ exports.Reducer = function (state, action) {
                 obstacles: state.obstacles,
                 map: state.map,
                 selectedUnit: action.unit_id,
+                cursorPosition: state.cursorPosition,
                 type: "MOVE"
             };
         case "SET_LISTENER":
@@ -772,7 +902,17 @@ exports.Reducer = function (state, action) {
                 obstacles: state.obstacles,
                 map: action.map,
                 selectedUnit: state.selectedUnit,
+                cursorPosition: state.cursorPosition,
                 type: "SET_LISTENER"
+            };
+        case "CURSOR_MOVE":
+            return {
+                position: state.position,
+                obstacles: state.obstacles,
+                map: state.map,
+                cursorPosition: action.position,
+                selectedUnit: state.selectedUnit,
+                type: state.type,
             };
         default:
             return state;
@@ -781,92 +921,7 @@ exports.Reducer = function (state, action) {
 
 
 /***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var Pair = /** @class */ (function () {
-    function Pair(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-    Pair.prototype.getX = function () {
-        return this.x;
-    };
-    Pair.prototype.getY = function () {
-        return this.y;
-    };
-    Pair.prototype.setX = function (x) {
-        this.x = x;
-    };
-    Pair.prototype.setY = function (y) {
-        this.y = y;
-    };
-    return Pair;
-}());
-exports.Pair = Pair;
-/* Representación cúbica del hexágono */
-var Cubic = /** @class */ (function () {
-    function Cubic(pair) {
-        this.x = pair.y;
-        this.z = pair.x - (pair.y - (pair.y & 1)) / 2;
-        this.y = -this.x - this.z;
-    }
-    /* Calcula la distancia Manhattan */
-    Cubic.prototype.distanceTo = function (cubic) {
-        return Math.max(Math.abs(this.x - cubic.x), Math.abs(this.y - cubic.y), Math.abs(this.z - cubic.z));
-    };
-    Cubic.prototype.getPair = function () {
-        return new Pair(this.z + (this.x - (this.x & 1)) / 2, this.x);
-    };
-    Cubic.prototype.getX = function () {
-        return this.x;
-    };
-    Cubic.prototype.getY = function () {
-        return this.y;
-    };
-    Cubic.prototype.getZ = function () {
-        return this.z;
-    };
-    Cubic.prototype.sum = function (cubic) {
-        this.x = this.x + cubic.getX();
-        this.y = this.y + cubic.getY();
-        this.z = this.z + cubic.getZ();
-    };
-    return Cubic;
-}());
-exports.Cubic = Cubic;
-exports.cubic_directions = [
-    new Cubic(new Pair(0, 1)), new Cubic(new Pair(-1, 1)), new Cubic(new Pair(-1, 0)),
-    new Cubic(new Pair(-1, -1)), new Cubic(new Pair(0, -1)), new Cubic(new Pair(1, 0))
-];
-//Debido a que indexOf de los array iguala con ===, no es posible saber si un objeto está dentro de un array sino es identicamente el mismo objeto
-//por eso se ha creado este método auxiliar para ayudar al cálculo
-function myIndexOf(arr, o) {
-    for (var i = 0; i < arr.length; i++) {
-        if (arr[i].x == o.x && arr[i].y == o.y) {
-            return i;
-        }
-    }
-    return -1;
-}
-exports.myIndexOf = myIndexOf;
-//IGual que el de arriba pero para cúbica
-function myIndexOfCubic(arr, o) {
-    for (var i = 0; i < arr.length; i++) {
-        if (arr[i].getX() == o.getX() && arr[i].getY() == o.getY() && arr[i].getZ() == o.getZ()) {
-            return i;
-        }
-    }
-    return -1;
-}
-exports.myIndexOfCubic = myIndexOfCubic;
-
-
-/***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -883,6 +938,8 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
+var Store_1 = __webpack_require__(1);
+var Cursor_1 = __webpack_require__(12);
 var Unit = /** @class */ (function (_super) {
     __extends(Unit, _super);
     function Unit(props) {
@@ -891,10 +948,16 @@ var Unit = /** @class */ (function (_super) {
     //Con una variable externa se podría hacer que haya o no sprite de montaña etc
     //TODO En la id de unit debería ir la id de unit pero más adelante se añadirá
     Unit.prototype.render = function () {
-        return (React.createElement("div", { className: "cell" },
-            React.createElement("img", { id: "hex" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/hex_base.png" }),
+        // Al igual que en Cell, primero obtenemos la posición del cursor
+        var positionCursor = Store_1.store.getState().cursorPosition;
+        // Despues comprobando que esta casilla esté en esa posición
+        var cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row ? React.createElement(Cursor_1.Cursor, null) : null;
+        // Le añadiremos el resultado de la comprobación anterior.
+        return (React.createElement("div", { className: "div_cell" },
+            React.createElement("img", { className: "cell", id: "hex" + this.props.row + "_" + this.props.column, src: "imgs/hex_base.png" }),
             React.createElement("div", { className: "unit" },
-                React.createElement("img", { id: "unit" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/unit.png" }))));
+                React.createElement("img", { id: "unit" + this.props.row + "_" + this.props.column, src: "imgs/unit.png" })),
+            cursor));
     };
     return Unit;
 }(React.Component));
@@ -921,27 +984,7 @@ exports.ReducerStats = function (state, action) {
 
 
 /***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var ReactDOM = __webpack_require__(12);
-var Game_1 = __webpack_require__(13);
-// Representa la aplicación, por ahora únicamente el mapa
-ReactDOM.render(React.createElement(Game_1.Game, null), document.getElementById("root"));
-
-
-/***/ }),
 /* 12 */
-/***/ (function(module, exports) {
-
-module.exports = ReactDOM;
-
-/***/ }),
-/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -958,11 +1001,62 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var Map_1 = __webpack_require__(14);
+var Cursor = /** @class */ (function (_super) {
+    __extends(Cursor, _super);
+    function Cursor(props) {
+        return _super.call(this, props) || this;
+    }
+    Cursor.prototype.render = function () {
+        return (React.createElement("img", { src: "imgs/hex_numpad_selected.png", id: "selector", className: "selector" }));
+    };
+    return Cursor;
+}(React.Component));
+exports.Cursor = Cursor;
+
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var ReactDOM = __webpack_require__(14);
+var Game_1 = __webpack_require__(15);
+// Representa la aplicación, por ahora únicamente el mapa
+ReactDOM.render(React.createElement(Game_1.Game, null), document.getElementById("root"));
+
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports) {
+
+module.exports = ReactDOM;
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var Map_1 = __webpack_require__(16);
 var EnterGameButton = /** @class */ (function (_super) {
     __extends(EnterGameButton, _super);
     function EnterGameButton(props) {
-        return _super.call(this) || this;
+        return _super.call(this, props) || this;
     }
     EnterGameButton.prototype.render = function () {
         return React.createElement("button", { id: "enterGame", name: "enterGame", className: "enterGameButton", onClick: this.onClick.bind(this) }, "Jugar");
@@ -975,7 +1069,7 @@ var EnterGameButton = /** @class */ (function (_super) {
 var OptionsMenuButton = /** @class */ (function (_super) {
     __extends(OptionsMenuButton, _super);
     function OptionsMenuButton(props) {
-        return _super.call(this) || this;
+        return _super.call(this, props) || this;
     }
     OptionsMenuButton.prototype.render = function () {
         return React.createElement("button", { id: "optionsMenu", name: "optionsMenu", className: "optionsMenuButton", onClick: this.onClick.bind(this) }, "Acceder al menu de opciones");
@@ -987,8 +1081,8 @@ var OptionsMenuButton = /** @class */ (function (_super) {
 }(React.Component));
 var OptionsMenu = /** @class */ (function (_super) {
     __extends(OptionsMenu, _super);
-    function OptionsMenu() {
-        return _super.call(this) || this;
+    function OptionsMenu(props) {
+        return _super.call(this, props) || this;
     }
     OptionsMenu.prototype.render = function () {
         return React.createElement("div", { className: "optionsMenu" },
@@ -1003,8 +1097,8 @@ var OptionsMenu = /** @class */ (function (_super) {
 }(React.Component));
 var Game = /** @class */ (function (_super) {
     __extends(Game, _super);
-    function Game() {
-        var _this = _super.call(this) || this;
+    function Game(props) {
+        var _this = _super.call(this, props) || this;
         _this.state = { gameState: 0 }; // 0 es el menu del juego, 1 será el menú de opciones y 2 será el juego
         return _this;
     }
@@ -1034,7 +1128,7 @@ exports.Game = Game;
 
 
 /***/ }),
-/* 14 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1051,12 +1145,11 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var Store_1 = __webpack_require__(15);
-var GameState_1 = __webpack_require__(8);
-var Cell_1 = __webpack_require__(32);
-var Obstacle_1 = __webpack_require__(33);
-var Unit_1 = __webpack_require__(10);
-var Utils_1 = __webpack_require__(9);
+var Store_1 = __webpack_require__(1);
+var GameState_1 = __webpack_require__(10);
+var Cell_1 = __webpack_require__(33);
+var Utils_1 = __webpack_require__(2);
+var Unit_1 = __webpack_require__(11);
 /** Representa el mapa que contendrá las unidades y las casillas **/
 var Map = /** @class */ (function (_super) {
     __extends(Map, _super);
@@ -1080,8 +1173,56 @@ var Map = /** @class */ (function (_super) {
         this.props.parentObject.changeGameState(0); // Salir de la partida.
     };
     Map.prototype.onKey = function (keyEvent) {
-        if (keyEvent.keyCode == 27) {
-            this.props.parentObject.changeGameState(0); // Retornamos al menu.
+        var keyCode = keyEvent.keyCode;
+        var cursorPosition, newCursorPosition;
+        console.log("KeyCode: " + keyCode);
+        switch (keyCode) {
+            case 27:
+                this.props.parentObject.changeGameState(0); // Retornamos al menu.
+                break;
+            // Los siguientes casos corresponden con las teclas del numpad, para mover el cursor
+            case 97:
+                // La tecla 1 del numpad (-1,+1)
+                // Primero, obtenemos la posición de la casilla
+                cursorPosition = Store_1.store.getState().cursorPosition;
+                // Crearemos una nueva posición resultado
+                newCursorPosition = new Utils_1.Pair(cursorPosition.row + (cursorPosition.column & 1 ? 1 : 0), cursorPosition.column - 1);
+                // Llamamos a la acción para cambiarlo
+                break;
+            case 98:
+                // La tecla 2 del numpad (0,+1)
+                cursorPosition = Store_1.store.getState().cursorPosition;
+                newCursorPosition = new Utils_1.Pair(cursorPosition.row + 1, cursorPosition.column);
+                break;
+            case 99:
+                // La tecla 3 del numpad (+1,+1)
+                cursorPosition = Store_1.store.getState().cursorPosition;
+                newCursorPosition = new Utils_1.Pair(cursorPosition.row + (cursorPosition.column & 1 ? 1 : 0), cursorPosition.column + 1);
+                break;
+            case 103:
+                // La tecla 7 del numpad (-1,-1)
+                cursorPosition = Store_1.store.getState().cursorPosition;
+                newCursorPosition = new Utils_1.Pair(cursorPosition.row - (cursorPosition.column & 1 ? 0 : 1), cursorPosition.column - 1);
+                break;
+            case 104:
+                // La tecla 8 del numpad (0, -1)
+                cursorPosition = Store_1.store.getState().cursorPosition;
+                newCursorPosition = new Utils_1.Pair(cursorPosition.row - 1, cursorPosition.column);
+                break;
+            case 105:
+                // La tecla 9 del numpad (+1, -1)
+                cursorPosition = Store_1.store.getState().cursorPosition;
+                newCursorPosition = new Utils_1.Pair(cursorPosition.row - (cursorPosition.column & 1 ? 0 : 1), cursorPosition.column + 1);
+                break;
+            case 32:
+                // Realizar el click en la posición
+                cursorPosition = Store_1.store.getState().cursorPosition;
+                this.clickAction(cursorPosition.row, cursorPosition.column);
+                break;
+        }
+        // Si puede hacerse el movimiento, realiza la acción
+        if (newCursorPosition.row >= 0 && newCursorPosition.column >= 0 && newCursorPosition.column <= this.props.vertical && newCursorPosition.row <= this.props.horizontal) {
+            Store_1.saveState(GameState_1.Actions.generateCursorMovement(newCursorPosition));
         }
     };
     /** Placeholder, contendrá la lógica de selección de la casilla correcta. **/
@@ -1132,8 +1273,6 @@ var Map = /** @class */ (function (_super) {
             var distanceCircle = this.calculateDistance(centerX, centerY, x, y);
             var distancePossibleHex = this.calculateDistance(comparingHexX, comparingHexY, x, y);
             // Si la distancia del hex posible es menor al del círculo, entonces cambiamos el row y column
-            console.log("Dist. original: " + distanceCircle);
-            console.log("Dist. posible: " + distancePossibleHex);
             if (distancePossibleHex < distanceCircle) {
                 // Debido al sistema de identificación usado, es necesario añadir reglas si el hex es impar o par.
                 if (isOdd) {
@@ -1151,14 +1290,17 @@ var Map = /** @class */ (function (_super) {
             }
         }
         //Guardamos la posición actual y la nueva posición
-        var newPosition = new Utils_1.Pair(row, column);
+        this.clickAction(row, column); // TODO Solucionar esto!
+    };
+    Map.prototype.clickAction = function (row, column) {
+        var newPosition = new Utils_1.Pair(column, row);
         var unitIndex = Utils_1.myIndexOf(Store_1.store.getState().position, newPosition);
         //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
         if (unitIndex != -1 && Store_1.store.getState().type == "SET_LISTENER") {
             Store_1.saveState(GameState_1.Actions.generateMove(unitIndex));
             //Si hace clic en una possición exterior, mantieene el estado de en movimiento (seleccionado) y sigue almacenando la unidad seleccionada
         }
-        else if ((newPosition.x < 0 || newPosition.x > this.props.horizontal || newPosition.y < 0 || newPosition.y > this.props.vertical) && Store_1.store.getState().type == "MOVE") {
+        else if ((newPosition.column < 0 || newPosition.column > this.props.horizontal || newPosition.row < 0 || newPosition.row > this.props.vertical) && Store_1.store.getState().type == "MOVE") {
             Store_1.saveState(GameState_1.Actions.generateMove(Store_1.store.getState().selectedUnit));
             //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
         }
@@ -1170,7 +1312,7 @@ var Map = /** @class */ (function (_super) {
             //let validPositions: Array<Cubic> = this.getValidPosition(cubicActual);
             //Si la distancia entre la nueva posición y la actual es menor al limite de movimiento entonces se realizará el movimiento
             //if(myIndexOfCubic(validPositions,cubicNew)!=-1){
-            if (cubicActual.distanceTo(cubicNew) <= Store_1.storeStats.getState().movement) {
+            if (cubicActual.distanceTo(cubicNew) <= Store_1.storeStats.getState().movement && Utils_1.myIndexOf(Store_1.store.getState().obstacles, newPosition) == -1) {
                 //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
                 Store_1.saveState(GameState_1.Actions.generateChangeUnitPos(Store_1.store.getState().selectedUnit, newPosition, null));
             }
@@ -1260,16 +1402,11 @@ var Map = /** @class */ (function (_super) {
         for (var j = num_row % 2 == 0 ? 0 : 1; j <= this.props.vertical; j = j + 2) {
             var column = j;
             var row = num_row % 2 == 0 ? num_row / 2 : Math.floor(num_row / 2);
-            var pos = new Utils_1.Pair(row, column);
+            var pos = new Utils_1.Pair(column, row);
             //Si está incluida en la lista de posiciones de unidades (el indice obtenido es -1) entonces se añade una casilla de unidad
             if (Utils_1.myIndexOf(Store_1.store.getState().position, pos) != -1) {
-                this.state.cells[row][column] = React.createElement(Cell_1.Cell, { vertical: row, horizontal: column });
-                accum2.push(React.createElement(Unit_1.Unit, { horizontal: column, vertical: row }));
-                //Si es un obstáculo se colocará ahí
-            }
-            else if (Utils_1.myIndexOf(Store_1.store.getState().obstacles, pos) != -1) {
-                this.state.cells[row][column] = React.createElement(Cell_1.Cell, { vertical: row, horizontal: column });
-                accum2.push(React.createElement(Obstacle_1.Obstacle, { horizontal: column, vertical: row }));
+                this.state.cells[row][column] = React.createElement(Cell_1.Cell, { row: row, column: column });
+                accum2.push(React.createElement(Unit_1.Unit, { row: row, column: column }));
                 //Si está en modo seleccionado se usará otra lógica es necesario llamarlo despues de la unidad sino las casillas de unidades al generarse se pondran en amarillo
             }
             else if (Store_1.store.getState().selectedUnit != null) {
@@ -1277,26 +1414,23 @@ var Map = /** @class */ (function (_super) {
                 // Convertimos la posición en cúbica
                 var cubicActual = new Utils_1.Cubic(actualPosition);
                 var cubicNew = new Utils_1.Cubic(pos);
-                //let validPositions: Array<Cubic> = this.getValidPosition(cubicActual);
                 //Si la distancia es menor o igual a la distancia máxima entonces son posiciones validas y se seleccionaran, además se comprueba que no sea un obstáculo
                 if (cubicActual.distanceTo(cubicNew) <= Store_1.storeStats.getState().movement && Utils_1.myIndexOf(Store_1.store.getState().obstacles, pos) == -1) {
-                    var cell = React.createElement(Cell_1.Cell, { vertical: row, horizontal: column }); // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                    var cell = React.createElement(Cell_1.Cell, { row: row, column: column, selected: true }); // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                     this.state.cells[row][column] = cell;
                     //Para no añadir una nueva clase de celda seleccionada simplemente hacemos esto
-                    accum2.push(React.createElement("div", { className: "cell" },
-                        React.createElement("img", { id: "hex" + column + "_" + row, src: "imgs/hex_base_selected.png" })));
+                    accum2.push(cell);
                     //Es necesario hacer este else porque al entrar en este else if no podrá ejecutar el else exterior
                 }
                 else {
-                    var cell = React.createElement(Cell_1.Cell, { vertical: row, horizontal: column }); // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                    var cell = React.createElement(Cell_1.Cell, { row: row, column: column }); // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                     this.state.cells[row][column] = cell;
                     accum2.push(cell);
                 }
-                //En caso de que no sea nada de lo anterior se añadirá una casilla normal y corriente
             }
             else {
                 // Se introducirá el elemento en una lista
-                var cell = React.createElement(Cell_1.Cell, { vertical: row, horizontal: column }); // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                var cell = React.createElement(Cell_1.Cell, { row: row, column: column }); // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                 this.state.cells[row][column] = cell;
                 accum2.push(cell);
             }
@@ -1310,43 +1444,17 @@ exports.Map = Map;
 
 
 /***/ }),
-/* 15 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var Redux = __webpack_require__(16);
-var GameState_1 = __webpack_require__(8);
-var Unit_1 = __webpack_require__(10);
-exports.store = Redux.createStore(GameState_1.Reducer);
-//Guardaremos el estado de stats (en un futuro podremos guardar el estado y modificarlo y será como buffos o incluso restricciones de mapa)
-exports.storeStats = Redux.createStore(Unit_1.ReducerStats);
-function saveState(action) {
-    exports.store.dispatch(action);
-    // Refresca el mapa y el resto de variables del estado
-    var map = exports.store.getState().map;
-    var position = exports.store.getState().position;
-    var obstacles = exports.store.getState().obstacles;
-    var selectedUnit = exports.store.getState().selectedUnit;
-    var type = exports.store.getState().type;
-    map.setState({});
-}
-exports.saveState = saveState;
-
-
-/***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* WEBPACK VAR INJECTION */(function(process) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__createStore__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__combineReducers__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__bindActionCreators__ = __webpack_require__(30);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__applyMiddleware__ = __webpack_require__(31);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__compose__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_warning__ = __webpack_require__(6);
+/* WEBPACK VAR INJECTION */(function(process) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__createStore__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__combineReducers__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__bindActionCreators__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__applyMiddleware__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__compose__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_warning__ = __webpack_require__(8);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "createStore", function() { return __WEBPACK_IMPORTED_MODULE_0__createStore__["b"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "combineReducers", function() { return __WEBPACK_IMPORTED_MODULE_1__combineReducers__["a"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "bindActionCreators", function() { return __WEBPACK_IMPORTED_MODULE_2__bindActionCreators__["a"]; });
@@ -1370,16 +1478,16 @@ if (process.env.NODE_ENV !== 'production' && typeof isCrushed.name === 'string' 
 }
 
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(1)))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Symbol_js__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getRawTag_js__ = __webpack_require__(20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__objectToString_js__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Symbol_js__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getRawTag_js__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__objectToString_js__ = __webpack_require__(22);
 
 
 
@@ -1411,11 +1519,11 @@ function baseGetTag(value) {
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__freeGlobal_js__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__freeGlobal_js__ = __webpack_require__(20);
 
 
 /** Detect free variable `self`. */
@@ -1428,7 +1536,7 @@ var root = __WEBPACK_IMPORTED_MODULE_0__freeGlobal_js__["a" /* default */] || fr
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1437,14 +1545,14 @@ var freeGlobal = typeof global == 'object' && global && global.Object === Object
 
 /* harmony default export */ __webpack_exports__["a"] = (freeGlobal);
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(5)))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(7)))
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Symbol_js__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Symbol_js__ = __webpack_require__(6);
 
 
 /** Used for built-in method references. */
@@ -1494,7 +1602,7 @@ function getRawTag(value) {
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1523,11 +1631,11 @@ function objectToString(value) {
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__overArg_js__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__overArg_js__ = __webpack_require__(24);
 
 
 /** Built-in value references. */
@@ -1537,7 +1645,7 @@ var getPrototype = Object(__WEBPACK_IMPORTED_MODULE_0__overArg_js__["a" /* defau
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1559,7 +1667,7 @@ function overArg(func, transform) {
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1595,14 +1703,14 @@ function isObjectLike(value) {
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(26);
+module.exports = __webpack_require__(27);
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1612,7 +1720,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _ponyfill = __webpack_require__(28);
+var _ponyfill = __webpack_require__(29);
 
 var _ponyfill2 = _interopRequireDefault(_ponyfill);
 
@@ -1635,10 +1743,10 @@ if (typeof self !== 'undefined') {
 
 var result = (0, _ponyfill2['default'])(root);
 exports['default'] = result;
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5), __webpack_require__(27)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7), __webpack_require__(28)(module)))
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -1666,7 +1774,7 @@ module.exports = function(module) {
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1695,14 +1803,14 @@ function symbolObservablePonyfill(root) {
 };
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/* harmony export (immutable) */ __webpack_exports__["a"] = combineReducers;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__createStore__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash_es_isPlainObject__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_warning__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__createStore__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash_es_isPlainObject__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_warning__ = __webpack_require__(8);
 
 
 
@@ -1833,10 +1941,10 @@ function combineReducers(reducers) {
     return hasChanged ? nextState : state;
   };
 }
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(1)))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1890,12 +1998,12 @@ function bindActionCreators(actionCreators, dispatch) {
 }
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = applyMiddleware;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compose__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compose__ = __webpack_require__(9);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 
@@ -1946,7 +2054,7 @@ function applyMiddleware() {
 }
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1963,6 +2071,10 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
+var Cursor_1 = __webpack_require__(12);
+var Store_1 = __webpack_require__(1);
+var Obstacle_1 = __webpack_require__(34);
+var Utils_1 = __webpack_require__(2);
 /**
     Esta clase consiste en la representación de una casilla dentro del mapa
     @constructor Incluye los atributos HTML: horizontal y vertical.
@@ -1976,12 +2088,19 @@ var Cell = /** @class */ (function (_super) {
     }
     /** Renderiza el objeto **/
     Cell.prototype.render = function () {
-        return (React.createElement("div", { className: "cell" },
-            React.createElement("img", { id: "hex" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/hex_base.png" })));
-    };
-    /** Placeholder, contendrá la lógica de movimiento y otros **/
-    Cell.prototype.onClick = function () {
-        window.alert("Clicked on (" + this.props.horizontal + ", " + this.props.vertical + ")");
+        // Comprobamos si la casilla actual contiene el cursor, primero obteniendo su posición
+        var positionCursor = Store_1.store.getState().cursorPosition;
+        // Despues comprobando que esta casilla esté en esa posición
+        var cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row ? React.createElement(Cursor_1.Cursor, null) : null;
+        // Le añadiremos el resultado de la comprobación anterior.
+        // De igual forma, obtenemos las posiciones de los obstaculos:
+        var obstacles = Store_1.store.getState().obstacles;
+        // Comprobamos si esta posición contiene el obstaculo:
+        var obstacle = Utils_1.myIndexOf(obstacles, new Utils_1.Pair(this.props.column, this.props.row)) == -1 ? null : React.createElement(Obstacle_1.Obstacle, { column: this.props.column, row: this.props.row });
+        return (React.createElement("div", { className: "div_cell" },
+            React.createElement("img", { className: "cell", id: "hex" + this.props.row + "_" + this.props.column, src: this.props.selected ? "imgs/hex_base_selected.png" : "imgs/hex_base.png" }),
+            cursor,
+            obstacle));
     };
     return Cell;
 }(React.Component));
@@ -1989,7 +2108,7 @@ exports.Cell = Cell;
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2013,10 +2132,8 @@ var Obstacle = /** @class */ (function (_super) {
     }
     //Este es el render del obstacle
     Obstacle.prototype.render = function () {
-        return (React.createElement("div", { className: "cell" },
-            React.createElement("img", { id: "hex" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/hex_base.png" }),
-            React.createElement("div", { className: "obstacle" },
-                React.createElement("img", { id: "obstacle" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/obstacle.png" }))));
+        return (React.createElement("div", { className: "obstacle" },
+            React.createElement("img", { id: "obstacle" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/obstacle.png" })));
     };
     return Obstacle;
 }(React.Component));
