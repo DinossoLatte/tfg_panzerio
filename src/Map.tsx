@@ -5,10 +5,8 @@ import { store, saveState, storeStats } from './Store';
 import { Actions, State, InitialState, Reducer } from './GameState';
 import { Cell } from './Cell';
 import { Obstacle } from './Obstacle';
-import { Unit } from './Unit';
 import { Pair, Cubic, myIndexOf, cubic_directions, myIndexOfCubic } from './Utils';
 import { Unit, Stats, InitialStats} from './Unit';
-import { Pair, Cubic, myIndexOf } from './Utils';
 import { Cursor } from './Cursor';
 
 /** Representa el mapa que contendrá las unidades y las casillas **/
@@ -53,45 +51,43 @@ export class Map extends React.Component<any, any> {
                 // Primero, obtenemos la posición de la casilla
                 cursorPosition = store.getState().cursorPosition;
                 // Crearemos una nueva posición resultado
-                newCursorPosition = new Pair(cursorPosition.x - 1, cursorPosition.y + (cursorPosition.x&1?1:0));
+                newCursorPosition = new Pair(cursorPosition.row + (cursorPosition.column&1?1:0), cursorPosition.column - 1);
                 // Llamamos a la acción para cambiarlo
-                saveState(Actions.generateCursorMovement(newCursorPosition));
                 break;
             case 98:
                 // La tecla 2 del numpad (0,+1)
                 cursorPosition = store.getState().cursorPosition;
-                newCursorPosition = new Pair(cursorPosition.x, cursorPosition.y + 1);
-                saveState(Actions.generateCursorMovement(newCursorPosition));
+                newCursorPosition = new Pair(cursorPosition.row + 1, cursorPosition.column);
                 break;
             case 99:
                 // La tecla 3 del numpad (+1,+1)
                 cursorPosition = store.getState().cursorPosition;
-                newCursorPosition = new Pair(cursorPosition.x + 1, cursorPosition.y + (cursorPosition.x&1?1:0));
-                saveState(Actions.generateCursorMovement(newCursorPosition));
+                newCursorPosition = new Pair(cursorPosition.row + (cursorPosition.column&1?1:0), cursorPosition.column + 1);
                 break;
             case 103:
                 // La tecla 7 del numpad (-1,-1)
                 cursorPosition = store.getState().cursorPosition;
-                newCursorPosition = new Pair(cursorPosition.x - 1, cursorPosition.y - (cursorPosition.x&1?0:1));
-                saveState(Actions.generateCursorMovement(newCursorPosition));
+                newCursorPosition = new Pair(cursorPosition.row - (cursorPosition.column&1?0:1), cursorPosition.column - 1);
                 break;
             case 104:
                 // La tecla 8 del numpad (0, -1)
                 cursorPosition = store.getState().cursorPosition;
-                newCursorPosition = new Pair(cursorPosition.x, cursorPosition.y - 1);
-                saveState(Actions.generateCursorMovement(newCursorPosition));
+                newCursorPosition = new Pair(cursorPosition.row - 1, cursorPosition.column);
                 break;
             case 105:
                 // La tecla 9 del numpad (+1, -1)
                 cursorPosition = store.getState().cursorPosition;
-                newCursorPosition = new Pair(cursorPosition.x + 1, cursorPosition.y - (cursorPosition.x&1?0:1));
-                saveState(Actions.generateCursorMovement(newCursorPosition));
+                newCursorPosition = new Pair(cursorPosition.row - (cursorPosition.column&1?0:1), cursorPosition.column + 1);
                 break;
             case 32:
                 // Realizar el click en la posición
                 cursorPosition = store.getState().cursorPosition;
-                this.clickAction(cursorPosition.x, cursorPosition.y);
+                this.clickAction(cursorPosition.row, cursorPosition.column);
                 break;
+        }
+        // Si puede hacerse el movimiento, realiza la acción
+        if(newCursorPosition.row >= 0 && newCursorPosition.column >= 0 && newCursorPosition.column <= this.props.vertical && newCursorPosition.row <= this.props.horizontal) {
+            saveState(Actions.generateCursorMovement(newCursorPosition));
         }
     }
 
@@ -168,7 +164,7 @@ export class Map extends React.Component<any, any> {
 
         //Guardamos la posición actual y la nueva posición
 
-        this.clickAction(column, row); // TODO Solucionar esto!
+        this.clickAction(row, column); // TODO Solucionar esto!
     }
 
     clickAction(row: number, column: number) {
@@ -179,7 +175,7 @@ export class Map extends React.Component<any, any> {
         if(unitIndex!= -1 && store.getState().type == "SET_LISTENER"){
             saveState(Actions.generateMove(unitIndex));
         //Si hace clic en una possición exterior, mantieene el estado de en movimiento (seleccionado) y sigue almacenando la unidad seleccionada
-        }else if((newPosition.x<0 || newPosition.x>this.props.horizontal || newPosition.y<0 || newPosition.y>this.props.vertical) && store.getState().type == "MOVE"){
+        }else if((newPosition.column<0 || newPosition.column>this.props.horizontal || newPosition.row<0 || newPosition.row>this.props.vertical) && store.getState().type == "MOVE"){
             saveState(Actions.generateMove(store.getState().selectedUnit));
         //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
         }else if(unitIndex==-1 && store.getState().type == "MOVE"){
@@ -190,7 +186,7 @@ export class Map extends React.Component<any, any> {
             //let validPositions: Array<Cubic> = this.getValidPosition(cubicActual);
             //Si la distancia entre la nueva posición y la actual es menor al limite de movimiento entonces se realizará el movimiento
             //if(myIndexOfCubic(validPositions,cubicNew)!=-1){
-            if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement){
+            if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement && myIndexOf(store.getState().obstacles, newPosition) == -1){
                 //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
                 saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null));
             }
@@ -283,18 +279,12 @@ export class Map extends React.Component<any, any> {
         for(var j = num_row%2==0?0:1; j <= this.props.vertical; j = j+2) { // Incrementamos en 2 porque el elemento entre cada hex tendrá el valor j + 1.
             let column = j;
             let row = num_row%2==0?num_row/2:Math.floor(num_row/2);
-            let pos = new Pair(row, column);
+            let pos = new Pair(column, row);
             //Si está incluida en la lista de posiciones de unidades (el indice obtenido es -1) entonces se añade una casilla de unidad
             if (myIndexOf(store.getState().position, pos)!=-1){
-                this.state.cells[row][column] = <Cell vertical={row} horizontal={column} />
+                this.state.cells[row][column] = <Cell row={row} column={column} />
                 accum2.push(
-                    <Unit horizontal={column} vertical={row}/>
-                );
-            //Si es un obstáculo se colocará ahí
-            }else if(myIndexOf(store.getState().obstacles, pos)!=-1){
-                this.state.cells[row][column] = <Cell vertical={row} horizontal={column} />
-                accum2.push(
-                    <Obstacle horizontal={column} vertical={row}/>
+                    <Unit row={row} column={column} />
                 );
             //Si está en modo seleccionado se usará otra lógica es necesario llamarlo despues de la unidad sino las casillas de unidades al generarse se pondran en amarillo
             }else if(store.getState().selectedUnit!=null){
@@ -304,19 +294,19 @@ export class Map extends React.Component<any, any> {
                 let cubicNew : Cubic = new Cubic(pos);
                 //Si la distancia es menor o igual a la distancia máxima entonces son posiciones validas y se seleccionaran, además se comprueba que no sea un obstáculo
                 if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement && myIndexOf(store.getState().obstacles,pos)==-1){
-                    var cell = <Cell vertical={row} horizontal={column} selected={true} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                    var cell = <Cell row={row} column={column} selected={true} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                     this.state.cells[row][column] = cell;
                     //Para no añadir una nueva clase de celda seleccionada simplemente hacemos esto
                     accum2.push(cell);
                 //Es necesario hacer este else porque al entrar en este else if no podrá ejecutar el else exterior
                 }else{
-                    var cell = <Cell vertical={row} horizontal={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                    var cell = <Cell row={row} column={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                     this.state.cells[row][column] = cell;
                     accum2.push(cell);
                 }
             }else{
                 // Se introducirá el elemento en una lista
-                var cell = <Cell vertical={row} horizontal={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
+                var cell = <Cell row={row} column={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                 this.state.cells[row][column] = cell;
                 accum2.push(cell);
             }

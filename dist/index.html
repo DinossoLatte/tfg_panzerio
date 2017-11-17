@@ -2,6 +2,24 @@
 <head>
     <title>Hello World</title>
     <meta charset="UTF-8">
+    <script src="https://js.pusher.com/4.1/pusher.min.js"></script>
+    <script>
+
+    // Habilita poder ver las notificaciones de lo que vaya pasando por la consola del navegador
+    Pusher.logToConsole = true;
+
+    //crea una variable pusher asignandole la key correspondiente (a la cuenta)
+    var pusher = new Pusher('2955e071f41e18e9805c', {
+      cluster: 'eu',
+      encrypted: true
+    });
+
+    //Crea un canal que nos servirá para la comunicación y lanzará un window alert cuando desde el servidor se mande un mensaje
+    var channel = pusher.subscribe('my-channel');
+    channel.bind('my-event', function(data) {
+      alert(data.message);
+    });
+    </script>
     <script crossorigin src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/redux@3.7.2/dist/redux.min.js"></script>

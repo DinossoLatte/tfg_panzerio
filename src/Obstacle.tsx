@@ -13,13 +13,9 @@ export class Obstacle extends React.Component<any, any> {
     //Este es el render del obstacle
     render() {
         return (
-            <div className={"cell"}>
-                <img id={"hex"+this.props.horizontal+"_"+this.props.vertical} src="imgs/hex_base.png" />
-                <div className ={"obstacle"}>
+                <div className ="obstacle">
                     <img id={"obstacle"+this.props.horizontal+"_"+this.props.vertical} src="imgs/obstacle.png" />
                 </div>
-            </div>
-
         );
     }
 

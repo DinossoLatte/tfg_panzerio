@@ -55,7 +55,7 @@ export type State = {
 //El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
 export const InitialState: State = {
     position: [new Pair (0,0), new Pair(0,1), new Pair (1,0)],
-    obstacles: [new Pair (2,2), new Pair (2,1)],
+    obstacles: [new Pair (2,1), new Pair (2,1)],
     cursorPosition: new Pair(0,0),
     map: null,
     selectedUnit: null,
@@ -98,6 +98,7 @@ export const Reducer : Redux.Reducer<State> =
             case "CURSOR_MOVE":
                 return {
                     position: state.position,
+                    obstacles: state.obstacles,
                     map: state.map,
                     cursorPosition: action.position,
                     selectedUnit: state.selectedUnit,

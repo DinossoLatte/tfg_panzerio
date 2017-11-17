@@ -18,13 +18,13 @@ export class Unit extends React.Component<any, any> {
         // Al igual que en Cell, primero obtenemos la posición del cursor
         let positionCursor = store.getState().cursorPosition;
         // Despues comprobando que esta casilla esté en esa posición
-        let cursor = positionCursor.x == this.props.horizontal && positionCursor.y == this.props.vertical?<Cursor />:null;
+        let cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row?<Cursor />:null;
         // Le añadiremos el resultado de la comprobación anterior.
         return (
             <div className="div_cell">
-                <img className="cell" id={"hex"+this.props.horizontal+"_"+this.props.vertical} src="imgs/hex_base.png" />
+                <img className="cell" id={"hex"+this.props.row+"_"+this.props.column} src="imgs/hex_base.png" />
                 <div className ="unit">
-                    <img id={"unit"+this.props.horizontal+"_"+this.props.vertical} src="imgs/unit.png" />
+                    <img id={"unit"+this.props.row+"_"+this.props.column} src="imgs/unit.png" />
                 </div>
                 {cursor}
             </div>
