@@ -87,6 +87,7 @@ function saveState(action) {
     // Refresca el mapa y el resto de variables del estado
     var map = exports.store.getState().map;
     var position = exports.store.getState().position;
+    var enemyposition = exports.store.getState().enemyposition;
     var obstacles = exports.store.getState().obstacles;
     var selectedUnit = exports.store.getState().selectedUnit;
     var cursorPosition = exports.store.getState().cursorPosition;
@@ -840,6 +841,15 @@ var Actions = /** @class */ (function () {
             selectedUnit: selectedUnit
         };
     };
+    Actions.generateChangeUnitPosEnemy = function (unit_id, new_position, selectedUnit) {
+        //Este estado es el de cambiar la posición (justo cuando hace clic de a donde quiere ir)
+        return {
+            type: "CHANGE_UNIT_POS_ENEMY",
+            unit_id: unit_id,
+            new_position: new_position,
+            selectedUnit: selectedUnit
+        };
+    };
     Actions.generateMove = function (unit_id) {
         //ESte estado es el de mantener la unidad seleccionada
         return {
@@ -866,6 +876,7 @@ exports.Actions = Actions;
 //El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
 exports.InitialState = {
     position: [new Utils_1.Pair(0, 0), new Utils_1.Pair(0, 1), new Utils_1.Pair(1, 0)],
+    enemyposition: [new Utils_1.Pair(4, 0), new Utils_1.Pair(4, 1), new Utils_1.Pair(3, 1)],
     obstacles: [new Utils_1.Pair(2, 1), new Utils_1.Pair(2, 1)],
     cursorPosition: new Utils_1.Pair(0, 0),
     map: null,
@@ -881,6 +892,18 @@ exports.Reducer = function (state, action) {
             state.position[action.unit_id] = action.new_position;
             return {
                 position: state.position,
+                enemyposition: state.enemyposition,
+                obstacles: state.obstacles,
+                map: state.map,
+                selectedUnit: action.selectedUnit,
+                cursorPosition: state.cursorPosition,
+                type: "SET_LISTENER"
+            };
+        case "CHANGE_UNIT_POS_ENEMY":
+            state.enemyposition[action.unit_id] = action.new_position;
+            return {
+                position: state.position,
+                enemyposition: state.enemyposition,
                 obstacles: state.obstacles,
                 map: state.map,
                 selectedUnit: action.selectedUnit,
@@ -890,6 +913,7 @@ exports.Reducer = function (state, action) {
         case "MOVE":
             return {
                 position: state.position,
+                enemyposition: state.enemyposition,
                 obstacles: state.obstacles,
                 map: state.map,
                 selectedUnit: action.unit_id,
@@ -899,6 +923,7 @@ exports.Reducer = function (state, action) {
         case "SET_LISTENER":
             return {
                 position: state.position,
+                enemyposition: state.enemyposition,
                 obstacles: state.obstacles,
                 map: action.map,
                 selectedUnit: state.selectedUnit,
@@ -908,6 +933,7 @@ exports.Reducer = function (state, action) {
         case "CURSOR_MOVE":
             return {
                 position: state.position,
+                enemyposition: state.enemyposition,
                 obstacles: state.obstacles,
                 map: state.map,
                 cursorPosition: action.position,
@@ -952,11 +978,13 @@ var Unit = /** @class */ (function (_super) {
         var positionCursor = Store_1.store.getState().cursorPosition;
         // Despues comprobando que esta casilla esté en esa posición
         var cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row ? React.createElement(Cursor_1.Cursor, null) : null;
+        //Comprobamos si es enemiga o no:
+        var unitType = this.props.enemy ? "enemy_unit" : "unit";
         // Le añadiremos el resultado de la comprobación anterior.
         return (React.createElement("div", { className: "div_cell" },
             React.createElement("img", { className: "cell", id: "hex" + this.props.row + "_" + this.props.column, src: "imgs/hex_base.png" }),
             React.createElement("div", { className: "unit" },
-                React.createElement("img", { id: "unit" + this.props.row + "_" + this.props.column, src: "imgs/unit.png" })),
+                React.createElement("img", { id: "unit" + this.props.row + "_" + this.props.column, src: "imgs/" + unitType + ".png" })),
             cursor));
     };
     return Unit;
@@ -1156,6 +1184,7 @@ var Map = /** @class */ (function (_super) {
     /** @constructor  Deben introducirse los elementos horizontal y vertical **/
     function Map(props) {
         var _this = _super.call(this, props) || this;
+        _this.turn = 0;
         _this.state = { cells: new Array(_this.props.horizontal) };
         Store_1.store.dispatch(GameState_1.Actions.generateSetListener(_this));
         return _this;
@@ -1164,6 +1193,11 @@ var Map = /** @class */ (function (_super) {
     Map.prototype.render = function () {
         // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
         return (React.createElement("div", null,
+            React.createElement("p", null,
+                "Turno del ",
+                this.turn % 2 == 0 ? "Jugador" : "Enemigo",
+                ". D\u00EDa ",
+                this.turn),
             React.createElement("button", { id: "exitButton", name: "exitButton", onClick: this.onClickExit.bind(this) }, "Salir del juego"),
             React.createElement("div", { id: "map", className: "map", onClick: this.onClick.bind(this), tabIndex: 0, onKeyDown: this.onKey.bind(this) }, this.generateMap.bind(this)().map(function (a) {
                 return a;
@@ -1294,7 +1328,13 @@ var Map = /** @class */ (function (_super) {
     };
     Map.prototype.clickAction = function (row, column) {
         var newPosition = new Utils_1.Pair(column, row);
-        var unitIndex = Utils_1.myIndexOf(Store_1.store.getState().position, newPosition);
+        var unitIndex;
+        if (this.turn % 2 == 0) {
+            unitIndex = Utils_1.myIndexOf(Store_1.store.getState().position, newPosition);
+        }
+        else {
+            unitIndex = Utils_1.myIndexOf(Store_1.store.getState().enemyposition, newPosition);
+        }
         //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
         if (unitIndex != -1 && Store_1.store.getState().type == "SET_LISTENER") {
             Store_1.saveState(GameState_1.Actions.generateMove(unitIndex));
@@ -1305,7 +1345,13 @@ var Map = /** @class */ (function (_super) {
             //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
         }
         else if (unitIndex == -1 && Store_1.store.getState().type == "MOVE") {
-            var actualPosition = Store_1.store.getState().position[Store_1.store.getState().selectedUnit];
+            var actualPosition = void 0;
+            if (this.turn % 2 == 0) {
+                actualPosition = Store_1.store.getState().position[Store_1.store.getState().selectedUnit];
+            }
+            else {
+                actualPosition = Store_1.store.getState().enemyposition[Store_1.store.getState().selectedUnit];
+            }
             // Transformamos primero a cúbica la posición de ambos:
             var cubicActual = new Utils_1.Cubic(actualPosition);
             var cubicNew = new Utils_1.Cubic(newPosition);
@@ -1314,7 +1360,13 @@ var Map = /** @class */ (function (_super) {
             //if(myIndexOfCubic(validPositions,cubicNew)!=-1){
             if (cubicActual.distanceTo(cubicNew) <= Store_1.storeStats.getState().movement && Utils_1.myIndexOf(Store_1.store.getState().obstacles, newPosition) == -1) {
                 //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
-                Store_1.saveState(GameState_1.Actions.generateChangeUnitPos(Store_1.store.getState().selectedUnit, newPosition, null));
+                if (this.turn % 2 == 0) {
+                    Store_1.saveState(GameState_1.Actions.generateChangeUnitPos(Store_1.store.getState().selectedUnit, newPosition, null));
+                }
+                else {
+                    Store_1.saveState(GameState_1.Actions.generateChangeUnitPosEnemy(Store_1.store.getState().selectedUnit, newPosition, null));
+                }
+                this.turn++;
             }
         }
         else {
@@ -1406,11 +1458,22 @@ var Map = /** @class */ (function (_super) {
             //Si está incluida en la lista de posiciones de unidades (el indice obtenido es -1) entonces se añade una casilla de unidad
             if (Utils_1.myIndexOf(Store_1.store.getState().position, pos) != -1) {
                 this.state.cells[row][column] = React.createElement(Cell_1.Cell, { row: row, column: column });
-                accum2.push(React.createElement(Unit_1.Unit, { row: row, column: column }));
+                accum2.push(React.createElement(Unit_1.Unit, { row: row, column: column, enemy: false }));
+                //Si está entre las casillas enemigas entonces se modifica su imagen.
+            }
+            else if (Utils_1.myIndexOf(Store_1.store.getState().enemyposition, pos) != -1) {
+                this.state.cells[row][column] = React.createElement(Cell_1.Cell, { row: row, column: column });
+                accum2.push(React.createElement(Unit_1.Unit, { row: row, column: column, enemy: true }));
                 //Si está en modo seleccionado se usará otra lógica es necesario llamarlo despues de la unidad sino las casillas de unidades al generarse se pondran en amarillo
             }
             else if (Store_1.store.getState().selectedUnit != null) {
-                var actualPosition = Store_1.store.getState().position[Store_1.store.getState().selectedUnit];
+                var actualPosition = void 0;
+                if (this.turn % 2 == 0) {
+                    actualPosition = Store_1.store.getState().position[Store_1.store.getState().selectedUnit];
+                }
+                else {
+                    actualPosition = Store_1.store.getState().enemyposition[Store_1.store.getState().selectedUnit];
+                }
                 // Convertimos la posición en cúbica
                 var cubicActual = new Utils_1.Cubic(actualPosition);
                 var cubicNew = new Utils_1.Cubic(pos);

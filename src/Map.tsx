@@ -11,9 +11,13 @@ import { Cursor } from './Cursor';
 
 /** Representa el mapa que contendrá las unidades y las casillas **/
 export class Map extends React.Component<any, any> {
+    //Esta variable controla el turno del juego
+    turn : number;
+
     /** @constructor  Deben introducirse los elementos horizontal y vertical **/
     constructor(props: any) {
         super(props);
+        this.turn = 0;
         this.state = { cells: new Array<Array<Cell>>(this.props.horizontal) };
         store.dispatch(Actions.generateSetListener(this));
     }
@@ -23,6 +27,7 @@ export class Map extends React.Component<any, any> {
         // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
         return (
             <div>
+                <p>Turno del {this.turn%2==0?"Jugador":"Enemigo"}. Día {this.turn}</p>
                 <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
                 <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)}>
                     {this.generateMap.bind(this)().map((a: any) => {
@@ -169,7 +174,13 @@ export class Map extends React.Component<any, any> {
 
     clickAction(row: number, column: number) {
         let newPosition: Pair = new Pair(column,row);
-        let unitIndex: number = myIndexOf(store.getState().position, newPosition);
+        let unitIndex: number;
+        //Cada vez que salga este if es que se está comprobando si es turno del jugador o enemigo y dependiendo de eso comprueba en la lista del jugador o enemiga
+        if(this.turn%2==0){
+            unitIndex = myIndexOf(store.getState().position, newPosition);
+        }else{
+            unitIndex = myIndexOf(store.getState().enemyposition, newPosition);
+        }
 
         //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
         if(unitIndex!= -1 && store.getState().type == "SET_LISTENER"){
@@ -179,7 +190,12 @@ export class Map extends React.Component<any, any> {
             saveState(Actions.generateMove(store.getState().selectedUnit));
         //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
         }else if(unitIndex==-1 && store.getState().type == "MOVE"){
-            let actualPosition: Pair = store.getState().position[store.getState().selectedUnit];
+            let actualPosition: Pair;
+            if(this.turn%2==0){
+                actualPosition = store.getState().position[store.getState().selectedUnit];
+            }else{
+                actualPosition = store.getState().enemyposition[store.getState().selectedUnit];
+            }
             // Transformamos primero a cúbica la posición de ambos:
             let cubicActual : Cubic = new Cubic(actualPosition);
             let cubicNew : Cubic = new Cubic(newPosition);
@@ -188,7 +204,12 @@ export class Map extends React.Component<any, any> {
             //if(myIndexOfCubic(validPositions,cubicNew)!=-1){
             if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement && myIndexOf(store.getState().obstacles, newPosition) == -1){
                 //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
-                saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null));
+                if(this.turn%2==0){
+                    saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null));
+                }else{
+                    saveState(Actions.generateChangeUnitPosEnemy(store.getState().selectedUnit, newPosition, null));
+                }
+                this.turn++;
             }
         }else{
             saveState(Actions.generateSetListener(this));
@@ -284,11 +305,22 @@ export class Map extends React.Component<any, any> {
             if (myIndexOf(store.getState().position, pos)!=-1){
                 this.state.cells[row][column] = <Cell row={row} column={column} />
                 accum2.push(
-                    <Unit row={row} column={column} />
+                    <Unit row={row} column={column} enemy={false}/>
+                );
+            //Si está entre las casillas enemigas entonces se modifica su imagen.
+            }else if(myIndexOf(store.getState().enemyposition, pos)!=-1){
+                this.state.cells[row][column] = <Cell row={row} column={column} />
+                accum2.push(
+                    <Unit row={row} column={column} enemy={true}/>
                 );
             //Si está en modo seleccionado se usará otra lógica es necesario llamarlo despues de la unidad sino las casillas de unidades al generarse se pondran en amarillo
             }else if(store.getState().selectedUnit!=null){
-                let actualPosition: Pair = store.getState().position[store.getState().selectedUnit];
+                let actualPosition: Pair;
+                if(this.turn%2==0){
+                    actualPosition = store.getState().position[store.getState().selectedUnit];
+                }else{
+                    actualPosition = store.getState().enemyposition[store.getState().selectedUnit];
+                }
                 // Convertimos la posición en cúbica
                 let cubicActual : Cubic = new Cubic(actualPosition);
                 let cubicNew : Cubic = new Cubic(pos);

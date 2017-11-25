@@ -18,6 +18,16 @@ export class Actions {
         };
     }
 
+    static generateChangeUnitPosEnemy(unit_id: number, new_position: Pair, selectedUnit: number) : Redux.AnyAction {
+        //Este estado es el de cambiar la posición (justo cuando hace clic de a donde quiere ir)
+        return {
+            type: "CHANGE_UNIT_POS_ENEMY",
+            unit_id: unit_id,
+            new_position: new_position,
+            selectedUnit: selectedUnit
+        };
+    }
+
     static generateMove(unit_id: number) : Redux.AnyAction {
         //ESte estado es el de mantener la unidad seleccionada
         return {
@@ -45,6 +55,7 @@ export class Actions {
 //Aquí declaramos las variables del estado
 export type State = {
     readonly position: Array<Pair>,
+    readonly enemyposition: Array<Pair>,
     readonly obstacles: Array<Pair>,
     readonly cursorPosition: Pair,
     readonly map: Map,
@@ -55,6 +66,7 @@ export type State = {
 //El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
 export const InitialState: State = {
     position: [new Pair (0,0), new Pair(0,1), new Pair (1,0)],
+    enemyposition: [new Pair (4,0), new Pair(4,1), new Pair (3,1)],
     obstacles: [new Pair (2,1), new Pair (2,1)],
     cursorPosition: new Pair(0,0),
     map: null,
@@ -71,6 +83,19 @@ export const Reducer : Redux.Reducer<State> =
                 state.position[action.unit_id] = action.new_position;
                 return {
                     position: state.position,
+                    enemyposition: state.enemyposition,
+                    obstacles: state.obstacles,
+                    map: state.map,
+                    selectedUnit: action.selectedUnit,
+                    cursorPosition: state.cursorPosition,
+                    type: "SET_LISTENER"
+                };
+            //Simplemente se añade un nuevo estado que corresponde al cambio de posición en caso de ser unidad enemiga
+            case "CHANGE_UNIT_POS_ENEMY":
+                state.enemyposition[action.unit_id] = action.new_position;
+                return {
+                    position: state.position,
+                    enemyposition: state.enemyposition,
                     obstacles: state.obstacles,
                     map: state.map,
                     selectedUnit: action.selectedUnit,
@@ -80,6 +105,7 @@ export const Reducer : Redux.Reducer<State> =
             case "MOVE":
                 return {
                     position: state.position,
+                    enemyposition: state.enemyposition,
                     obstacles: state.obstacles,
                     map: state.map,
                     selectedUnit: action.unit_id,
@@ -89,6 +115,7 @@ export const Reducer : Redux.Reducer<State> =
             case "SET_LISTENER":
                 return {
                     position: state.position,
+                    enemyposition: state.enemyposition,
                     obstacles: state.obstacles,
                     map: action.map,
                     selectedUnit: state.selectedUnit,
@@ -98,6 +125,7 @@ export const Reducer : Redux.Reducer<State> =
             case "CURSOR_MOVE":
                 return {
                     position: state.position,
+                    enemyposition: state.enemyposition,
                     obstacles: state.obstacles,
                     map: state.map,
                     cursorPosition: action.position,

@@ -19,12 +19,14 @@ export class Unit extends React.Component<any, any> {
         let positionCursor = store.getState().cursorPosition;
         // Despues comprobando que esta casilla esté en esa posición
         let cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row?<Cursor />:null;
+        //Comprobamos si es enemiga o no para cambiar su sprite
+        let unitType = this.props.enemy?"enemy_unit":"unit";
         // Le añadiremos el resultado de la comprobación anterior.
         return (
             <div className="div_cell">
                 <img className="cell" id={"hex"+this.props.row+"_"+this.props.column} src="imgs/hex_base.png" />
                 <div className ="unit">
-                    <img id={"unit"+this.props.row+"_"+this.props.column} src="imgs/unit.png" />
+                    <img id={"unit"+this.props.row+"_"+this.props.column} src={"imgs/"+unitType+".png"} />
                 </div>
                 {cursor}
             </div>
