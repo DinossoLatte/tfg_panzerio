@@ -899,6 +899,7 @@ exports.Reducer = function (state, action) {
                 cursorPosition: state.cursorPosition,
                 type: "SET_LISTENER"
             };
+        //Simplemente se añade un nuevo estado que corresponde al cambio de posición en caso de ser unidad enemiga
         case "CHANGE_UNIT_POS_ENEMY":
             state.enemyposition[action.unit_id] = action.new_position;
             return {
@@ -978,7 +979,7 @@ var Unit = /** @class */ (function (_super) {
         var positionCursor = Store_1.store.getState().cursorPosition;
         // Despues comprobando que esta casilla esté en esa posición
         var cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row ? React.createElement(Cursor_1.Cursor, null) : null;
-        //Comprobamos si es enemiga o no:
+        //Comprobamos si es enemiga o no para cambiar su sprite
         var unitType = this.props.enemy ? "enemy_unit" : "unit";
         // Le añadiremos el resultado de la comprobación anterior.
         return (React.createElement("div", { className: "div_cell" },
@@ -1329,11 +1330,15 @@ var Map = /** @class */ (function (_super) {
     Map.prototype.clickAction = function (row, column) {
         var newPosition = new Utils_1.Pair(column, row);
         var unitIndex;
+        var otherIndex;
+        //Cada vez que salga este if es que se está comprobando si es turno del jugador o enemigo y dependiendo de eso comprueba en la lista del jugador o enemiga
         if (this.turn % 2 == 0) {
             unitIndex = Utils_1.myIndexOf(Store_1.store.getState().position, newPosition);
+            otherIndex = Utils_1.myIndexOf(Store_1.store.getState().enemyposition, newPosition);
         }
         else {
             unitIndex = Utils_1.myIndexOf(Store_1.store.getState().enemyposition, newPosition);
+            otherIndex = Utils_1.myIndexOf(Store_1.store.getState().position, newPosition);
         }
         //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
         if (unitIndex != -1 && Store_1.store.getState().type == "SET_LISTENER") {
@@ -1344,7 +1349,7 @@ var Map = /** @class */ (function (_super) {
             Store_1.saveState(GameState_1.Actions.generateMove(Store_1.store.getState().selectedUnit));
             //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
         }
-        else if (unitIndex == -1 && Store_1.store.getState().type == "MOVE") {
+        else if (unitIndex == -1 && otherIndex == -1 && Store_1.store.getState().type == "MOVE") {
             var actualPosition = void 0;
             if (this.turn % 2 == 0) {
                 actualPosition = Store_1.store.getState().position[Store_1.store.getState().selectedUnit];

@@ -175,11 +175,14 @@ export class Map extends React.Component<any, any> {
     clickAction(row: number, column: number) {
         let newPosition: Pair = new Pair(column,row);
         let unitIndex: number;
+        let otherIndex: number;
         //Cada vez que salga este if es que se está comprobando si es turno del jugador o enemigo y dependiendo de eso comprueba en la lista del jugador o enemiga
         if(this.turn%2==0){
             unitIndex = myIndexOf(store.getState().position, newPosition);
+            otherIndex = myIndexOf(store.getState().enemyposition, newPosition);
         }else{
             unitIndex = myIndexOf(store.getState().enemyposition, newPosition);
+            otherIndex = myIndexOf(store.getState().position, newPosition);
         }
 
         //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
@@ -189,7 +192,7 @@ export class Map extends React.Component<any, any> {
         }else if((newPosition.column<0 || newPosition.column>this.props.horizontal || newPosition.row<0 || newPosition.row>this.props.vertical) && store.getState().type == "MOVE"){
             saveState(Actions.generateMove(store.getState().selectedUnit));
         //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
-        }else if(unitIndex==-1 && store.getState().type == "MOVE"){
+        }else if(unitIndex==-1 && otherIndex==-1 && store.getState().type == "MOVE"){
             let actualPosition: Pair;
             if(this.turn%2==0){
                 actualPosition = store.getState().position[store.getState().selectedUnit];
