@@ -58,5 +58,5 @@ typings/
 .env
 
 # Resultado de la compilación también debería ignorarse
-dist/bundle.js
-dist/bundle.js.map
+bundle.js
+bundle.js.map
