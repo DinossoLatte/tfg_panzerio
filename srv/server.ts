@@ -1,14 +1,37 @@
-import * as restify from 'restify';
+import * as webSocket from 'ws';
 
-function response_test(request, response, next) {
-    response.send('test ' + request.params.name);
-    next();
-}
+var server = new webSocket.Server({ port: 8080 });
 
-var server = restify.createServer();
-server.get('/hello/:name', response_test);
-server.head('/hello/:name', response_test);
+server.on('connection', function connect(ws) {
+    console.log("Connected with someone!");
+    ws.on("message", function received(data) {
+        console.log("Client said "+data);
+    });
 
-server.listen(8080, function() {
-  console.log('%s listening at %s', server.name, server.url);
+    ws.send("Hello!");
+
+    ws.on("message", function conv(data) {
+        if(data.includes("you?")) {
+            ws.send("Fine, thanks");
+        } else if(data.includes("Hoping")) {
+            ws.send("How about you?");
+        }
+    })
+});
+
+var connection = new webSocket('ws://localhost:8080');
+
+connection.on('open', function hello() {
+    connection.send("Hello!");
+})
+
+var said_hi = false;
+
+connection.on('message', function response(data) {
+    console.log("Someone said something! It said: "+data);
+    if(!said_hi) {
+        connection.send("How are you?");
+        connection.send("Hoping you're doing fine!");
+    }
+    said_hi = true;
 });
