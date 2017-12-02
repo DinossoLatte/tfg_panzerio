@@ -50,6 +50,22 @@ export class Actions {
             map: map
         };
     }
+
+    static attack(unit_id: number, player: boolean) : Redux.AnyAction {
+        //Este estado se envía la unidad a atacar (se eliminará del array) y si es del jugador o no
+        return {
+            type: "ATTACK",
+            unit_id: unit_id,
+            player: player
+        }
+    }
+
+    static finish() : Redux.AnyAction{
+        //Este estado por ahora simplemente hace que no se pueda jugar hasta que se reinicie la partida
+        return {
+            type: "FINISH"
+        }
+    }
 }
 
 //Aquí declaramos las variables del estado
@@ -130,8 +146,21 @@ export const Reducer : Redux.Reducer<State> =
                     map: state.map,
                     cursorPosition: action.position,
                     selectedUnit: state.selectedUnit,
-                    type: state.type,
+                    type: state.type
                 };
+            case "ATTACK":
+                action.player%2==0?state.position.splice(action.unit_id, 1):state.enemyposition.splice(action.unit_id, 1);
+                return {
+                    position: state.position,
+                    enemyposition: state.enemyposition,
+                    obstacles: state.obstacles,
+                    map: state.map,
+                    cursorPosition: state.cursorPosition,
+                    selectedUnit: state.selectedUnit,
+                    type: "MOVE"
+                }
+            case "FINISH":
+                return state;
             default:
                 return state;
         }

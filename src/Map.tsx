@@ -13,11 +13,13 @@ import { Cursor } from './Cursor';
 export class Map extends React.Component<any, any> {
     //Esta variable controla el turno del juego
     turn : number;
+    actualstate : number; //El valor 0 es por defecto, 1 es victoria y 2 es derrota
 
     /** @constructor  Deben introducirse los elementos horizontal y vertical **/
     constructor(props: any) {
         super(props);
         this.turn = 0;
+        this.actualstate = 0;
         this.state = { cells: new Array<Array<Cell>>(this.props.horizontal) };
         store.dispatch(Actions.generateSetListener(this));
     }
@@ -27,7 +29,7 @@ export class Map extends React.Component<any, any> {
         // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
         return (
             <div>
-                <p>Turno del {this.turn%2==0?"Jugador":"Enemigo"}. Día {this.turn}</p>
+                <p>Turno del {this.turn%2==0?"Jugador":"Enemigo"}. Día {this.turn}{this.actualstate==1?". Victoria":this.actualstate==2?". Derrota":""}</p>
                 <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
                 <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)}>
                     {this.generateMap.bind(this)().map((a: any) => {
@@ -192,7 +194,7 @@ export class Map extends React.Component<any, any> {
         }else if((newPosition.column<0 || newPosition.column>this.props.horizontal || newPosition.row<0 || newPosition.row>this.props.vertical) && store.getState().type == "MOVE"){
             saveState(Actions.generateMove(store.getState().selectedUnit));
         //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
-        }else if(unitIndex==-1 && otherIndex==-1 && store.getState().type == "MOVE"){
+        }else if(unitIndex==-1 && store.getState().type == "MOVE"){
             let actualPosition: Pair;
             if(this.turn%2==0){
                 actualPosition = store.getState().position[store.getState().selectedUnit];
@@ -206,11 +208,24 @@ export class Map extends React.Component<any, any> {
             //Si la distancia entre la nueva posición y la actual es menor al limite de movimiento entonces se realizará el movimiento
             //if(myIndexOfCubic(validPositions,cubicNew)!=-1){
             if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement && myIndexOf(store.getState().obstacles, newPosition) == -1){
+                //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
+                if(otherIndex != -1){
+                    //Si es así se ataca
+                    saveState(Actions.attack(otherIndex,this.turn%2==0));
+                }
                 //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
                 if(this.turn%2==0){
                     saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null));
                 }else{
                     saveState(Actions.generateChangeUnitPosEnemy(store.getState().selectedUnit, newPosition, null));
+                }
+                //Si no quedan más unidades enemigas es una victoria y si no quedan más unidades del jugador es una derrota
+                if(store.getState().enemyposition.length==0){
+                    this.actualstate=1;
+                    saveState(Actions.finish());
+                }else if(store.getState().position.length==0){
+                    this.actualstate=2;
+                    saveState(Actions.finish());
                 }
                 this.turn++;
             }

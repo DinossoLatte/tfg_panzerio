@@ -870,6 +870,18 @@ var Actions = /** @class */ (function () {
             map: map
         };
     };
+    Actions.attack = function (unit_id, player) {
+        return {
+            type: "ATTACK",
+            unit_id: unit_id,
+            player: player
+        };
+    };
+    Actions.finish = function () {
+        return {
+            type: "FINISH"
+        };
+    };
     return Actions;
 }());
 exports.Actions = Actions;
@@ -939,8 +951,21 @@ exports.Reducer = function (state, action) {
                 map: state.map,
                 cursorPosition: action.position,
                 selectedUnit: state.selectedUnit,
-                type: state.type,
+                type: state.type
             };
+        case "ATTACK":
+            action.player % 2 == 0 ? state.position.splice(action.unit_id, 1) : state.enemyposition.splice(action.unit_id, 1);
+            return {
+                position: state.position,
+                enemyposition: state.enemyposition,
+                obstacles: state.obstacles,
+                map: state.map,
+                cursorPosition: state.cursorPosition,
+                selectedUnit: state.selectedUnit,
+                type: "MOVE"
+            };
+        case "FINISH":
+            return state;
         default:
             return state;
     }
@@ -1186,6 +1211,7 @@ var Map = /** @class */ (function (_super) {
     function Map(props) {
         var _this = _super.call(this, props) || this;
         _this.turn = 0;
+        _this.actualstate = 0;
         _this.state = { cells: new Array(_this.props.horizontal) };
         Store_1.store.dispatch(GameState_1.Actions.generateSetListener(_this));
         return _this;
@@ -1198,7 +1224,8 @@ var Map = /** @class */ (function (_super) {
                 "Turno del ",
                 this.turn % 2 == 0 ? "Jugador" : "Enemigo",
                 ". D\u00EDa ",
-                this.turn),
+                this.turn,
+                this.actualstate == 1 ? ". Victoria" : this.actualstate == 2 ? ". Derrota" : ""),
             React.createElement("button", { id: "exitButton", name: "exitButton", onClick: this.onClickExit.bind(this) }, "Salir del juego"),
             React.createElement("div", { id: "map", className: "map", onClick: this.onClick.bind(this), tabIndex: 0, onKeyDown: this.onKey.bind(this) }, this.generateMap.bind(this)().map(function (a) {
                 return a;
@@ -1349,7 +1376,7 @@ var Map = /** @class */ (function (_super) {
             Store_1.saveState(GameState_1.Actions.generateMove(Store_1.store.getState().selectedUnit));
             //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
         }
-        else if (unitIndex == -1 && otherIndex == -1 && Store_1.store.getState().type == "MOVE") {
+        else if (unitIndex == -1 && Store_1.store.getState().type == "MOVE") {
             var actualPosition = void 0;
             if (this.turn % 2 == 0) {
                 actualPosition = Store_1.store.getState().position[Store_1.store.getState().selectedUnit];
@@ -1364,12 +1391,26 @@ var Map = /** @class */ (function (_super) {
             //Si la distancia entre la nueva posición y la actual es menor al limite de movimiento entonces se realizará el movimiento
             //if(myIndexOfCubic(validPositions,cubicNew)!=-1){
             if (cubicActual.distanceTo(cubicNew) <= Store_1.storeStats.getState().movement && Utils_1.myIndexOf(Store_1.store.getState().obstacles, newPosition) == -1) {
+                //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
+                if (otherIndex != -1) {
+                    //Si es así se ataca
+                    Store_1.saveState(GameState_1.Actions.attack(otherIndex, this.turn % 2 == 0));
+                }
                 //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
                 if (this.turn % 2 == 0) {
                     Store_1.saveState(GameState_1.Actions.generateChangeUnitPos(Store_1.store.getState().selectedUnit, newPosition, null));
                 }
                 else {
                     Store_1.saveState(GameState_1.Actions.generateChangeUnitPosEnemy(Store_1.store.getState().selectedUnit, newPosition, null));
+                }
+                //Si no quedan más unidades enemigas es una victoria y si no quedan más unidades del jugador es una derrota
+                if (Store_1.store.getState().enemyposition.length == 0) {
+                    this.actualstate = 1;
+                    Store_1.saveState(GameState_1.Actions.finish());
+                }
+                else if (Store_1.store.getState().position.length == 0) {
+                    this.actualstate = 2;
+                    Store_1.saveState(GameState_1.Actions.finish());
                 }
                 this.turn++;
             }
