@@ -20,6 +20,7 @@ export function saveState(action: Redux.AnyAction) {
     // Refresca el mapa y el resto de variables del estado
     var map: Map = store.getState().map;
     var position: Array<Pair> = store.getState().position;
+    var visitables: Array<Pair> = store.getState().visitables;
     var enemyposition: Array<Pair> = store.getState().enemyposition;
     var obstacles: Array<Pair> = store.getState().obstacles;
     var selectedUnit: number = store.getState().selectedUnit;

@@ -65,6 +65,12 @@ export class Cubic {
         return this.z;
     }
 
+    add(cubic : Cubic) : Cubic {
+        var new_cubic = Object.create(this);
+        new_cubic.sum(cubic);
+        return new_cubic;
+    }
+
     sum(cubic: Cubic){
         this.x = this.x+cubic.getX();
         this.y = this.y+cubic.getY();

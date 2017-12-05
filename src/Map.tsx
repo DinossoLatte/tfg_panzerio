@@ -191,44 +191,37 @@ export class Map extends React.Component<any, any> {
         if(unitIndex!= -1 && store.getState().type == "SET_LISTENER"){
             saveState(Actions.generateMove(unitIndex));
         //Si hace clic en una possición exterior, mantieene el estado de en movimiento (seleccionado) y sigue almacenando la unidad seleccionada
-        }else if((newPosition.column<0 || newPosition.column>this.props.horizontal || newPosition.row<0 || newPosition.row>this.props.vertical) && store.getState().type == "MOVE"){
+        }else if((newPosition.column<0 || newPosition.column>this.props.horizontal || newPosition.row<0 || newPosition.row>this.props.vertical)){
             saveState(Actions.generateMove(store.getState().selectedUnit));
         //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
-        }else if(unitIndex==-1 && store.getState().type == "MOVE"){
+        }else if(unitIndex==-1 && store.getState().selectedUnit != null && (myIndexOf(store.getState().visitables, newPosition) != -1 || otherIndex!= -1)){
             let actualPosition: Pair;
-            if(this.turn%2==0){
+            /*if(this.turn%2==0){
                 actualPosition = store.getState().position[store.getState().selectedUnit];
             }else{
                 actualPosition = store.getState().enemyposition[store.getState().selectedUnit];
+            }*/
+
+            //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
+            if(otherIndex != -1){
+                //Si es así se ataca
+                saveState(Actions.attack(otherIndex,this.turn%2==0));
             }
-            // Transformamos primero a cúbica la posición de ambos:
-            let cubicActual : Cubic = new Cubic(actualPosition);
-            let cubicNew : Cubic = new Cubic(newPosition);
-            //let validPositions: Array<Cubic> = this.getValidPosition(cubicActual);
-            //Si la distancia entre la nueva posición y la actual es menor al limite de movimiento entonces se realizará el movimiento
-            //if(myIndexOfCubic(validPositions,cubicNew)!=-1){
-            if(cubicActual.distanceTo(cubicNew) <= storeStats.getState().movement && myIndexOf(store.getState().obstacles, newPosition) == -1){
-                //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
-                if(otherIndex != -1){
-                    //Si es así se ataca
-                    saveState(Actions.attack(otherIndex,this.turn%2==0));
-                }
-                //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
-                if(this.turn%2==0){
-                    saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null));
-                }else{
-                    saveState(Actions.generateChangeUnitPosEnemy(store.getState().selectedUnit, newPosition, null));
-                }
-                //Si no quedan más unidades enemigas es una victoria y si no quedan más unidades del jugador es una derrota
-                if(store.getState().enemyposition.length==0){
-                    this.actualstate=1;
-                    saveState(Actions.finish());
-                }else if(store.getState().position.length==0){
-                    this.actualstate=2;
-                    saveState(Actions.finish());
-                }
-                this.turn++;
+            //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
+            if(this.turn%2==0){
+                saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null));
+            }else{
+                saveState(Actions.generateChangeUnitPosEnemy(store.getState().selectedUnit, newPosition, null));
             }
+            //Si no quedan más unidades enemigas es una victoria y si no quedan más unidades del jugador es una derrota
+            if(store.getState().enemyposition.length==0){
+                this.actualstate=1;
+                saveState(Actions.finish());
+            }else if(store.getState().position.length==0){
+                this.actualstate=2;
+                saveState(Actions.finish());
+            }
+            this.turn++;
         }else{
             saveState(Actions.generateSetListener(this));
         }
