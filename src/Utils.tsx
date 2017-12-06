@@ -23,6 +23,13 @@ export class Pair {
         this.row = y;
     }
 
+    add(pair : Pair) : Pair {
+        var new_pair = new Pair(0,0);
+        new_pair.row = this.row + pair.row;
+        new_pair.column = this.column + pair.column;
+        return new_pair;
+    }
+
     public equals(pair: Pair): boolean {
         return this.row == pair.row && this.column == pair.column;
     }
@@ -38,9 +45,10 @@ export class Cubic {
     y : number;
     z : number;
 
+    // TODO: Este constructor debe sólo admitir x,y y z. Se debe poner un método estático de conversión!!!
     constructor(pair : Pair) {
-        this.x = pair.row;
-        this.z = pair.column - (pair.row - (pair.row&1))/2
+        this.x = pair.column;
+        this.z = pair.row - (pair.column - (pair.column&1))/2
         this.y = -this.x-this.z;
     }
 

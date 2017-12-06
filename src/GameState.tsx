@@ -28,11 +28,12 @@ export class Actions {
         };
     }
 
-    static generateMove(unit_id: number) : Redux.AnyAction {
+    static generateMove(unit_id: number, isAlly : boolean) : Redux.AnyAction {
         //ESte estado es el de mantener la unidad seleccionada
         return {
             type: "MOVE",
-            unit_id: unit_id
+            unit_id: unit_id,
+            isAlly: isAlly
         };
     }
 
@@ -85,7 +86,7 @@ export const InitialState: State = {
     position: [new Pair (0,0), new Pair(0,1), new Pair (1,0)],
     visitables: null,
     enemyposition: [new Pair (4,0), new Pair(4,1), new Pair (3,1)],
-    obstacles: [new Pair (2,1), new Pair (2,1)],
+    obstacles: [new Pair (2,1), new Pair (2,2), new Pair(3,1), new Pair(4,2)],
     cursorPosition: new Pair(0,0),
     map: null,
     selectedUnit: null,
@@ -124,7 +125,7 @@ export const Reducer : Redux.Reducer<State> =
                 };
             case "MOVE":
                 // Para reducir los cálculos del movimiento, vamos a realizar en este punto el cálculo de las celdas visitables
-                var visitables_cubic : Array<Cubic> = [new Cubic(state.position[action.unit_id])];
+                var visitables_cubic : Array<Cubic> = [new Cubic(action.isAlly?state.position[action.unit_id]:state.enemyposition[action.unit_id])];
                 var movements : number = InitialStats.movement;
                 var neighbours : Array<Cubic> = [];
                 // Primero, iteraremos desde 0 hasta el número de movimientos
@@ -140,7 +141,7 @@ export const Reducer : Redux.Reducer<State> =
                         visitables_cubic.forEach(cubic => {
                             var new_cubic = cubic.add(cubic_directions[index_directions]);
                             if(myIndexOf(state.obstacles, new_cubic.getPair()) == -1 && myIndexOfCubic(visitables_cubic, new_cubic)
-                                && myIndexOf(state.position, new_cubic.getPair()) == -1) {
+                                && myIndexOf(action.isAlly?state.position:state.enemyposition, new_cubic.getPair()) == -1) {
                                 new_neighbours.push(new_cubic);
                             }
                         });

@@ -3,7 +3,7 @@ import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
 
 export class Cursor extends React.Component<any, any> {
-    constructor(props: any) {
+    constructor(props : any) {
         super(props);
     }
 
