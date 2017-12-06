@@ -45,15 +45,15 @@ export class Map extends React.Component<any, any> {
     }
 
     onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
-        let keyCode = keyEvent.keyCode;
+        let keyCode = keyEvent.key;
         let cursorPosition, newCursorPosition : Pair;
         console.log("KeyCode: "+keyCode);
         switch(keyCode) {
-            case 27:
+            case 'Escape':
                 this.props.parentObject.changeGameState(0); // Retornamos al menu.
                 break;
             // Los siguientes casos corresponden con las teclas del numpad, para mover el cursor
-            case 97:
+            case '1':
                 // La tecla 1 del numpad (-1,+1)
                 // Primero, obtenemos la posición de la casilla
                 cursorPosition = store.getState().cursorPosition;
@@ -61,39 +61,40 @@ export class Map extends React.Component<any, any> {
                 newCursorPosition = new Pair(cursorPosition.row + (cursorPosition.column&1?1:0), cursorPosition.column - 1);
                 // Llamamos a la acción para cambiarlo
                 break;
-            case 98:
+            case '2':
                 // La tecla 2 del numpad (0,+1)
                 cursorPosition = store.getState().cursorPosition;
                 newCursorPosition = new Pair(cursorPosition.row + 1, cursorPosition.column);
                 break;
-            case 99:
+            case '3':
                 // La tecla 3 del numpad (+1,+1)
                 cursorPosition = store.getState().cursorPosition;
                 newCursorPosition = new Pair(cursorPosition.row + (cursorPosition.column&1?1:0), cursorPosition.column + 1);
                 break;
-            case 103:
+            case '7':
                 // La tecla 7 del numpad (-1,-1)
                 cursorPosition = store.getState().cursorPosition;
                 newCursorPosition = new Pair(cursorPosition.row - (cursorPosition.column&1?0:1), cursorPosition.column - 1);
                 break;
-            case 104:
+            case '8':
                 // La tecla 8 del numpad (0, -1)
                 cursorPosition = store.getState().cursorPosition;
                 newCursorPosition = new Pair(cursorPosition.row - 1, cursorPosition.column);
                 break;
-            case 105:
+            case '9':
                 // La tecla 9 del numpad (+1, -1)
                 cursorPosition = store.getState().cursorPosition;
                 newCursorPosition = new Pair(cursorPosition.row - (cursorPosition.column&1?0:1), cursorPosition.column + 1);
                 break;
-            case 32:
+            case '5':
+            case ' ':
                 // Realizar el click en la posición
                 cursorPosition = store.getState().cursorPosition;
                 this.clickAction(cursorPosition.row, cursorPosition.column);
                 break;
         }
         // Si puede hacerse el movimiento, realiza la acción
-        if(newCursorPosition.row >= 0 && newCursorPosition.column >= 0 && newCursorPosition.column <= this.props.vertical && newCursorPosition.row <= this.props.horizontal) {
+        if(newCursorPosition && newCursorPosition.row >= 0 && newCursorPosition.column >= 0 && newCursorPosition.column <= this.props.vertical && newCursorPosition.row <= this.props.horizontal) {
             saveState(Actions.generateCursorMovement(newCursorPosition));
         }
     }
