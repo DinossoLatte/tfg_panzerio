@@ -172,11 +172,11 @@ export class Map extends React.Component<any, any> {
 
         //Guardamos la posición actual y la nueva posición
 
-        this.clickAction(row, column); // TODO Solucionar esto!
+        this.clickAction(row, column);
     }
 
     clickAction(row: number, column: number) {
-        let newPosition: Pair = new Pair(column,row);
+        let newPosition: Pair = new Pair(row,column);
         let unitIndex: number;
         let otherIndex: number;
         let isAlly: boolean
@@ -199,65 +199,24 @@ export class Map extends React.Component<any, any> {
             saveState(Actions.generateMove(store.getState().selectedUnit, isAlly));
         //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
         }else if(unitIndex==-1 && store.getState().selectedUnit != null && myIndexOf(store.getState().visitables, newPosition) != -1){
-            saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null));
+            // Primero comprobamos si ataca
+            if(otherIndex > -1 && myIndexOf(store.getState().visitables, newPosition)) {
+                // Ejecutamos la acción de ataque
+                saveState(Actions.attack(otherIndex, isAlly));
+            }
+            // Despues ejecutamos el movimiento
+            if(isAlly) {
+                saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null));
+            } else {
+                saveState(Actions.generateChangeUnitPosEnemy(store.getState().selectedUnit, newPosition, null));
+            }
+
+            this.turn++;
         }else{
             saveState(Actions.generateSetListener(this));
         }
     }
-/*
-    getValidPosition(actual: Cubic){
-        let valid: Array<Cubic> = [];
-        let last: Cubic = actual;
-        let pos: Cubic;
-        let r: number = 0;
-        var row = [];
-        for(var k = 1; k <= storeStats.getState().movement; k++) {
-            row[k] = [];
-            console.log("k="+k);
-            if(k-1>0){
-                for(var j = 0; j < row[k-1].length; j++){
-                    last = row[k-1][j];
-                    console.log("j="+j);
-                    console.log("last: "+last.x+","+last.y+","+last.z);
-                    for (var i = 0; i < cubic_directions.length; i++) {
-                        console.log("i="+i);
-                        pos = last;
-                        pos.sum(cubic_directions[i]);
-                        console.log("pos: "+pos.getPair().x+","+pos.getPair().y);
-                        console.log("posCubic: "+pos.x+","+pos.y+","+pos.z);
-                        if(myIndexOf(store.getState().obstacles,pos.getPair())==-1 && myIndexOfCubic(valid,pos)==-1){
-                            console.log("obstacles: "+myIndexOf(store.getState().obstacles,pos.getPair()));
-                            console.log("valid: "+myIndexOfCubic(valid,pos));
-                            row[k].push(pos);
-                            valid.push(pos);
-                            console.log("introduceCubic "+valid[r].x+","+valid[r].y+","+valid[r].z);
-                            console.log("introduce "+valid[r].getPair().x+","+valid[r].getPair().y);
-                            r++;
-                        }
-                    }
-                }
-            }else{
-                for (var i = 0; i < cubic_directions.length; i++) {
-                    console.log("i="+i);
-                    pos = last;
-                    pos.sum(cubic_directions[i]);
-                    console.log("pos: "+pos.getPair().x+","+pos.getPair().y);
-                    console.log("posCubic: "+pos.x+","+pos.y+","+pos.z);
-                    console.log("obstacles: "+myIndexOf(store.getState().obstacles,pos.getPair()));
-                    console.log("valid: "+myIndexOfCubic(valid,pos));
-                    if(myIndexOf(store.getState().obstacles,pos.getPair())==-1 && myIndexOfCubic(valid,pos)==-1){
-                        row[k].push(pos);
-                        valid.push(pos);
-                        console.log("introduceCubic "+valid[r].x+","+valid[r].y+","+valid[r].z);
-                        console.log("introduce "+valid[0].x+","+valid[0].y+","+valid[0].z);
-                    }
-                }
-            }
 
-        }
-        return valid;
-    }
-*/
     // Calcula si dado los datos del circulo y  un punto cualquiuera, el punto cualquiera está dentro del círculo
     getInCircle(centerX: number, centerY: number, radius: number, x: number, y: number) {
         // Raiz cuadrada de la distancia vectorial entre el centro y el punto debe ser menor al radio
@@ -289,7 +248,7 @@ export class Map extends React.Component<any, any> {
         for(var j = num_row%2==0?0:1; j <= this.props.horizontal; j = j+2) { // Incrementamos en 2 porque el elemento entre cada hex tendrá el valor j + 1.
             let column = j;
             let row = num_row%2==0?num_row/2:Math.floor(num_row/2);
-            let pos = new Pair(column, row);
+            let pos = new Pair(row, column);
             //Si está incluida en la lista de posiciones de unidades (el indice obtenido es -1) entonces se añade una casilla de unidad
             let indexOfAlly = myIndexOf(store.getState().position, pos);
             let indexOfEnemy = myIndexOf(store.getState().enemyposition, pos);

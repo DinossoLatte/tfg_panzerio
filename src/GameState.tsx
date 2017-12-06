@@ -85,7 +85,7 @@ export type State = {
 export const InitialState: State = {
     position: [new Pair (0,0), new Pair(0,1), new Pair (1,0)],
     visitables: null,
-    enemyposition: [new Pair (4,0), new Pair(4,1), new Pair (3,1)],
+    enemyposition: [new Pair (0,4), new Pair(1,4), new Pair (0,5)],
     obstacles: [new Pair (2,1), new Pair (2,2), new Pair(3,1), new Pair(4,2)],
     cursorPosition: new Pair(0,0),
     map: null,
@@ -137,7 +137,6 @@ export const Reducer : Redux.Reducer<State> =
                     // Calculamos los próximos vecinos:
                     var new_neighbours: Array<Cubic> = [];
                     for(var index_directions = 0; index_directions < cubic_directions.length; index_directions++) {
-                        console.log(index_directions);
                         visitables_cubic.forEach(cubic => {
                             var new_cubic = cubic.add(cubic_directions[index_directions]);
                             if(myIndexOf(state.obstacles, new_cubic.getPair()) == -1 && myIndexOfCubic(visitables_cubic, new_cubic)
@@ -151,6 +150,7 @@ export const Reducer : Redux.Reducer<State> =
 
                 // Finalmente convertimos el resultado a Pair:
                 var visitables_pair : Array<Pair> = visitables_cubic.map(cubic => cubic.getPair());
+                console.log(visitables_pair);
 
                 return {
                     position: state.position,
