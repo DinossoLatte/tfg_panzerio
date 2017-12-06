@@ -79,6 +79,7 @@ export class Map extends React.Component<any, any> {
                 cursorPosition = store.getState().cursorPosition;
                 newCursorPosition = new Pair(cursorPosition.row - (cursorPosition.column&1?0:1), cursorPosition.column + 1);
                 break;
+            case '5':
             case ' ':
                 // Realizar el click en la posición
                 cursorPosition = store.getState().cursorPosition;
