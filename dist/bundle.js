@@ -77,8 +77,8 @@ module.exports = React;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var Redux = __webpack_require__(17);
-var GameState_1 = __webpack_require__(10);
-var Unit_1 = __webpack_require__(11);
+var GameState_1 = __webpack_require__(11);
+var Unit_1 = __webpack_require__(3);
 exports.store = Redux.createStore(GameState_1.Reducer);
 //Guardaremos el estado de stats (en un futuro podremos guardar el estado y modificarlo y será como buffos o incluso restricciones de mapa)
 exports.storeStats = Redux.createStore(Unit_1.ReducerStats);
@@ -121,6 +121,12 @@ var Pair = /** @class */ (function () {
     Pair.prototype.setRow = function (y) {
         this.row = y;
     };
+    Pair.prototype.add = function (pair) {
+        var new_pair = new Pair(0, 0);
+        new_pair.row = this.row + pair.row;
+        new_pair.column = this.column + pair.column;
+        return new_pair;
+    };
     Pair.prototype.equals = function (pair) {
         return this.row == pair.row && this.column == pair.column;
     };
@@ -132,9 +138,10 @@ var Pair = /** @class */ (function () {
 exports.Pair = Pair;
 /* Representación cúbica del hexágono */
 var Cubic = /** @class */ (function () {
+    // TODO: Este constructor debe sólo admitir x,y y z. Se debe poner un método estático de conversión!!!
     function Cubic(pair) {
-        this.x = pair.row;
-        this.z = pair.column - (pair.row - (pair.row & 1)) / 2;
+        this.x = pair.column;
+        this.z = pair.row - (pair.column - (pair.column & 1)) / 2;
         this.y = -this.x - this.z;
     }
     /* Calcula la distancia Manhattan */
@@ -152,6 +159,11 @@ var Cubic = /** @class */ (function () {
     };
     Cubic.prototype.getZ = function () {
         return this.z;
+    };
+    Cubic.prototype.add = function (cubic) {
+        var new_cubic = Object.create(this);
+        new_cubic.sum(cubic);
+        return new_cubic;
     };
     Cubic.prototype.sum = function (cubic) {
         this.x = this.x + cubic.getX();
@@ -193,6 +205,71 @@ exports.myIndexOfCubic = myIndexOfCubic;
 
 /***/ }),
 /* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var Store_1 = __webpack_require__(1);
+var Cursor_1 = __webpack_require__(12);
+var Unit = /** @class */ (function (_super) {
+    __extends(Unit, _super);
+    function Unit(props) {
+        return _super.call(this, props) || this;
+    }
+    //Con una variable externa se podría hacer que haya o no sprite de montaña etc
+    //TODO En la id de unit debería ir la id de unit pero más adelante se añadirá
+    Unit.prototype.render = function () {
+        // Al igual que en Cell, primero obtenemos la posición del cursor
+        var positionCursor = Store_1.store.getState().cursorPosition;
+        // Despues comprobando que esta casilla esté en esa posición
+        var cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row ? React.createElement(Cursor_1.Cursor, null) : null;
+        //Comprobamos si es enemiga o no para cambiar su sprite
+        var unitType = this.props.enemy ? "enemy_unit" : "unit";
+        // Le añadiremos el resultado de la comprobación anterior.
+        return (React.createElement("div", { className: "div_cell" },
+            React.createElement("img", { className: "cell", id: "hex" + this.props.row + "_" + this.props.column, src: "imgs/hex_base.png" }),
+            React.createElement("div", { className: "unit" },
+                React.createElement("img", { id: "unit" + this.props.row + "_" + this.props.column, src: "imgs/" + unitType + ".png" })),
+            cursor));
+    };
+    return Unit;
+}(React.Component));
+exports.Unit = Unit;
+//Al inicio serán estos, el tipo nos sirve para identificar la situacion, ejemplo, con buffo de ataque etc.
+exports.InitialStats = {
+    movement: 2,
+    type: "NONE"
+};
+//En principio no se realizarán cambios ya que solo nos centraremos en que el movimiento funcione
+exports.ReducerStats = function (state, action) {
+    if (state === void 0) { state = exports.InitialStats; }
+    //Dependiendo del tipo se cambiarán las variables del estado
+    switch (action.type) {
+        case "NONE":
+            return {
+                movement: state.movement,
+                type: "NONE"
+            };
+        default:
+            return state;
+    }
+};
+
+
+/***/ }),
+/* 4 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -382,13 +459,13 @@ process.umask = function() { return 0; };
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ActionTypes; });
 /* harmony export (immutable) */ __webpack_exports__["b"] = createStore;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_es_isPlainObject__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_es_isPlainObject__ = __webpack_require__(6);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_symbol_observable__ = __webpack_require__(26);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_symbol_observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_symbol_observable__);
 
@@ -641,7 +718,7 @@ var ActionTypes = {
 }
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -713,7 +790,7 @@ function isPlainObject(value) {
 
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -727,7 +804,7 @@ var Symbol = __WEBPACK_IMPORTED_MODULE_0__root_js__["a" /* default */].Symbol;
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports) {
 
 var g;
@@ -754,7 +831,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -782,7 +859,7 @@ function warning(message) {
 }
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -821,13 +898,14 @@ function compose() {
 }
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var Utils_1 = __webpack_require__(2);
+var Unit_1 = __webpack_require__(3);
 var Actions = /** @class */ (function () {
     function Actions() {
     }
@@ -850,11 +928,12 @@ var Actions = /** @class */ (function () {
             selectedUnit: selectedUnit
         };
     };
-    Actions.generateMove = function (unit_id) {
+    Actions.generateMove = function (unit_id, player) {
         //ESte estado es el de mantener la unidad seleccionada
         return {
             type: "MOVE",
-            unit_id: unit_id
+            unit_id: unit_id,
+            player: player
         };
     };
     Actions.generateCursorMovement = function (new_position) {
@@ -871,6 +950,7 @@ var Actions = /** @class */ (function () {
         };
     };
     Actions.attack = function (unit_id, player) {
+        //Este estado se envía la unidad a atacar (se eliminará del array) y si es del jugador o no
         return {
             type: "ATTACK",
             unit_id: unit_id,
@@ -878,6 +958,7 @@ var Actions = /** @class */ (function () {
         };
     };
     Actions.finish = function () {
+        //Este estado por ahora simplemente hace que no se pueda jugar hasta que se reinicie la partida
         return {
             type: "FINISH"
         };
@@ -888,8 +969,9 @@ exports.Actions = Actions;
 //El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
 exports.InitialState = {
     position: [new Utils_1.Pair(0, 0), new Utils_1.Pair(0, 1), new Utils_1.Pair(1, 0)],
-    enemyposition: [new Utils_1.Pair(4, 0), new Utils_1.Pair(4, 1), new Utils_1.Pair(3, 1)],
-    obstacles: [new Utils_1.Pair(2, 1), new Utils_1.Pair(2, 1)],
+    enemyposition: [new Utils_1.Pair(0, 4), new Utils_1.Pair(1, 4), new Utils_1.Pair(0, 3)],
+    visitables: null,
+    obstacles: [new Utils_1.Pair(2, 2)],
     cursorPosition: new Utils_1.Pair(0, 0),
     map: null,
     selectedUnit: null,
@@ -905,6 +987,7 @@ exports.Reducer = function (state, action) {
             return {
                 position: state.position,
                 enemyposition: state.enemyposition,
+                visitables: state.visitables,
                 obstacles: state.obstacles,
                 map: state.map,
                 selectedUnit: action.selectedUnit,
@@ -917,6 +1000,7 @@ exports.Reducer = function (state, action) {
             return {
                 position: state.position,
                 enemyposition: state.enemyposition,
+                visitables: state.visitables,
                 obstacles: state.obstacles,
                 map: state.map,
                 selectedUnit: action.selectedUnit,
@@ -924,9 +1008,36 @@ exports.Reducer = function (state, action) {
                 type: "SET_LISTENER"
             };
         case "MOVE":
+            // Para reducir los cálculos del movimiento, vamos a realizar en este punto el cálculo de las celdas visitables
+            var visitables_cubic = [new Utils_1.Cubic(action.player ? state.position[action.unit_id] : state.enemyposition[action.unit_id])];
+            var movements = Unit_1.InitialStats.movement;
+            var neighbours = [];
+            // Primero, iteraremos desde 0 hasta el número de movimientos
+            for (var i = 0; i <= movements; i++) {
+                // Primero, filtramos de los vecinos los que sean obstáculos
+                neighbours.filter(function (possible_cubic) { return Utils_1.myIndexOf(state.obstacles, possible_cubic.getPair()) == -1; });
+                // Añadimos los vecinos que queden, son celdas visitables:
+                visitables_cubic = visitables_cubic.concat(neighbours);
+                // Calculamos los próximos vecinos:
+                var new_neighbours = [];
+                for (var index_directions = 0; index_directions < Utils_1.cubic_directions.length; index_directions++) {
+                    console.log(index_directions);
+                    visitables_cubic.forEach(function (cubic) {
+                        var new_cubic = cubic.add(Utils_1.cubic_directions[index_directions]);
+                        if (Utils_1.myIndexOf(state.obstacles, new_cubic.getPair()) == -1 && Utils_1.myIndexOfCubic(visitables_cubic, new_cubic)
+                            && Utils_1.myIndexOf(action.player ? state.position : state.enemyposition, new_cubic.getPair()) == -1) {
+                            new_neighbours.push(new_cubic);
+                        }
+                    });
+                }
+                neighbours = new_neighbours;
+            }
+            // Finalmente convertimos el resultado a Pair:
+            var visitables_pair = visitables_cubic.map(function (cubic) { return cubic.getPair(); });
             return {
                 position: state.position,
                 enemyposition: state.enemyposition,
+                visitables: visitables_pair,
                 obstacles: state.obstacles,
                 map: state.map,
                 selectedUnit: action.unit_id,
@@ -937,6 +1048,7 @@ exports.Reducer = function (state, action) {
             return {
                 position: state.position,
                 enemyposition: state.enemyposition,
+                visitables: state.visitables,
                 obstacles: state.obstacles,
                 map: action.map,
                 selectedUnit: state.selectedUnit,
@@ -947,6 +1059,7 @@ exports.Reducer = function (state, action) {
             return {
                 position: state.position,
                 enemyposition: state.enemyposition,
+                visitables: state.visitables,
                 obstacles: state.obstacles,
                 map: state.map,
                 cursorPosition: action.position,
@@ -954,10 +1067,11 @@ exports.Reducer = function (state, action) {
                 type: state.type
             };
         case "ATTACK":
-            action.player % 2 == 0 ? state.position.splice(action.unit_id, 1) : state.enemyposition.splice(action.unit_id, 1);
+            action.player ? state.enemyposition.splice(action.unit_id, 1) : state.position.splice(action.unit_id, 1);
             return {
                 position: state.position,
                 enemyposition: state.enemyposition,
+                visitables: state.visitables,
                 obstacles: state.obstacles,
                 map: state.map,
                 cursorPosition: state.cursorPosition,
@@ -966,71 +1080,6 @@ exports.Reducer = function (state, action) {
             };
         case "FINISH":
             return state;
-        default:
-            return state;
-    }
-};
-
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var Store_1 = __webpack_require__(1);
-var Cursor_1 = __webpack_require__(12);
-var Unit = /** @class */ (function (_super) {
-    __extends(Unit, _super);
-    function Unit(props) {
-        return _super.call(this, props) || this;
-    }
-    //Con una variable externa se podría hacer que haya o no sprite de montaña etc
-    //TODO En la id de unit debería ir la id de unit pero más adelante se añadirá
-    Unit.prototype.render = function () {
-        // Al igual que en Cell, primero obtenemos la posición del cursor
-        var positionCursor = Store_1.store.getState().cursorPosition;
-        // Despues comprobando que esta casilla esté en esa posición
-        var cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row ? React.createElement(Cursor_1.Cursor, null) : null;
-        //Comprobamos si es enemiga o no para cambiar su sprite
-        var unitType = this.props.enemy ? "enemy_unit" : "unit";
-        // Le añadiremos el resultado de la comprobación anterior.
-        return (React.createElement("div", { className: "div_cell" },
-            React.createElement("img", { className: "cell", id: "hex" + this.props.row + "_" + this.props.column, src: "imgs/hex_base.png" }),
-            React.createElement("div", { className: "unit" },
-                React.createElement("img", { id: "unit" + this.props.row + "_" + this.props.column, src: "imgs/" + unitType + ".png" })),
-            cursor));
-    };
-    return Unit;
-}(React.Component));
-exports.Unit = Unit;
-//Al inicio serán estos, el tipo nos sirve para identificar la situacion, ejemplo, con buffo de ataque etc.
-exports.InitialStats = {
-    movement: 1,
-    type: "NONE"
-};
-//En principio no se realizarán cambios ya que solo nos centraremos en que el movimiento funcione
-exports.ReducerStats = function (state, action) {
-    if (state === void 0) { state = exports.InitialStats; }
-    //Dependiendo del tipo se cambiarán las variables del estado
-    switch (action.type) {
-        case "NONE":
-            return {
-                movement: state.movement,
-                type: "NONE"
-            };
         default:
             return state;
     }
@@ -1159,7 +1208,7 @@ var Game = /** @class */ (function (_super) {
     Game.prototype.render = function () {
         var result;
         if (this.state.gameState == 2) {
-            result = React.createElement(Map_1.Map, { horizontal: "5", vertical: "8", parentObject: this });
+            result = React.createElement(Map_1.Map, { horizontal: "6", vertical: "6", parentObject: this });
         }
         else if (this.state.gameState == 1) {
             result = React.createElement(OptionsMenu, { parentObject: this });
@@ -1200,10 +1249,10 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var Store_1 = __webpack_require__(1);
-var GameState_1 = __webpack_require__(10);
+var GameState_1 = __webpack_require__(11);
 var Cell_1 = __webpack_require__(33);
 var Utils_1 = __webpack_require__(2);
-var Unit_1 = __webpack_require__(11);
+var Unit_1 = __webpack_require__(3);
 /** Representa el mapa que contendrá las unidades y las casillas **/
 var Map = /** @class */ (function (_super) {
     __extends(Map, _super);
@@ -1235,15 +1284,15 @@ var Map = /** @class */ (function (_super) {
         this.props.parentObject.changeGameState(0); // Salir de la partida.
     };
     Map.prototype.onKey = function (keyEvent) {
-        var keyCode = keyEvent.keyCode;
+        var keyCode = keyEvent.key;
         var cursorPosition, newCursorPosition;
         console.log("KeyCode: " + keyCode);
         switch (keyCode) {
-            case 27:
+            case 'Escape':
                 this.props.parentObject.changeGameState(0); // Retornamos al menu.
                 break;
             // Los siguientes casos corresponden con las teclas del numpad, para mover el cursor
-            case 97:
+            case '1':
                 // La tecla 1 del numpad (-1,+1)
                 // Primero, obtenemos la posición de la casilla
                 cursorPosition = Store_1.store.getState().cursorPosition;
@@ -1251,39 +1300,40 @@ var Map = /** @class */ (function (_super) {
                 newCursorPosition = new Utils_1.Pair(cursorPosition.row + (cursorPosition.column & 1 ? 1 : 0), cursorPosition.column - 1);
                 // Llamamos a la acción para cambiarlo
                 break;
-            case 98:
+            case '2':
                 // La tecla 2 del numpad (0,+1)
                 cursorPosition = Store_1.store.getState().cursorPosition;
                 newCursorPosition = new Utils_1.Pair(cursorPosition.row + 1, cursorPosition.column);
                 break;
-            case 99:
+            case '3':
                 // La tecla 3 del numpad (+1,+1)
                 cursorPosition = Store_1.store.getState().cursorPosition;
                 newCursorPosition = new Utils_1.Pair(cursorPosition.row + (cursorPosition.column & 1 ? 1 : 0), cursorPosition.column + 1);
                 break;
-            case 103:
+            case '7':
                 // La tecla 7 del numpad (-1,-1)
                 cursorPosition = Store_1.store.getState().cursorPosition;
                 newCursorPosition = new Utils_1.Pair(cursorPosition.row - (cursorPosition.column & 1 ? 0 : 1), cursorPosition.column - 1);
                 break;
-            case 104:
+            case '8':
                 // La tecla 8 del numpad (0, -1)
                 cursorPosition = Store_1.store.getState().cursorPosition;
                 newCursorPosition = new Utils_1.Pair(cursorPosition.row - 1, cursorPosition.column);
                 break;
-            case 105:
+            case '9':
                 // La tecla 9 del numpad (+1, -1)
                 cursorPosition = Store_1.store.getState().cursorPosition;
                 newCursorPosition = new Utils_1.Pair(cursorPosition.row - (cursorPosition.column & 1 ? 0 : 1), cursorPosition.column + 1);
                 break;
-            case 32:
+            case '5':
+            case ' ':
                 // Realizar el click en la posición
                 cursorPosition = Store_1.store.getState().cursorPosition;
                 this.clickAction(cursorPosition.row, cursorPosition.column);
                 break;
         }
         // Si puede hacerse el movimiento, realiza la acción
-        if (newCursorPosition.row >= 0 && newCursorPosition.column >= 0 && newCursorPosition.column <= this.props.vertical && newCursorPosition.row <= this.props.horizontal) {
+        if (newCursorPosition && newCursorPosition.row >= 0 && newCursorPosition.column >= 0 && newCursorPosition.column <= this.props.vertical && newCursorPosition.row <= this.props.horizontal) {
             Store_1.saveState(GameState_1.Actions.generateCursorMovement(newCursorPosition));
         }
     };
@@ -1355,7 +1405,7 @@ var Map = /** @class */ (function (_super) {
         this.clickAction(row, column); // TODO Solucionar esto!
     };
     Map.prototype.clickAction = function (row, column) {
-        var newPosition = new Utils_1.Pair(column, row);
+        var newPosition = new Utils_1.Pair(row, column);
         var unitIndex;
         var otherIndex;
         //Cada vez que salga este if es que se está comprobando si es turno del jugador o enemigo y dependiendo de eso comprueba en la lista del jugador o enemiga
@@ -1369,51 +1419,36 @@ var Map = /** @class */ (function (_super) {
         }
         //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
         if (unitIndex != -1 && Store_1.store.getState().type == "SET_LISTENER") {
-            Store_1.saveState(GameState_1.Actions.generateMove(unitIndex));
+            Store_1.saveState(GameState_1.Actions.generateMove(unitIndex, this.turn % 2 == 0));
             //Si hace clic en una possición exterior, mantieene el estado de en movimiento (seleccionado) y sigue almacenando la unidad seleccionada
         }
-        else if ((newPosition.column < 0 || newPosition.column > this.props.horizontal || newPosition.row < 0 || newPosition.row > this.props.vertical) && Store_1.store.getState().type == "MOVE") {
-            Store_1.saveState(GameState_1.Actions.generateMove(Store_1.store.getState().selectedUnit));
+        else if ((newPosition.column < 0 || newPosition.column > this.props.horizontal || newPosition.row < 0 || newPosition.row > this.props.vertical)) {
+            Store_1.saveState(GameState_1.Actions.generateMove(Store_1.store.getState().selectedUnit, this.turn % 2 == 0));
             //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
         }
-        else if (unitIndex == -1 && Store_1.store.getState().type == "MOVE") {
-            var actualPosition = void 0;
+        else if (unitIndex == -1 && Store_1.store.getState().selectedUnit != null && Utils_1.myIndexOf(Store_1.store.getState().visitables, newPosition) != -1) {
+            //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
+            if (otherIndex != -1) {
+                //Si es así se ataca
+                Store_1.saveState(GameState_1.Actions.attack(otherIndex, this.turn % 2 == 0));
+            }
+            //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
             if (this.turn % 2 == 0) {
-                actualPosition = Store_1.store.getState().position[Store_1.store.getState().selectedUnit];
+                Store_1.saveState(GameState_1.Actions.generateChangeUnitPos(Store_1.store.getState().selectedUnit, newPosition, null));
             }
             else {
-                actualPosition = Store_1.store.getState().enemyposition[Store_1.store.getState().selectedUnit];
+                Store_1.saveState(GameState_1.Actions.generateChangeUnitPosEnemy(Store_1.store.getState().selectedUnit, newPosition, null));
             }
-            // Transformamos primero a cúbica la posición de ambos:
-            var cubicActual = new Utils_1.Cubic(actualPosition);
-            var cubicNew = new Utils_1.Cubic(newPosition);
-            //let validPositions: Array<Cubic> = this.getValidPosition(cubicActual);
-            //Si la distancia entre la nueva posición y la actual es menor al limite de movimiento entonces se realizará el movimiento
-            //if(myIndexOfCubic(validPositions,cubicNew)!=-1){
-            if (cubicActual.distanceTo(cubicNew) <= Store_1.storeStats.getState().movement && Utils_1.myIndexOf(Store_1.store.getState().obstacles, newPosition) == -1) {
-                //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
-                if (otherIndex != -1) {
-                    //Si es así se ataca
-                    Store_1.saveState(GameState_1.Actions.attack(otherIndex, this.turn % 2 == 0));
-                }
-                //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
-                if (this.turn % 2 == 0) {
-                    Store_1.saveState(GameState_1.Actions.generateChangeUnitPos(Store_1.store.getState().selectedUnit, newPosition, null));
-                }
-                else {
-                    Store_1.saveState(GameState_1.Actions.generateChangeUnitPosEnemy(Store_1.store.getState().selectedUnit, newPosition, null));
-                }
-                //Si no quedan más unidades enemigas es una victoria y si no quedan más unidades del jugador es una derrota
-                if (Store_1.store.getState().enemyposition.length == 0) {
-                    this.actualstate = 1;
-                    Store_1.saveState(GameState_1.Actions.finish());
-                }
-                else if (Store_1.store.getState().position.length == 0) {
-                    this.actualstate = 2;
-                    Store_1.saveState(GameState_1.Actions.finish());
-                }
-                this.turn++;
+            //Si no quedan más unidades enemigas es una victoria y si no quedan más unidades del jugador es una derrota
+            if (Store_1.store.getState().enemyposition.length == 0) {
+                this.actualstate = 1;
+                Store_1.saveState(GameState_1.Actions.finish());
             }
+            else if (Store_1.store.getState().position.length == 0) {
+                this.actualstate = 2;
+                Store_1.saveState(GameState_1.Actions.finish());
+            }
+            this.turn++;
         }
         else {
             Store_1.saveState(GameState_1.Actions.generateSetListener(this));
@@ -1486,7 +1521,7 @@ var Map = /** @class */ (function (_super) {
     Map.prototype.generateMap = function () {
         var accum = [];
         // Repetirá este for hasta que se llegue al número de columnas especificado
-        for (var i = 0; i <= this.props.horizontal * 2 + 1; i++) {
+        for (var i = 0; i <= this.props.vertical * 2 + 1; i++) {
             // Este método retornará una lista con las casillas en fila
             accum.push(this.generateCellRow.bind(this)(i));
         }
@@ -1497,10 +1532,10 @@ var Map = /** @class */ (function (_super) {
         var accum2 = [];
         this.state.cells[num_row] = new Array(this.props.horizontal);
         // Este bucle iterará hasta el número de celdas horizontales especificado en el props.
-        for (var j = num_row % 2 == 0 ? 0 : 1; j <= this.props.vertical; j = j + 2) {
+        for (var j = num_row % 2 == 0 ? 0 : 1; j <= this.props.horizontal; j = j + 2) {
             var column = j;
             var row = num_row % 2 == 0 ? num_row / 2 : Math.floor(num_row / 2);
-            var pos = new Utils_1.Pair(column, row);
+            var pos = new Utils_1.Pair(row, column);
             //Si está incluida en la lista de posiciones de unidades (el indice obtenido es -1) entonces se añade una casilla de unidad
             if (Utils_1.myIndexOf(Store_1.store.getState().position, pos) != -1) {
                 this.state.cells[row][column] = React.createElement(Cell_1.Cell, { row: row, column: column });
@@ -1520,11 +1555,8 @@ var Map = /** @class */ (function (_super) {
                 else {
                     actualPosition = Store_1.store.getState().enemyposition[Store_1.store.getState().selectedUnit];
                 }
-                // Convertimos la posición en cúbica
-                var cubicActual = new Utils_1.Cubic(actualPosition);
-                var cubicNew = new Utils_1.Cubic(pos);
                 //Si la distancia es menor o igual a la distancia máxima entonces son posiciones validas y se seleccionaran, además se comprueba que no sea un obstáculo
-                if (cubicActual.distanceTo(cubicNew) <= Store_1.storeStats.getState().movement && Utils_1.myIndexOf(Store_1.store.getState().obstacles, pos) == -1) {
+                if (Utils_1.myIndexOf(Store_1.store.getState().visitables, pos) != -1) {
                     var cell = React.createElement(Cell_1.Cell, { row: row, column: column, selected: true }); // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                     this.state.cells[row][column] = cell;
                     //Para no añadir una nueva clase de celda seleccionada simplemente hacemos esto
@@ -1558,12 +1590,12 @@ exports.Map = Map;
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* WEBPACK VAR INJECTION */(function(process) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__createStore__ = __webpack_require__(4);
+/* WEBPACK VAR INJECTION */(function(process) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__createStore__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__combineReducers__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__bindActionCreators__ = __webpack_require__(31);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__applyMiddleware__ = __webpack_require__(32);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__compose__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_warning__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__compose__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_warning__ = __webpack_require__(9);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "createStore", function() { return __WEBPACK_IMPORTED_MODULE_0__createStore__["b"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "combineReducers", function() { return __WEBPACK_IMPORTED_MODULE_1__combineReducers__["a"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "bindActionCreators", function() { return __WEBPACK_IMPORTED_MODULE_2__bindActionCreators__["a"]; });
@@ -1587,14 +1619,14 @@ if (process.env.NODE_ENV !== 'production' && typeof isCrushed.name === 'string' 
 }
 
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(4)))
 
 /***/ }),
 /* 18 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Symbol_js__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Symbol_js__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getRawTag_js__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__objectToString_js__ = __webpack_require__(22);
 
@@ -1654,14 +1686,14 @@ var freeGlobal = typeof global == 'object' && global && global.Object === Object
 
 /* harmony default export */ __webpack_exports__["a"] = (freeGlobal);
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(7)))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(8)))
 
 /***/ }),
 /* 21 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Symbol_js__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Symbol_js__ = __webpack_require__(7);
 
 
 /** Used for built-in method references. */
@@ -1852,7 +1884,7 @@ if (typeof self !== 'undefined') {
 
 var result = (0, _ponyfill2['default'])(root);
 exports['default'] = result;
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7), __webpack_require__(28)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8), __webpack_require__(28)(module)))
 
 /***/ }),
 /* 28 */
@@ -1917,9 +1949,9 @@ function symbolObservablePonyfill(root) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/* harmony export (immutable) */ __webpack_exports__["a"] = combineReducers;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__createStore__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash_es_isPlainObject__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_warning__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__createStore__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash_es_isPlainObject__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_warning__ = __webpack_require__(9);
 
 
 
@@ -2050,7 +2082,7 @@ function combineReducers(reducers) {
     return hasChanged ? nextState : state;
   };
 }
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(4)))
 
 /***/ }),
 /* 31 */
@@ -2112,7 +2144,7 @@ function bindActionCreators(actionCreators, dispatch) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = applyMiddleware;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compose__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compose__ = __webpack_require__(10);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 
@@ -2205,7 +2237,7 @@ var Cell = /** @class */ (function (_super) {
         // De igual forma, obtenemos las posiciones de los obstaculos:
         var obstacles = Store_1.store.getState().obstacles;
         // Comprobamos si esta posición contiene el obstaculo:
-        var obstacle = Utils_1.myIndexOf(obstacles, new Utils_1.Pair(this.props.column, this.props.row)) == -1 ? null : React.createElement(Obstacle_1.Obstacle, { column: this.props.column, row: this.props.row });
+        var obstacle = Utils_1.myIndexOf(obstacles, new Utils_1.Pair(this.props.row, this.props.column)) == -1 ? null : React.createElement(Obstacle_1.Obstacle, { column: this.props.column, row: this.props.row });
         return (React.createElement("div", { className: "div_cell" },
             React.createElement("img", { className: "cell", id: "hex" + this.props.row + "_" + this.props.column, src: this.props.selected ? "imgs/hex_base_selected.png" : "imgs/hex_base.png" }),
             cursor,
