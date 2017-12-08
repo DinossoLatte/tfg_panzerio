@@ -18,11 +18,22 @@ export class Actions {
         };
     }
 
-    static generateMove(unit_id: number) : Redux.AnyAction {
+    static generateChangeUnitPosEnemy(unit_id: number, new_position: Pair, selectedUnit: number) : Redux.AnyAction {
+        //Este estado es el de cambiar la posición (justo cuando hace clic de a donde quiere ir)
+        return {
+            type: "CHANGE_UNIT_POS_ENEMY",
+            unit_id: unit_id,
+            new_position: new_position,
+            selectedUnit: selectedUnit
+        };
+    }
+
+    static generateMove(unit_id: number,player: boolean) : Redux.AnyAction {
         //ESte estado es el de mantener la unidad seleccionada
         return {
             type: "MOVE",
-            unit_id: unit_id
+            unit_id: unit_id,
+            player: player
         };
     }
 
@@ -40,11 +51,28 @@ export class Actions {
             map: map
         };
     }
+
+    static attack(unit_id: number, player: boolean) : Redux.AnyAction {
+        //Este estado se envía la unidad a atacar (se eliminará del array) y si es del jugador o no
+        return {
+            type: "ATTACK",
+            unit_id: unit_id,
+            player: player
+        }
+    }
+
+    static finish() : Redux.AnyAction{
+        //Este estado por ahora simplemente hace que no se pueda jugar hasta que se reinicie la partida
+        return {
+            type: "FINISH"
+        }
+    }
 }
 
 //Aquí declaramos las variables del estado
 export type State = {
     readonly position: Array<Pair>,
+    readonly enemyposition: Array<Pair>,
     readonly visitables: Array<Pair>,
     readonly obstacles: Array<Pair>,
     readonly cursorPosition: Pair,
@@ -56,8 +84,9 @@ export type State = {
 //El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
 export const InitialState: State = {
     position: [new Pair (0,0), new Pair(0,1), new Pair (1,0)],
+    enemyposition: [new Pair (0,4), new Pair(1,4), new Pair (0,3)],
     visitables: null,
-    obstacles: [new Pair (2,1), new Pair (2,2), new Pair(3,1), new Pair(4,2)],
+    obstacles: [new Pair (2,2)],
     cursorPosition: new Pair(0,0),
     map: null,
     selectedUnit: null,
@@ -73,6 +102,20 @@ export const Reducer : Redux.Reducer<State> =
                 state.position[action.unit_id] = action.new_position;
                 return {
                     position: state.position,
+                    enemyposition: state.enemyposition,
+                    visitables: state.visitables,
+                    obstacles: state.obstacles,
+                    map: state.map,
+                    selectedUnit: action.selectedUnit,
+                    cursorPosition: state.cursorPosition,
+                    type: "SET_LISTENER"
+                };
+            //Simplemente se añade un nuevo estado que corresponde al cambio de posición en caso de ser unidad enemiga
+            case "CHANGE_UNIT_POS_ENEMY":
+                state.enemyposition[action.unit_id] = action.new_position;
+                return {
+                    position: state.position,
+                    enemyposition: state.enemyposition,
                     visitables: state.visitables,
                     obstacles: state.obstacles,
                     map: state.map,
@@ -82,7 +125,7 @@ export const Reducer : Redux.Reducer<State> =
                 };
             case "MOVE":
                 // Para reducir los cálculos del movimiento, vamos a realizar en este punto el cálculo de las celdas visitables
-                var visitables_cubic : Array<Cubic> = [new Cubic(state.position[action.unit_id])];
+                var visitables_cubic : Array<Cubic> = [new Cubic(action.player?state.position[action.unit_id]:state.enemyposition[action.unit_id])];
                 var movements : number = InitialStats.movement;
                 var neighbours : Array<Cubic> = [];
                 // Primero, iteraremos desde 0 hasta el número de movimientos
@@ -98,7 +141,7 @@ export const Reducer : Redux.Reducer<State> =
                         visitables_cubic.forEach(cubic => {
                             var new_cubic = cubic.add(cubic_directions[index_directions]);
                             if(myIndexOf(state.obstacles, new_cubic.getPair()) == -1 && myIndexOfCubic(visitables_cubic, new_cubic)
-                                && myIndexOf(state.position, new_cubic.getPair()) == -1) {
+                                && myIndexOf(action.player?state.position:state.enemyposition, new_cubic.getPair()) == -1) {
                                 new_neighbours.push(new_cubic);
                             }
                         });
@@ -111,6 +154,7 @@ export const Reducer : Redux.Reducer<State> =
 
                 return {
                     position: state.position,
+                    enemyposition: state.enemyposition,
                     visitables: visitables_pair,
                     obstacles: state.obstacles,
                     map: state.map,
@@ -121,6 +165,7 @@ export const Reducer : Redux.Reducer<State> =
             case "SET_LISTENER":
                 return {
                     position: state.position,
+                    enemyposition: state.enemyposition,
                     visitables: state.visitables,
                     obstacles: state.obstacles,
                     map: action.map,
@@ -131,13 +176,28 @@ export const Reducer : Redux.Reducer<State> =
             case "CURSOR_MOVE":
                 return {
                     position: state.position,
+                    enemyposition: state.enemyposition,
                     visitables: state.visitables,
                     obstacles: state.obstacles,
                     map: state.map,
                     cursorPosition: action.position,
                     selectedUnit: state.selectedUnit,
-                    type: state.type,
+                    type: state.type
                 };
+            case "ATTACK":
+                action.player?state.enemyposition.splice(action.unit_id, 1):state.position.splice(action.unit_id, 1);
+                return {
+                    position: state.position,
+                    enemyposition: state.enemyposition,
+                    visitables: state.visitables,
+                    obstacles: state.obstacles,
+                    map: state.map,
+                    cursorPosition: state.cursorPosition,
+                    selectedUnit: state.selectedUnit,
+                    type: "MOVE"
+                }
+            case "FINISH":
+                return state;
             default:
                 return state;
         }

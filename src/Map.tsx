@@ -11,9 +11,15 @@ import { Cursor } from './Cursor';
 
 /** Representa el mapa que contendrá las unidades y las casillas **/
 export class Map extends React.Component<any, any> {
+    //Esta variable controla el turno del juego
+    turn : number;
+    actualstate : number; //El valor 0 es por defecto, 1 es victoria y 2 es derrota
+
     /** @constructor  Deben introducirse los elementos horizontal y vertical **/
     constructor(props: any) {
         super(props);
+        this.turn = 0;
+        this.actualstate = 0;
         this.state = { cells: new Array<Array<Cell>>(this.props.horizontal) };
         store.dispatch(Actions.generateSetListener(this));
     }
@@ -23,6 +29,7 @@ export class Map extends React.Component<any, any> {
         // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
         return (
             <div>
+                <p>Turno del {this.turn%2==0?"Jugador":"Enemigo"}. Día {this.turn}{this.actualstate==1?". Victoria":this.actualstate==2?". Derrota":""}</p>
                 <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
                 <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)}>
                     {this.generateMap.bind(this)().map((a: any) => {
@@ -38,15 +45,15 @@ export class Map extends React.Component<any, any> {
     }
 
     onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
-        let keyCode = keyEvent.keyCode;
+        let keyCode = keyEvent.key;
         let cursorPosition, newCursorPosition : Pair;
         console.log("KeyCode: "+keyCode);
         switch(keyCode) {
-            case 27:
+            case 'Escape':
                 this.props.parentObject.changeGameState(0); // Retornamos al menu.
                 break;
             // Los siguientes casos corresponden con las teclas del numpad, para mover el cursor
-            case 97:
+            case '1':
                 // La tecla 1 del numpad (-1,+1)
                 // Primero, obtenemos la posición de la casilla
                 cursorPosition = store.getState().cursorPosition;
@@ -54,39 +61,40 @@ export class Map extends React.Component<any, any> {
                 newCursorPosition = new Pair(cursorPosition.row + (cursorPosition.column&1?1:0), cursorPosition.column - 1);
                 // Llamamos a la acción para cambiarlo
                 break;
-            case 98:
+            case '2':
                 // La tecla 2 del numpad (0,+1)
                 cursorPosition = store.getState().cursorPosition;
                 newCursorPosition = new Pair(cursorPosition.row + 1, cursorPosition.column);
                 break;
-            case 99:
+            case '3':
                 // La tecla 3 del numpad (+1,+1)
                 cursorPosition = store.getState().cursorPosition;
                 newCursorPosition = new Pair(cursorPosition.row + (cursorPosition.column&1?1:0), cursorPosition.column + 1);
                 break;
-            case 103:
+            case '7':
                 // La tecla 7 del numpad (-1,-1)
                 cursorPosition = store.getState().cursorPosition;
                 newCursorPosition = new Pair(cursorPosition.row - (cursorPosition.column&1?0:1), cursorPosition.column - 1);
                 break;
-            case 104:
+            case '8':
                 // La tecla 8 del numpad (0, -1)
                 cursorPosition = store.getState().cursorPosition;
                 newCursorPosition = new Pair(cursorPosition.row - 1, cursorPosition.column);
                 break;
-            case 105:
+            case '9':
                 // La tecla 9 del numpad (+1, -1)
                 cursorPosition = store.getState().cursorPosition;
                 newCursorPosition = new Pair(cursorPosition.row - (cursorPosition.column&1?0:1), cursorPosition.column + 1);
                 break;
-            case 32:
+            case '5':
+            case ' ':
                 // Realizar el click en la posición
                 cursorPosition = store.getState().cursorPosition;
                 this.clickAction(cursorPosition.row, cursorPosition.column);
                 break;
         }
         // Si puede hacerse el movimiento, realiza la acción
-        if(newCursorPosition.row >= 0 && newCursorPosition.column >= 0 && newCursorPosition.column <= this.props.vertical && newCursorPosition.row <= this.props.horizontal) {
+        if(newCursorPosition && newCursorPosition.row >= 0 && newCursorPosition.column >= 0 && newCursorPosition.column <= this.props.vertical && newCursorPosition.row <= this.props.horizontal) {
             saveState(Actions.generateCursorMovement(newCursorPosition));
         }
     }
@@ -169,18 +177,45 @@ export class Map extends React.Component<any, any> {
 
     clickAction(row: number, column: number) {
         let newPosition: Pair = new Pair(row,column);
-        let unitIndex: number = myIndexOf(store.getState().position, newPosition);
-        console.log(newPosition);
+        let unitIndex: number;
+        let otherIndex: number;
+        //Cada vez que salga este if es que se está comprobando si es turno del jugador o enemigo y dependiendo de eso comprueba en la lista del jugador o enemiga
+        if(this.turn%2==0){
+            unitIndex = myIndexOf(store.getState().position, newPosition);
+            otherIndex = myIndexOf(store.getState().enemyposition, newPosition);
+        }else{
+            unitIndex = myIndexOf(store.getState().enemyposition, newPosition);
+            otherIndex = myIndexOf(store.getState().position, newPosition);
+        }
 
         //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
         if(unitIndex!= -1 && store.getState().type == "SET_LISTENER"){
-            saveState(Actions.generateMove(unitIndex));
+            saveState(Actions.generateMove(unitIndex,this.turn%2==0));
         //Si hace clic en una possición exterior, mantieene el estado de en movimiento (seleccionado) y sigue almacenando la unidad seleccionada
         }else if((newPosition.column<0 || newPosition.column>this.props.horizontal || newPosition.row<0 || newPosition.row>this.props.vertical)){
-            saveState(Actions.generateMove(store.getState().selectedUnit));
+            saveState(Actions.generateMove(store.getState().selectedUnit,this.turn%2==0));
         //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
         }else if(unitIndex==-1 && store.getState().selectedUnit != null && myIndexOf(store.getState().visitables, newPosition) != -1){
-            saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null));
+            //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
+            if(otherIndex != -1){
+                //Si es así se ataca
+                saveState(Actions.attack(otherIndex,this.turn%2==0));
+            }
+            //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
+            if(this.turn%2==0){
+                saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null));
+            }else{
+                saveState(Actions.generateChangeUnitPosEnemy(store.getState().selectedUnit, newPosition, null));
+            }
+            //Si no quedan más unidades enemigas es una victoria y si no quedan más unidades del jugador es una derrota
+            if(store.getState().enemyposition.length==0){
+                this.actualstate=1;
+                saveState(Actions.finish());
+            }else if(store.getState().position.length==0){
+                this.actualstate=2;
+                saveState(Actions.finish());
+            }
+            this.turn++;
         }else{
             saveState(Actions.generateSetListener(this));
         }
@@ -275,10 +310,22 @@ export class Map extends React.Component<any, any> {
             if (myIndexOf(store.getState().position, pos)!=-1){
                 this.state.cells[row][column] = <Cell row={row} column={column} />
                 accum2.push(
-                    <Unit row={row} column={column} />
+                    <Unit row={row} column={column} enemy={false}/>
+                );
+            //Si está entre las casillas enemigas entonces se modifica su imagen.
+            }else if(myIndexOf(store.getState().enemyposition, pos)!=-1){
+                this.state.cells[row][column] = <Cell row={row} column={column} />
+                accum2.push(
+                    <Unit row={row} column={column} enemy={true}/>
                 );
             //Si está en modo seleccionado se usará otra lógica es necesario llamarlo despues de la unidad sino las casillas de unidades al generarse se pondran en amarillo
             }else if(store.getState().selectedUnit!=null){
+                let actualPosition: Pair;
+                if(this.turn%2==0){
+                    actualPosition = store.getState().position[store.getState().selectedUnit];
+                }else{
+                    actualPosition = store.getState().enemyposition[store.getState().selectedUnit];
+                }
                 //Si la distancia es menor o igual a la distancia máxima entonces son posiciones validas y se seleccionaran, además se comprueba que no sea un obstáculo
                 if(myIndexOf(store.getState().visitables, pos) != -1){
                     var cell = <Cell row={row} column={column} selected={true} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
