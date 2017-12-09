@@ -5,7 +5,6 @@ import * as Redux from 'redux';
 import { Pair } from './Utils';
 import { Actions } from './GameState';
 import { store, saveState } from './Store';
-import { Cursor } from './Cursor';
 
 export class Unit extends React.Component<any, any> {
     constructor(props: any) {
@@ -18,17 +17,16 @@ export class Unit extends React.Component<any, any> {
         // Al igual que en Cell, primero obtenemos la posición del cursor
         let positionCursor = store.getState().cursorPosition;
         // Despues comprobando que esta casilla esté en esa posición
-        let cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row?<Cursor />:null;
+        let cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row;
         //Comprobamos si es enemiga o no para cambiar su sprite
         let unitType = this.props.enemy?"enemy_unit":"unit";
         // Le añadiremos el resultado de la comprobación anterior.
         return (
             <div className="div_cell">
-                <img className="cell" id={"hex"+this.props.row+"_"+this.props.column} src="imgs/hex_base.png" />
+                <img className="cell" id={"hex"+this.props.row+"_"+this.props.column} src={cursor?this.props.selected?"imgs/hex_base_numpad_selected.png":"imgs/hex_base_numpad.png":this.props.selected?"imgs/hex_base_selected.png":"imgs/hex_base.png"} />
                 <div className ="unit">
                     <img id={"unit"+this.props.row+"_"+this.props.column} src={"imgs/"+unitType+".png"} />
                 </div>
-                {cursor}
             </div>
         );
     }

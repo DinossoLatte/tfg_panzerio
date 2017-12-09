@@ -4,10 +4,9 @@ import * as Redux from 'redux';
 import { store, saveState, storeStats } from './Store';
 import { Actions, State, InitialState, Reducer } from './GameState';
 import { Cell } from './Cell';
-import { Obstacle } from './Obstacle';
+import { TerrainCell } from './TerrainCell';
 import { Pair, Cubic, myIndexOf, cubic_directions, myIndexOfCubic } from './Utils';
 import { Unit, Stats, InitialStats} from './Unit';
-import { Cursor } from './Cursor';
 
 /** Representa el mapa que contendrá las unidades y las casillas **/
 export class Map extends React.Component<any, any> {
@@ -20,7 +19,7 @@ export class Map extends React.Component<any, any> {
         super(props);
         this.turn = 0;
         this.actualstate = 0;
-        this.state = { cells: new Array<Array<Cell>>(this.props.horizontal) };
+        this.state = { cells: new Array<Array<Cell>>(this.props.horizontal), rows: this.props.vertical, columns: this.props.horizontal };
         store.dispatch(Actions.generateSetListener(this));
     }
 
@@ -220,60 +219,7 @@ export class Map extends React.Component<any, any> {
             saveState(Actions.generateSetListener(this));
         }
     }
-/*
-    getValidPosition(actual: Cubic){
-        let valid: Array<Cubic> = [];
-        let last: Cubic = actual;
-        let pos: Cubic;
-        let r: number = 0;
-        var row = [];
-        for(var k = 1; k <= storeStats.getState().movement; k++) {
-            row[k] = [];
-            console.log("k="+k);
-            if(k-1>0){
-                for(var j = 0; j < row[k-1].length; j++){
-                    last = row[k-1][j];
-                    console.log("j="+j);
-                    console.log("last: "+last.x+","+last.y+","+last.z);
-                    for (var i = 0; i < cubic_directions.length; i++) {
-                        console.log("i="+i);
-                        pos = last;
-                        pos.sum(cubic_directions[i]);
-                        console.log("pos: "+pos.getPair().x+","+pos.getPair().y);
-                        console.log("posCubic: "+pos.x+","+pos.y+","+pos.z);
-                        if(myIndexOf(store.getState().obstacles,pos.getPair())==-1 && myIndexOfCubic(valid,pos)==-1){
-                            console.log("obstacles: "+myIndexOf(store.getState().obstacles,pos.getPair()));
-                            console.log("valid: "+myIndexOfCubic(valid,pos));
-                            row[k].push(pos);
-                            valid.push(pos);
-                            console.log("introduceCubic "+valid[r].x+","+valid[r].y+","+valid[r].z);
-                            console.log("introduce "+valid[r].getPair().x+","+valid[r].getPair().y);
-                            r++;
-                        }
-                    }
-                }
-            }else{
-                for (var i = 0; i < cubic_directions.length; i++) {
-                    console.log("i="+i);
-                    pos = last;
-                    pos.sum(cubic_directions[i]);
-                    console.log("pos: "+pos.getPair().x+","+pos.getPair().y);
-                    console.log("posCubic: "+pos.x+","+pos.y+","+pos.z);
-                    console.log("obstacles: "+myIndexOf(store.getState().obstacles,pos.getPair()));
-                    console.log("valid: "+myIndexOfCubic(valid,pos));
-                    if(myIndexOf(store.getState().obstacles,pos.getPair())==-1 && myIndexOfCubic(valid,pos)==-1){
-                        row[k].push(pos);
-                        valid.push(pos);
-                        console.log("introduceCubic "+valid[r].x+","+valid[r].y+","+valid[r].z);
-                        console.log("introduce "+valid[0].x+","+valid[0].y+","+valid[0].z);
-                    }
-                }
-            }
 
-        }
-        return valid;
-    }
-*/
     // Calcula si dado los datos del circulo y  un punto cualquiuera, el punto cualquiera está dentro del círculo
     getInCircle(centerX: number, centerY: number, radius: number, x: number, y: number) {
         // Raiz cuadrada de la distancia vectorial entre el centro y el punto debe ser menor al radio
@@ -310,7 +256,7 @@ export class Map extends React.Component<any, any> {
             if (myIndexOf(store.getState().position, pos)!=-1){
                 this.state.cells[row][column] = <Cell row={row} column={column} />
                 accum2.push(
-                    <Unit row={row} column={column} enemy={false}/>
+                    <Unit row={row} column={column} enemy={false} />
                 );
             //Si está entre las casillas enemigas entonces se modifica su imagen.
             }else if(myIndexOf(store.getState().enemyposition, pos)!=-1){

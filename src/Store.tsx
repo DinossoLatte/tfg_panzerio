@@ -5,6 +5,7 @@ import { Map } from './Map';
 import { InitialState, Reducer, State } from './GameState';
 import { Pair, Cubic } from './Utils';
 import { Unit, Stats, ReducerStats } from './Unit';
+import { Terrain } from './Terrains';
 
 export interface Store extends Redux.Store<State> {
     dispatch: Redux.Dispatch<State>
@@ -21,7 +22,7 @@ export function saveState(action: Redux.AnyAction) {
     var map: Map = store.getState().map;
     var position: Array<Pair> = store.getState().position;
     var enemyposition: Array<Pair> = store.getState().enemyposition;
-    var obstacles: Array<Pair> = store.getState().obstacles;
+    var terrains: Array<Terrain> = store.getState().terrains;
     var selectedUnit: number = store.getState().selectedUnit;
     var cursorPosition: Pair = store.getState().cursorPosition;
     var type: string = store.getState().type;

@@ -5,7 +5,7 @@ import { Pair } from './Utils';
 import { Actions } from './GameState';
 import { store, saveState } from './Store';
 
-export class Obstacle extends React.Component<any, any> {
+export class TerrainCell extends React.Component<any, any> {
     constructor(props: any) {
         super(props);
     }
@@ -13,9 +13,9 @@ export class Obstacle extends React.Component<any, any> {
     //Este es el render del obstacle
     render() {
         return (
-                <div className ="obstacle">
-                    <img id={"obstacle"+this.props.horizontal+"_"+this.props.vertical} src="imgs/obstacle.png" />
-                </div>
+            <div className ="obstacle">
+                <img id={"obstacle"+this.props.terrain.position.getRow()+"_"+this.props.terrain.position.getColumn()} src={this.props.terrain.image} />
+            </div>
         );
     }
 
