@@ -151,13 +151,12 @@ export const Reducer : Redux.Reducer<State> =
                                         // Si se admite, añadimos la posición y la cantidad de movimientos para pasar por la casilla
                                         new_neighbours.push([new_cubic,
                                             // Por ahora se comprueba si está en la lista de obstáculos, en cuyo caso coge la cantidad. En caso contrario, asumimos Plains
-                                            indexOfObstacle > -1?state.terrains[indexOfObstacle].movement_penalty:0]);
+                                            indexOfObstacle > -1?(state.terrains[indexOfObstacle].movement_penalty-1):0]);
                                     }
                                 } else { // Si no, esta casilla ya la tenemos en vecinos, pero tiene un movimiento != 0, por lo que reducimos el movimiento de la casilla
                                     // Actualizamos el movimiento de la unidad, si es el caso.
                                     var cell = neighbours[indexOfNeighbours];
-                                    cell[1]--;
-                                    new_neighbours.push(cell);
+                                    new_neighbours.push([cell[0], cell[1] - 1]);
                                 }
                             }
                         });
