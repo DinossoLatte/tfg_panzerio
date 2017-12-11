@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 13);
+/******/ 	return __webpack_require__(__webpack_require__.s = 12);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -76,19 +76,16 @@ module.exports = React;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Redux = __webpack_require__(17);
-var GameState_1 = __webpack_require__(11);
-var Unit_1 = __webpack_require__(3);
+var Redux = __webpack_require__(16);
+var GameState_1 = __webpack_require__(10);
 exports.store = Redux.createStore(GameState_1.Reducer);
-//Guardaremos el estado de stats (en un futuro podremos guardar el estado y modificarlo y será como buffos o incluso restricciones de mapa)
-exports.storeStats = Redux.createStore(Unit_1.ReducerStats);
 function saveState(action) {
     exports.store.dispatch(action);
     // Refresca el mapa y el resto de variables del estado
     var map = exports.store.getState().map;
     var position = exports.store.getState().position;
     var enemyposition = exports.store.getState().enemyposition;
-    var obstacles = exports.store.getState().obstacles;
+    var terrains = exports.store.getState().terrains;
     var selectedUnit = exports.store.getState().selectedUnit;
     var cursorPosition = exports.store.getState().cursorPosition;
     var type = exports.store.getState().type;
@@ -205,71 +202,6 @@ exports.myIndexOfCubic = myIndexOfCubic;
 
 /***/ }),
 /* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var Store_1 = __webpack_require__(1);
-var Cursor_1 = __webpack_require__(12);
-var Unit = /** @class */ (function (_super) {
-    __extends(Unit, _super);
-    function Unit(props) {
-        return _super.call(this, props) || this;
-    }
-    //Con una variable externa se podría hacer que haya o no sprite de montaña etc
-    //TODO En la id de unit debería ir la id de unit pero más adelante se añadirá
-    Unit.prototype.render = function () {
-        // Al igual que en Cell, primero obtenemos la posición del cursor
-        var positionCursor = Store_1.store.getState().cursorPosition;
-        // Despues comprobando que esta casilla esté en esa posición
-        var cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row ? React.createElement(Cursor_1.Cursor, null) : null;
-        //Comprobamos si es enemiga o no para cambiar su sprite
-        var unitType = this.props.enemy ? "enemy_unit" : "unit";
-        // Le añadiremos el resultado de la comprobación anterior.
-        return (React.createElement("div", { className: "div_cell" },
-            React.createElement("img", { className: "cell", id: "hex" + this.props.row + "_" + this.props.column, src: "imgs/hex_base.png" }),
-            React.createElement("div", { className: "unit" },
-                React.createElement("img", { id: "unit" + this.props.row + "_" + this.props.column, src: "imgs/" + unitType + ".png" })),
-            cursor));
-    };
-    return Unit;
-}(React.Component));
-exports.Unit = Unit;
-//Al inicio serán estos, el tipo nos sirve para identificar la situacion, ejemplo, con buffo de ataque etc.
-exports.InitialStats = {
-    movement: 2,
-    type: "NONE"
-};
-//En principio no se realizarán cambios ya que solo nos centraremos en que el movimiento funcione
-exports.ReducerStats = function (state, action) {
-    if (state === void 0) { state = exports.InitialStats; }
-    //Dependiendo del tipo se cambiarán las variables del estado
-    switch (action.type) {
-        case "NONE":
-            return {
-                movement: state.movement,
-                type: "NONE"
-            };
-        default:
-            return state;
-    }
-};
-
-
-/***/ }),
-/* 4 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -459,14 +391,14 @@ process.umask = function() { return 0; };
 
 
 /***/ }),
-/* 5 */
+/* 4 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ActionTypes; });
 /* harmony export (immutable) */ __webpack_exports__["b"] = createStore;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_es_isPlainObject__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_symbol_observable__ = __webpack_require__(26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_es_isPlainObject__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_symbol_observable__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_symbol_observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_symbol_observable__);
 
 
@@ -718,13 +650,13 @@ var ActionTypes = {
 }
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__baseGetTag_js__ = __webpack_require__(18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getPrototype_js__ = __webpack_require__(23);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__isObjectLike_js__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__baseGetTag_js__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getPrototype_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__isObjectLike_js__ = __webpack_require__(24);
 
 
 
@@ -790,11 +722,11 @@ function isPlainObject(value) {
 
 
 /***/ }),
-/* 7 */
+/* 6 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__root_js__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__root_js__ = __webpack_require__(18);
 
 
 /** Built-in value references. */
@@ -804,7 +736,7 @@ var Symbol = __WEBPACK_IMPORTED_MODULE_0__root_js__["a" /* default */].Symbol;
 
 
 /***/ }),
-/* 8 */
+/* 7 */
 /***/ (function(module, exports) {
 
 var g;
@@ -831,7 +763,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 9 */
+/* 8 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -859,7 +791,7 @@ function warning(message) {
 }
 
 /***/ }),
-/* 10 */
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -898,14 +830,15 @@ function compose() {
 }
 
 /***/ }),
-/* 11 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var Utils_1 = __webpack_require__(2);
-var Unit_1 = __webpack_require__(3);
+var Unit_1 = __webpack_require__(32);
+var Terrains_1 = __webpack_require__(11);
 var Actions = /** @class */ (function () {
     function Actions() {
     }
@@ -968,10 +901,10 @@ var Actions = /** @class */ (function () {
 exports.Actions = Actions;
 //El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
 exports.InitialState = {
-    position: [new Utils_1.Pair(0, 0), new Utils_1.Pair(0, 1), new Utils_1.Pair(1, 0)],
-    enemyposition: [new Utils_1.Pair(0, 4), new Utils_1.Pair(1, 4), new Utils_1.Pair(0, 3)],
+    position: [Unit_1.Infantry.create(new Utils_1.Pair(0, 0)), Unit_1.Infantry.create(new Utils_1.Pair(0, 1)), Unit_1.Tank.create(new Utils_1.Pair(1, 0))],
+    enemyposition: [Unit_1.Infantry.create(new Utils_1.Pair(0, 4)), Unit_1.Infantry.create(new Utils_1.Pair(1, 4)), Unit_1.Tank.create(new Utils_1.Pair(0, 3))],
     visitables: null,
-    obstacles: [new Utils_1.Pair(2, 2)],
+    terrains: [Terrains_1.ImpassableMountain.create(new Utils_1.Pair(2, 2)), Terrains_1.ImpassableMountain.create(new Utils_1.Pair(3, 2)), Terrains_1.Hills.create(new Utils_1.Pair(2, 3))],
     cursorPosition: new Utils_1.Pair(0, 0),
     map: null,
     selectedUnit: null,
@@ -983,12 +916,12 @@ exports.Reducer = function (state, action) {
     //Dependiendo del tipo se cambiarán las variables del estado
     switch (action.type) {
         case "CHANGE_UNIT_POS":
-            state.position[action.unit_id] = action.new_position;
+            state.position[action.unit_id].position = action.new_position;
             return {
                 position: state.position,
                 enemyposition: state.enemyposition,
                 visitables: state.visitables,
-                obstacles: state.obstacles,
+                terrains: state.terrains,
                 map: state.map,
                 selectedUnit: action.selectedUnit,
                 cursorPosition: state.cursorPosition,
@@ -996,12 +929,12 @@ exports.Reducer = function (state, action) {
             };
         //Simplemente se añade un nuevo estado que corresponde al cambio de posición en caso de ser unidad enemiga
         case "CHANGE_UNIT_POS_ENEMY":
-            state.enemyposition[action.unit_id] = action.new_position;
+            state.enemyposition[action.unit_id].position = action.new_position;
             return {
                 position: state.position,
                 enemyposition: state.enemyposition,
                 visitables: state.visitables,
-                obstacles: state.obstacles,
+                terrains: state.terrains,
                 map: state.map,
                 selectedUnit: action.selectedUnit,
                 cursorPosition: state.cursorPosition,
@@ -1009,24 +942,41 @@ exports.Reducer = function (state, action) {
             };
         case "MOVE":
             // Para reducir los cálculos del movimiento, vamos a realizar en este punto el cálculo de las celdas visitables
-            var visitables_cubic = [new Utils_1.Cubic(action.player ? state.position[action.unit_id] : state.enemyposition[action.unit_id])];
-            var movements = Unit_1.InitialStats.movement;
-            var neighbours = [];
+            var visitables_cubic = [new Utils_1.Cubic(action.player ? state.position[action.unit_id].position : state.enemyposition[action.unit_id].position)];
+            var movements = action.player ? state.position[action.unit_id].movement : state.enemyposition[action.unit_id].movement;
+            // Los vecinos estarán compuestos por la posición cúbica y el número de movimientos para pasar la posición
+            var neighbours = new Array();
             // Primero, iteraremos desde 0 hasta el número de movimientos
             for (var i = 0; i <= movements; i++) {
-                // Primero, filtramos de los vecinos los que sean obstáculos
-                neighbours.filter(function (possible_cubic) { return Utils_1.myIndexOf(state.obstacles, possible_cubic.getPair()) == -1; });
                 // Añadimos los vecinos que queden, son celdas visitables:
-                visitables_cubic = visitables_cubic.concat(neighbours);
+                visitables_cubic = visitables_cubic.concat(neighbours.filter(function (possible_tuple) { return possible_tuple[1] == 0; }).map(function (x) { return x[0]; }));
                 // Calculamos los próximos vecinos:
                 var new_neighbours = [];
                 for (var index_directions = 0; index_directions < Utils_1.cubic_directions.length; index_directions++) {
-                    console.log(index_directions);
                     visitables_cubic.forEach(function (cubic) {
                         var new_cubic = cubic.add(Utils_1.cubic_directions[index_directions]);
-                        if (Utils_1.myIndexOf(state.obstacles, new_cubic.getPair()) == -1 && Utils_1.myIndexOfCubic(visitables_cubic, new_cubic)
-                            && Utils_1.myIndexOf(action.player ? state.position : state.enemyposition, new_cubic.getPair()) == -1) {
-                            new_neighbours.push(new_cubic);
+                        // Siempre que la nueva casilla no esté en la lista de visitables ni sea una posición no alcanzable.
+                        if (Utils_1.myIndexOfCubic(visitables_cubic, new_cubic) == -1) {
+                            var indexOfNeighbours = Utils_1.myIndexOfCubic(neighbours.map(function (x) { return x[0]; }), new_cubic);
+                            // Para añadir la posición, comprobamos primero que no esté la posición:
+                            if (indexOfNeighbours == -1) {
+                                // Si es el caso, debemos comprobar que la posición no esté ocupada por una de las unidades del jugador
+                                var positionIndex = action.player ? state.position.map(function (x) { return x.position; }) : state.enemyposition.map(function (x) { return x.position; });
+                                if (Utils_1.myIndexOf(positionIndex, new_cubic.getPair()) == -1) {
+                                    // Obtenemos el índice del obstáculo si está en la lista.
+                                    var indexOfObstacle = Utils_1.myIndexOf(state.terrains.map(function (x) { return x.position; }), new_cubic.getPair());
+                                    // Si se admite, añadimos la posición y la cantidad de movimientos para pasar por la casilla
+                                    new_neighbours.push([new_cubic,
+                                        // Por ahora se comprueba si está en la lista de obstáculos, en cuyo caso coge la cantidad. En caso contrario, asumimos Plains
+                                        indexOfObstacle > -1 ? state.terrains[indexOfObstacle].movement_penalty : 0]);
+                                }
+                            }
+                            else {
+                                // Actualizamos el movimiento de la unidad, si es el caso.
+                                var cell = neighbours[indexOfNeighbours];
+                                cell[1]--;
+                                new_neighbours.push(cell);
+                            }
                         }
                     });
                 }
@@ -1038,7 +988,7 @@ exports.Reducer = function (state, action) {
                 position: state.position,
                 enemyposition: state.enemyposition,
                 visitables: visitables_pair,
-                obstacles: state.obstacles,
+                terrains: state.terrains,
                 map: state.map,
                 selectedUnit: action.unit_id,
                 cursorPosition: state.cursorPosition,
@@ -1049,7 +999,7 @@ exports.Reducer = function (state, action) {
                 position: state.position,
                 enemyposition: state.enemyposition,
                 visitables: state.visitables,
-                obstacles: state.obstacles,
+                terrains: state.terrains,
                 map: action.map,
                 selectedUnit: state.selectedUnit,
                 cursorPosition: state.cursorPosition,
@@ -1060,7 +1010,7 @@ exports.Reducer = function (state, action) {
                 position: state.position,
                 enemyposition: state.enemyposition,
                 visitables: state.visitables,
-                obstacles: state.obstacles,
+                terrains: state.terrains,
                 map: state.map,
                 cursorPosition: action.position,
                 selectedUnit: state.selectedUnit,
@@ -1072,7 +1022,7 @@ exports.Reducer = function (state, action) {
                 position: state.position,
                 enemyposition: state.enemyposition,
                 visitables: state.visitables,
-                obstacles: state.obstacles,
+                terrains: state.terrains,
                 map: state.map,
                 cursorPosition: state.cursorPosition,
                 selectedUnit: state.selectedUnit,
@@ -1087,58 +1037,89 @@ exports.Reducer = function (state, action) {
 
 
 /***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var Terrain = /** @class */ (function () {
+    function Terrain(name, image, movement_penalty, position) {
+        this.name = name;
+        this.image = image;
+        this.movement_penalty = movement_penalty;
+        this.position = position;
+    }
+    return Terrain;
+}());
+exports.Terrain = Terrain;
+var Plains = /** @class */ (function (_super) {
+    __extends(Plains, _super);
+    function Plains() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Plains.create = function (position) {
+        return new Terrain("Plains", "imgs/terrain_plains.png", 0, position);
+    };
+    return Plains;
+}(Terrain));
+exports.Plains = Plains;
+var ImpassableMountain = /** @class */ (function (_super) {
+    __extends(ImpassableMountain, _super);
+    function ImpassableMountain() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    ImpassableMountain.create = function (position) {
+        return new Terrain("Mountains (impassable)", "imgs/terrain_mountain.png", -1, position);
+    };
+    return ImpassableMountain;
+}(Terrain));
+exports.ImpassableMountain = ImpassableMountain;
+var Hills = /** @class */ (function (_super) {
+    __extends(Hills, _super);
+    function Hills() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Hills.create = function (position) {
+        return new Terrain("Hills", "imgs/terrain_hills.png", 2, position);
+    };
+    return Hills;
+}(Terrain));
+exports.Hills = Hills;
+
+
+/***/ }),
 /* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var Cursor = /** @class */ (function (_super) {
-    __extends(Cursor, _super);
-    function Cursor(props) {
-        return _super.call(this, props) || this;
-    }
-    Cursor.prototype.render = function () {
-        return (React.createElement("img", { src: "imgs/hex_numpad_selected.png", id: "selector", className: "selector" }));
-    };
-    return Cursor;
-}(React.Component));
-exports.Cursor = Cursor;
-
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var ReactDOM = __webpack_require__(14);
-var Game_1 = __webpack_require__(15);
+var ReactDOM = __webpack_require__(13);
+var Game_1 = __webpack_require__(14);
 // Representa la aplicación, por ahora únicamente el mapa
 ReactDOM.render(React.createElement(Game_1.Game, null), document.getElementById("root"));
 
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports) {
 
 module.exports = ReactDOM;
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1155,7 +1136,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var Map_1 = __webpack_require__(16);
+var Map_1 = __webpack_require__(15);
 var EnterGameButton = /** @class */ (function (_super) {
     __extends(EnterGameButton, _super);
     function EnterGameButton(props) {
@@ -1231,7 +1212,7 @@ exports.Game = Game;
 
 
 /***/ }),
-/* 16 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1249,10 +1230,10 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var Store_1 = __webpack_require__(1);
-var GameState_1 = __webpack_require__(11);
+var GameState_1 = __webpack_require__(10);
 var Cell_1 = __webpack_require__(33);
 var Utils_1 = __webpack_require__(2);
-var Unit_1 = __webpack_require__(3);
+var UnitCell_1 = __webpack_require__(35);
 /** Representa el mapa que contendrá las unidades y las casillas **/
 var Map = /** @class */ (function (_super) {
     __extends(Map, _super);
@@ -1261,7 +1242,7 @@ var Map = /** @class */ (function (_super) {
         var _this = _super.call(this, props) || this;
         _this.turn = 0;
         _this.actualstate = 0;
-        _this.state = { cells: new Array(_this.props.horizontal) };
+        _this.state = { cells: new Array(_this.props.horizontal), rows: _this.props.vertical, columns: _this.props.horizontal };
         Store_1.store.dispatch(GameState_1.Actions.generateSetListener(_this));
         return _this;
     }
@@ -1410,12 +1391,12 @@ var Map = /** @class */ (function (_super) {
         var otherIndex;
         //Cada vez que salga este if es que se está comprobando si es turno del jugador o enemigo y dependiendo de eso comprueba en la lista del jugador o enemiga
         if (this.turn % 2 == 0) {
-            unitIndex = Utils_1.myIndexOf(Store_1.store.getState().position, newPosition);
-            otherIndex = Utils_1.myIndexOf(Store_1.store.getState().enemyposition, newPosition);
+            unitIndex = Utils_1.myIndexOf(Store_1.store.getState().position.map(function (x) { return x.position; }), newPosition);
+            otherIndex = Utils_1.myIndexOf(Store_1.store.getState().enemyposition.map(function (x) { return x.position; }), newPosition);
         }
         else {
-            unitIndex = Utils_1.myIndexOf(Store_1.store.getState().enemyposition, newPosition);
-            otherIndex = Utils_1.myIndexOf(Store_1.store.getState().position, newPosition);
+            unitIndex = Utils_1.myIndexOf(Store_1.store.getState().enemyposition.map(function (x) { return x.position; }), newPosition);
+            otherIndex = Utils_1.myIndexOf(Store_1.store.getState().position.map(function (x) { return x.position; }), newPosition);
         }
         //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
         if (unitIndex != -1 && Store_1.store.getState().type == "SET_LISTENER") {
@@ -1454,60 +1435,6 @@ var Map = /** @class */ (function (_super) {
             Store_1.saveState(GameState_1.Actions.generateSetListener(this));
         }
     };
-    /*
-        getValidPosition(actual: Cubic){
-            let valid: Array<Cubic> = [];
-            let last: Cubic = actual;
-            let pos: Cubic;
-            let r: number = 0;
-            var row = [];
-            for(var k = 1; k <= storeStats.getState().movement; k++) {
-                row[k] = [];
-                console.log("k="+k);
-                if(k-1>0){
-                    for(var j = 0; j < row[k-1].length; j++){
-                        last = row[k-1][j];
-                        console.log("j="+j);
-                        console.log("last: "+last.x+","+last.y+","+last.z);
-                        for (var i = 0; i < cubic_directions.length; i++) {
-                            console.log("i="+i);
-                            pos = last;
-                            pos.sum(cubic_directions[i]);
-                            console.log("pos: "+pos.getPair().x+","+pos.getPair().y);
-                            console.log("posCubic: "+pos.x+","+pos.y+","+pos.z);
-                            if(myIndexOf(store.getState().obstacles,pos.getPair())==-1 && myIndexOfCubic(valid,pos)==-1){
-                                console.log("obstacles: "+myIndexOf(store.getState().obstacles,pos.getPair()));
-                                console.log("valid: "+myIndexOfCubic(valid,pos));
-                                row[k].push(pos);
-                                valid.push(pos);
-                                console.log("introduceCubic "+valid[r].x+","+valid[r].y+","+valid[r].z);
-                                console.log("introduce "+valid[r].getPair().x+","+valid[r].getPair().y);
-                                r++;
-                            }
-                        }
-                    }
-                }else{
-                    for (var i = 0; i < cubic_directions.length; i++) {
-                        console.log("i="+i);
-                        pos = last;
-                        pos.sum(cubic_directions[i]);
-                        console.log("pos: "+pos.getPair().x+","+pos.getPair().y);
-                        console.log("posCubic: "+pos.x+","+pos.y+","+pos.z);
-                        console.log("obstacles: "+myIndexOf(store.getState().obstacles,pos.getPair()));
-                        console.log("valid: "+myIndexOfCubic(valid,pos));
-                        if(myIndexOf(store.getState().obstacles,pos.getPair())==-1 && myIndexOfCubic(valid,pos)==-1){
-                            row[k].push(pos);
-                            valid.push(pos);
-                            console.log("introduceCubic "+valid[r].x+","+valid[r].y+","+valid[r].z);
-                            console.log("introduce "+valid[0].x+","+valid[0].y+","+valid[0].z);
-                        }
-                    }
-                }
-    
-            }
-            return valid;
-        }
-    */
     // Calcula si dado los datos del circulo y  un punto cualquiuera, el punto cualquiera está dentro del círculo
     Map.prototype.getInCircle = function (centerX, centerY, radius, x, y) {
         // Raiz cuadrada de la distancia vectorial entre el centro y el punto debe ser menor al radio
@@ -1537,23 +1464,25 @@ var Map = /** @class */ (function (_super) {
             var row = num_row % 2 == 0 ? num_row / 2 : Math.floor(num_row / 2);
             var pos = new Utils_1.Pair(row, column);
             //Si está incluida en la lista de posiciones de unidades (el indice obtenido es -1) entonces se añade una casilla de unidad
-            if (Utils_1.myIndexOf(Store_1.store.getState().position, pos) != -1) {
+            var unitIndex = Utils_1.myIndexOf(Store_1.store.getState().position.map(function (x) { return x.position; }), pos);
+            var enemyIndex = Utils_1.myIndexOf(Store_1.store.getState().enemyposition.map(function (x) { return x.position; }), pos);
+            if (unitIndex != -1) {
                 this.state.cells[row][column] = React.createElement(Cell_1.Cell, { row: row, column: column });
-                accum2.push(React.createElement(Unit_1.Unit, { row: row, column: column, enemy: false }));
+                accum2.push(React.createElement(UnitCell_1.UnitCell, { row: row, column: column, enemy: false, unit: Store_1.store.getState().position[unitIndex] }));
                 //Si está entre las casillas enemigas entonces se modifica su imagen.
             }
-            else if (Utils_1.myIndexOf(Store_1.store.getState().enemyposition, pos) != -1) {
+            else if (enemyIndex != -1) {
                 this.state.cells[row][column] = React.createElement(Cell_1.Cell, { row: row, column: column });
-                accum2.push(React.createElement(Unit_1.Unit, { row: row, column: column, enemy: true }));
+                accum2.push(React.createElement(UnitCell_1.UnitCell, { row: row, column: column, enemy: true, unit: Store_1.store.getState().enemyposition[enemyIndex] }));
                 //Si está en modo seleccionado se usará otra lógica es necesario llamarlo despues de la unidad sino las casillas de unidades al generarse se pondran en amarillo
             }
             else if (Store_1.store.getState().selectedUnit != null) {
                 var actualPosition = void 0;
                 if (this.turn % 2 == 0) {
-                    actualPosition = Store_1.store.getState().position[Store_1.store.getState().selectedUnit];
+                    actualPosition = Store_1.store.getState().position[Store_1.store.getState().selectedUnit].position;
                 }
                 else {
-                    actualPosition = Store_1.store.getState().enemyposition[Store_1.store.getState().selectedUnit];
+                    actualPosition = Store_1.store.getState().enemyposition[Store_1.store.getState().selectedUnit].position;
                 }
                 //Si la distancia es menor o igual a la distancia máxima entonces son posiciones validas y se seleccionaran, además se comprueba que no sea un obstáculo
                 if (Utils_1.myIndexOf(Store_1.store.getState().visitables, pos) != -1) {
@@ -1585,17 +1514,17 @@ exports.Map = Map;
 
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* WEBPACK VAR INJECTION */(function(process) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__createStore__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__combineReducers__ = __webpack_require__(30);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__bindActionCreators__ = __webpack_require__(31);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__applyMiddleware__ = __webpack_require__(32);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__compose__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_warning__ = __webpack_require__(9);
+/* WEBPACK VAR INJECTION */(function(process) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__createStore__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__combineReducers__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__bindActionCreators__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__applyMiddleware__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__compose__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_warning__ = __webpack_require__(8);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "createStore", function() { return __WEBPACK_IMPORTED_MODULE_0__createStore__["b"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "combineReducers", function() { return __WEBPACK_IMPORTED_MODULE_1__combineReducers__["a"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "bindActionCreators", function() { return __WEBPACK_IMPORTED_MODULE_2__bindActionCreators__["a"]; });
@@ -1619,16 +1548,16 @@ if (process.env.NODE_ENV !== 'production' && typeof isCrushed.name === 'string' 
 }
 
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(4)))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 18 */
+/* 17 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Symbol_js__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getRawTag_js__ = __webpack_require__(21);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__objectToString_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Symbol_js__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getRawTag_js__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__objectToString_js__ = __webpack_require__(21);
 
 
 
@@ -1660,11 +1589,11 @@ function baseGetTag(value) {
 
 
 /***/ }),
-/* 19 */
+/* 18 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__freeGlobal_js__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__freeGlobal_js__ = __webpack_require__(19);
 
 
 /** Detect free variable `self`. */
@@ -1677,7 +1606,7 @@ var root = __WEBPACK_IMPORTED_MODULE_0__freeGlobal_js__["a" /* default */] || fr
 
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1686,14 +1615,14 @@ var freeGlobal = typeof global == 'object' && global && global.Object === Object
 
 /* harmony default export */ __webpack_exports__["a"] = (freeGlobal);
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(8)))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(7)))
 
 /***/ }),
-/* 21 */
+/* 20 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Symbol_js__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Symbol_js__ = __webpack_require__(6);
 
 
 /** Used for built-in method references. */
@@ -1743,7 +1672,7 @@ function getRawTag(value) {
 
 
 /***/ }),
-/* 22 */
+/* 21 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1772,11 +1701,11 @@ function objectToString(value) {
 
 
 /***/ }),
-/* 23 */
+/* 22 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__overArg_js__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__overArg_js__ = __webpack_require__(23);
 
 
 /** Built-in value references. */
@@ -1786,7 +1715,7 @@ var getPrototype = Object(__WEBPACK_IMPORTED_MODULE_0__overArg_js__["a" /* defau
 
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1808,7 +1737,7 @@ function overArg(func, transform) {
 
 
 /***/ }),
-/* 25 */
+/* 24 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1844,14 +1773,14 @@ function isObjectLike(value) {
 
 
 /***/ }),
-/* 26 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(27);
+module.exports = __webpack_require__(26);
 
 
 /***/ }),
-/* 27 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1861,7 +1790,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _ponyfill = __webpack_require__(29);
+var _ponyfill = __webpack_require__(28);
 
 var _ponyfill2 = _interopRequireDefault(_ponyfill);
 
@@ -1884,10 +1813,10 @@ if (typeof self !== 'undefined') {
 
 var result = (0, _ponyfill2['default'])(root);
 exports['default'] = result;
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8), __webpack_require__(28)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7), __webpack_require__(27)(module)))
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -1915,7 +1844,7 @@ module.exports = function(module) {
 
 
 /***/ }),
-/* 29 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1944,14 +1873,14 @@ function symbolObservablePonyfill(root) {
 };
 
 /***/ }),
-/* 30 */
+/* 29 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/* harmony export (immutable) */ __webpack_exports__["a"] = combineReducers;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__createStore__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash_es_isPlainObject__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_warning__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__createStore__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash_es_isPlainObject__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_warning__ = __webpack_require__(8);
 
 
 
@@ -2082,10 +2011,10 @@ function combineReducers(reducers) {
     return hasChanged ? nextState : state;
   };
 }
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(4)))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 31 */
+/* 30 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2139,12 +2068,12 @@ function bindActionCreators(actionCreators, dispatch) {
 }
 
 /***/ }),
-/* 32 */
+/* 31 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = applyMiddleware;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compose__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compose__ = __webpack_require__(9);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 
@@ -2195,6 +2124,57 @@ function applyMiddleware() {
 }
 
 /***/ }),
+/* 32 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var Unit = /** @class */ (function () {
+    function Unit(name, type, movement, position) {
+        this.name = name;
+        this.type = type;
+        this.movement = movement;
+        this.position = position;
+    }
+    return Unit;
+}());
+exports.Unit = Unit;
+var Infantry = /** @class */ (function (_super) {
+    __extends(Infantry, _super);
+    function Infantry() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Infantry.create = function (position) {
+        return new Unit("Infantry", "unit", 2, position);
+    };
+    return Infantry;
+}(Unit));
+exports.Infantry = Infantry;
+var Tank = /** @class */ (function (_super) {
+    __extends(Tank, _super);
+    function Tank() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Tank.create = function (position) {
+        return new Unit("Tank", "tank", 1, position);
+    };
+    return Tank;
+}(Unit));
+exports.Tank = Tank;
+
+
+/***/ }),
 /* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2212,10 +2192,10 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var Cursor_1 = __webpack_require__(12);
 var Store_1 = __webpack_require__(1);
-var Obstacle_1 = __webpack_require__(34);
+var TerrainCell_1 = __webpack_require__(34);
 var Utils_1 = __webpack_require__(2);
+var Terrain = __webpack_require__(11);
 /**
     Esta clase consiste en la representación de una casilla dentro del mapa
     @constructor Incluye los atributos HTML: horizontal y vertical.
@@ -2225,23 +2205,23 @@ var Cell = /** @class */ (function (_super) {
     /** Debe introducirse los atributos horizontal y vertical
         @param props debe contener horizontal y vertical**/
     function Cell(props) {
-        return _super.call(this, props) || this;
+        var _this = _super.call(this, props) || this;
+        var pair = new Utils_1.Pair(props.row, props.column);
+        var index = Utils_1.myIndexOf(Store_1.store.getState().terrains.map(function (x) { return x.position; }), pair);
+        _this.state = {
+            terrain: index > -1 ? Store_1.store.getState().terrains[index] : Terrain.Plains.create(new Utils_1.Pair(props.row, props.column))
+        };
+        return _this;
     }
     /** Renderiza el objeto **/
     Cell.prototype.render = function () {
         // Comprobamos si la casilla actual contiene el cursor, primero obteniendo su posición
         var positionCursor = Store_1.store.getState().cursorPosition;
         // Despues comprobando que esta casilla esté en esa posición
-        var cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row ? React.createElement(Cursor_1.Cursor, null) : null;
-        // Le añadiremos el resultado de la comprobación anterior.
-        // De igual forma, obtenemos las posiciones de los obstaculos:
-        var obstacles = Store_1.store.getState().obstacles;
-        // Comprobamos si esta posición contiene el obstaculo:
-        var obstacle = Utils_1.myIndexOf(obstacles, new Utils_1.Pair(this.props.row, this.props.column)) == -1 ? null : React.createElement(Obstacle_1.Obstacle, { column: this.props.column, row: this.props.row });
+        var cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row;
         return (React.createElement("div", { className: "div_cell" },
-            React.createElement("img", { className: "cell", id: "hex" + this.props.row + "_" + this.props.column, src: this.props.selected ? "imgs/hex_base_selected.png" : "imgs/hex_base.png" }),
-            cursor,
-            obstacle));
+            React.createElement("img", { className: "cell", id: "hex" + this.props.row + "_" + this.props.column, src: cursor ? this.props.selected ? "imgs/hex_base_numpad_selected.png" : "imgs/hex_base_numpad.png" : this.props.selected ? "imgs/hex_base_selected.png" : "imgs/hex_base.png" }),
+            React.createElement(TerrainCell_1.TerrainCell, { terrain: this.state.terrain })));
     };
     return Cell;
 }(React.Component));
@@ -2266,19 +2246,90 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var Obstacle = /** @class */ (function (_super) {
-    __extends(Obstacle, _super);
-    function Obstacle(props) {
+var TerrainCell = /** @class */ (function (_super) {
+    __extends(TerrainCell, _super);
+    function TerrainCell(props) {
         return _super.call(this, props) || this;
     }
     //Este es el render del obstacle
-    Obstacle.prototype.render = function () {
+    TerrainCell.prototype.render = function () {
         return (React.createElement("div", { className: "obstacle" },
-            React.createElement("img", { id: "obstacle" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/obstacle.png" })));
+            React.createElement("img", { id: "obstacle" + this.props.terrain.position.getRow() + "_" + this.props.terrain.position.getColumn(), src: this.props.terrain.image })));
     };
-    return Obstacle;
+    return TerrainCell;
 }(React.Component));
-exports.Obstacle = Obstacle;
+exports.TerrainCell = TerrainCell;
+
+
+/***/ }),
+/* 35 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var Store_1 = __webpack_require__(1);
+var UnitCell = /** @class */ (function (_super) {
+    __extends(UnitCell, _super);
+    function UnitCell(props) {
+        return _super.call(this, props) || this;
+    }
+    //Con una variable externa se podría hacer que haya o no sprite de montaña etc
+    //TODO En la id de unit debería ir la id de unit pero más adelante se añadirá
+    UnitCell.prototype.render = function () {
+        // Al igual que en Cell, primero obtenemos la posición del cursor
+        var positionCursor = Store_1.store.getState().cursorPosition;
+        // Despues comprobando que esta casilla esté en esa posición
+        var cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row;
+        //Comprobamos si es enemiga o no para cambiar su sprite
+        var enemy = this.props.enemy ? "enemy_" : "";
+        // Le añadiremos el resultado de la comprobación anterior.
+        return (React.createElement("div", { className: "div_cell" },
+            React.createElement("img", { className: "cell", id: "hex" + this.props.unit.position.getRow() + "_" + this.props.unit.position.getRow(), src: cursor ? this.props.selected ? "imgs/hex_base_numpad_selected.png" : "imgs/hex_base_numpad.png" : this.props.selected ? "imgs/hex_base_selected.png" : "imgs/hex_base.png" }),
+            React.createElement("div", { className: "unit" },
+                React.createElement("img", { id: "unit" + this.props.unit.position.getRow() + "_" + this.props.unit.position.getRow(), src: "imgs/" + enemy + this.props.unit.type + ".png" }))));
+    };
+    return UnitCell;
+}(React.Component));
+exports.UnitCell = UnitCell;
+/*
+//Estos son los stats de las unidades
+export type Stats = {
+    readonly movement: number,
+    readonly type: string
+}
+
+//Al inicio serán estos, el tipo nos sirve para identificar la situacion, ejemplo, con buffo de ataque etc.
+export const InitialStats: Stats = {
+    movement: 2,
+    type: "NONE"
+}
+
+//En principio no se realizarán cambios ya que solo nos centraremos en que el movimiento funcione
+export const ReducerStats : Redux.Reducer<Stats> =
+    (state: Stats = InitialStats, action: Redux.AnyAction) => {
+        //Dependiendo del tipo se cambiarán las variables del estado
+        switch(action.type) {
+            case "NONE":
+                return {
+                    movement: state.movement,
+                    type: "NONE"
+                };
+            default:
+                return state;
+    }
+}*/
 
 
 /***/ })

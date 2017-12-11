@@ -1,12 +1,13 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
-import { store, saveState, storeStats } from './Store';
+import { store, saveState } from './Store';
 import { Actions, State, InitialState, Reducer } from './GameState';
 import { Cell } from './Cell';
 import { TerrainCell } from './TerrainCell';
 import { Pair, Cubic, myIndexOf, cubic_directions, myIndexOfCubic } from './Utils';
-import { Unit, Stats, InitialStats} from './Unit';
+import { Unit } from './Unit';
+import { UnitCell } from './UnitCell';
 
 /** Representa el mapa que contendrá las unidades y las casillas **/
 export class Map extends React.Component<any, any> {
@@ -180,11 +181,11 @@ export class Map extends React.Component<any, any> {
         let otherIndex: number;
         //Cada vez que salga este if es que se está comprobando si es turno del jugador o enemigo y dependiendo de eso comprueba en la lista del jugador o enemiga
         if(this.turn%2==0){
-            unitIndex = myIndexOf(store.getState().position, newPosition);
-            otherIndex = myIndexOf(store.getState().enemyposition, newPosition);
+            unitIndex = myIndexOf(store.getState().position.map(x=>x.position), newPosition);
+            otherIndex = myIndexOf(store.getState().enemyposition.map(x=>x.position), newPosition);
         }else{
-            unitIndex = myIndexOf(store.getState().enemyposition, newPosition);
-            otherIndex = myIndexOf(store.getState().position, newPosition);
+            unitIndex = myIndexOf(store.getState().enemyposition.map(x=>x.position), newPosition);
+            otherIndex = myIndexOf(store.getState().position.map(x=>x.position), newPosition);
         }
 
         //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
@@ -253,24 +254,26 @@ export class Map extends React.Component<any, any> {
             let row = num_row%2==0?num_row/2:Math.floor(num_row/2);
             let pos = new Pair(row, column);
             //Si está incluida en la lista de posiciones de unidades (el indice obtenido es -1) entonces se añade una casilla de unidad
-            if (myIndexOf(store.getState().position, pos)!=-1){
+            let unitIndex = myIndexOf(store.getState().position.map(x=>x.position), pos);
+            let enemyIndex = myIndexOf(store.getState().enemyposition.map(x=>x.position), pos);
+            if (unitIndex!=-1){
                 this.state.cells[row][column] = <Cell row={row} column={column} />
                 accum2.push(
-                    <Unit row={row} column={column} enemy={false} />
+                    <UnitCell row={row} column={column} enemy={false} unit={store.getState().position[unitIndex]}/>
                 );
             //Si está entre las casillas enemigas entonces se modifica su imagen.
-            }else if(myIndexOf(store.getState().enemyposition, pos)!=-1){
+            }else if(enemyIndex!=-1){
                 this.state.cells[row][column] = <Cell row={row} column={column} />
                 accum2.push(
-                    <Unit row={row} column={column} enemy={true}/>
+                    <UnitCell row={row} column={column} enemy={true} unit={store.getState().enemyposition[enemyIndex]}/>
                 );
             //Si está en modo seleccionado se usará otra lógica es necesario llamarlo despues de la unidad sino las casillas de unidades al generarse se pondran en amarillo
             }else if(store.getState().selectedUnit!=null){
                 let actualPosition: Pair;
                 if(this.turn%2==0){
-                    actualPosition = store.getState().position[store.getState().selectedUnit];
+                    actualPosition = store.getState().position[store.getState().selectedUnit].position;
                 }else{
-                    actualPosition = store.getState().enemyposition[store.getState().selectedUnit];
+                    actualPosition = store.getState().enemyposition[store.getState().selectedUnit].position;
                 }
                 //Si la distancia es menor o igual a la distancia máxima entonces son posiciones validas y se seleccionaran, además se comprueba que no sea un obstáculo
                 if(myIndexOf(store.getState().visitables, pos) != -1){
