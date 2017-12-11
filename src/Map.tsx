@@ -1,13 +1,13 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
-import { store, saveState, storeStats } from './Store';
+import { store, saveState } from './Store';
 import { Actions, State, InitialState, Reducer } from './GameState';
 import { Cell } from './Cell';
-import { Obstacle } from './Obstacle';
+import { TerrainCell } from './TerrainCell';
 import { Pair, Cubic, myIndexOf, cubic_directions, myIndexOfCubic } from './Utils';
-import { Unit, Stats, InitialStats} from './Unit';
-import { Cursor } from './Cursor';
+import { Unit } from './Unit';
+import { UnitCell } from './UnitCell';
 
 /** Representa el mapa que contendrá las unidades y las casillas **/
 export class Map extends React.Component<any, any> {
@@ -20,7 +20,7 @@ export class Map extends React.Component<any, any> {
         super(props);
         this.turn = 0;
         this.actualstate = 0;
-        this.state = { cells: new Array<Array<Cell>>(this.props.horizontal) };
+        this.state = { cells: new Array<Array<Cell>>(this.props.horizontal), rows: this.props.vertical, columns: this.props.horizontal };
         store.dispatch(Actions.generateSetListener(this));
     }
 
@@ -172,45 +172,38 @@ export class Map extends React.Component<any, any> {
 
         //Guardamos la posición actual y la nueva posición
 
-        this.clickAction(row, column);
+        this.clickAction(row, column); // TODO Solucionar esto!
     }
 
     clickAction(row: number, column: number) {
         let newPosition: Pair = new Pair(row,column);
-        let unitIndex: number;
-        let otherIndex: number;
-        let isAlly: boolean
-        //Cada vez que salga este if es que se está comprobando si es turno del jugador o enemigo y dependiendo de eso comprueba en la lista del jugador o enemiga
-        if(this.turn%2==0){
-            isAlly = true;
-            unitIndex = myIndexOf(store.getState().position, newPosition);
-            otherIndex = myIndexOf(store.getState().enemyposition, newPosition);
-        }else{
-            isAlly = false;
-            unitIndex = myIndexOf(store.getState().enemyposition, newPosition);
-            otherIndex = myIndexOf(store.getState().position, newPosition);
-        }
-
+        let unitIndex: number = myIndexOf(store.getState().units.map(x=>x.position), newPosition);
+        let unitEnemy: boolean; //Vale true si la unidad seleccionada es enemiga de las unidades del turno actual
+        unitIndex!=-1?this.turn%2==0?unitEnemy = !store.getState().units[unitIndex].player:unitEnemy = store.getState().units[unitIndex].player:false;
         //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
         if(unitIndex!= -1 && store.getState().type == "SET_LISTENER"){
-            saveState(Actions.generateMove(unitIndex, isAlly));
+            saveState(Actions.generateMove(unitIndex,this.turn%2==0));
         //Si hace clic en una possición exterior, mantieene el estado de en movimiento (seleccionado) y sigue almacenando la unidad seleccionada
         }else if((newPosition.column<0 || newPosition.column>this.props.horizontal || newPosition.row<0 || newPosition.row>this.props.vertical)){
-            saveState(Actions.generateMove(store.getState().selectedUnit, isAlly));
+            saveState(Actions.generateMove(store.getState().selectedUnit,this.turn%2==0));
         //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
-        }else if(unitIndex==-1 && store.getState().selectedUnit != null && myIndexOf(store.getState().visitables, newPosition) != -1){
-            // Primero comprobamos si ataca
-            if(otherIndex > -1 && myIndexOf(store.getState().visitables, newPosition)) {
-                // Ejecutamos la acción de ataque
-                saveState(Actions.attack(otherIndex, isAlly));
+        }else if((unitIndex==-1 || unitEnemy) && store.getState().selectedUnit != null && myIndexOf(store.getState().visitables, newPosition) != -1){
+            //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
+            if(unitEnemy){
+                //Si es así se ataca
+                saveState(Actions.attack(unitIndex,this.turn%2==0));
             }
-            // Despues ejecutamos el movimiento
-            if(isAlly) {
-                saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null));
-            } else {
-                saveState(Actions.generateChangeUnitPosEnemy(store.getState().selectedUnit, newPosition, null));
-            }
+            //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
+            saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null, this.turn%2==0));
 
+            //Si no quedan más unidades enemigas es una victoria y si no quedan más unidades del jugador es una derrota
+            if(store.getState().units.filter(x => !x.player).length==0){
+                this.actualstate=1;
+                saveState(Actions.finish());
+            }else if(store.getState().units.filter(x => x.player).length==0){
+                this.actualstate=2;
+                saveState(Actions.finish());
+            }
             this.turn++;
         }else{
             saveState(Actions.generateSetListener(this));
@@ -249,15 +242,12 @@ export class Map extends React.Component<any, any> {
             let column = j;
             let row = num_row%2==0?num_row/2:Math.floor(num_row/2);
             let pos = new Pair(row, column);
-            //Si está incluida en la lista de posiciones de unidades (el indice obtenido es -1) entonces se añade una casilla de unidad
-            let indexOfAlly = myIndexOf(store.getState().position, pos);
-            let indexOfEnemy = myIndexOf(store.getState().enemyposition, pos);
-            if (indexOfAlly > -1 || indexOfEnemy > -1){
-                this.state.cells[row][column] = <Cell row={row} column={column} />
-                accum2.push(
-                    <Unit row={row} column={column} enemy={indexOfEnemy > -1?true:false} />
-                );
-            //Si está en modo seleccionado se usará otra lógica es necesario llamarlo despues de la unidad sino las casillas de unidades al generarse se pondran en amarillo
+            //Se generan las unidades
+            let indexUnit = myIndexOf(store.getState().units.map(x=>x.position), pos);
+            if (indexUnit!=-1){
+                var cell = <Cell row={row} column={column} unit={indexUnit}/>;
+                this.state.cells[row][column] = cell;
+                accum2.push(cell);
             }else if(store.getState().selectedUnit!=null){
                 //Si la distancia es menor o igual a la distancia máxima entonces son posiciones validas y se seleccionaran, además se comprueba que no sea un obstáculo
                 if(myIndexOf(store.getState().visitables, pos) != -1){

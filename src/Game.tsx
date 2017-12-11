@@ -4,7 +4,7 @@ import { Map } from './Map';
 import { store } from './Store';
 
 class EnterGameButton extends React.Component<any, any> {
-    constructor(props : any) {
+    constructor(props: any) {
         super(props);
     }
 
