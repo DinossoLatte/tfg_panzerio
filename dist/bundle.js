@@ -88,7 +88,7 @@ function saveState(action) {
     var map = exports.store.getState().map;
     var position = exports.store.getState().position;
     var enemyposition = exports.store.getState().enemyposition;
-    var obstacles = exports.store.getState().obstacles;
+    var terrains = exports.store.getState().terrains;
     var selectedUnit = exports.store.getState().selectedUnit;
     var cursorPosition = exports.store.getState().cursorPosition;
     var type = exports.store.getState().type;
@@ -222,7 +222,6 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var Store_1 = __webpack_require__(1);
-var Cursor_1 = __webpack_require__(12);
 var Unit = /** @class */ (function (_super) {
     __extends(Unit, _super);
     function Unit(props) {
@@ -234,15 +233,14 @@ var Unit = /** @class */ (function (_super) {
         // Al igual que en Cell, primero obtenemos la posición del cursor
         var positionCursor = Store_1.store.getState().cursorPosition;
         // Despues comprobando que esta casilla esté en esa posición
-        var cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row ? React.createElement(Cursor_1.Cursor, null) : null;
+        var cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row;
         //Comprobamos si es enemiga o no para cambiar su sprite
         var unitType = this.props.enemy ? "enemy_unit" : "unit";
         // Le añadiremos el resultado de la comprobación anterior.
         return (React.createElement("div", { className: "div_cell" },
-            React.createElement("img", { className: "cell", id: "hex" + this.props.row + "_" + this.props.column, src: "imgs/hex_base.png" }),
+            React.createElement("img", { className: "cell", id: "hex" + this.props.row + "_" + this.props.column, src: cursor ? this.props.selected ? "imgs/hex_base_numpad_selected.png" : "imgs/hex_base_numpad.png" : this.props.selected ? "imgs/hex_base_selected.png" : "imgs/hex_base.png" }),
             React.createElement("div", { className: "unit" },
-                React.createElement("img", { id: "unit" + this.props.row + "_" + this.props.column, src: "imgs/" + unitType + ".png" })),
-            cursor));
+                React.createElement("img", { id: "unit" + this.props.row + "_" + this.props.column, src: "imgs/" + unitType + ".png" }))));
     };
     return Unit;
 }(React.Component));
@@ -906,6 +904,7 @@ function compose() {
 Object.defineProperty(exports, "__esModule", { value: true });
 var Utils_1 = __webpack_require__(2);
 var Unit_1 = __webpack_require__(3);
+var Terrains_1 = __webpack_require__(12);
 var Actions = /** @class */ (function () {
     function Actions() {
     }
@@ -957,6 +956,7 @@ var Actions = /** @class */ (function () {
             player: player
         };
     };
+    // Se le pasa el mapa porque es necesario, en caso contrario no se podría reiniciar correctamente.
     Actions.finish = function () {
         //Este estado por ahora simplemente hace que no se pueda jugar hasta que se reinicie la partida
         return {
@@ -971,7 +971,7 @@ exports.InitialState = {
     position: [new Utils_1.Pair(0, 0), new Utils_1.Pair(0, 1), new Utils_1.Pair(1, 0)],
     enemyposition: [new Utils_1.Pair(0, 4), new Utils_1.Pair(1, 4), new Utils_1.Pair(0, 3)],
     visitables: null,
-    obstacles: [new Utils_1.Pair(2, 2)],
+    terrains: [Terrains_1.ImpassableMountain.create(new Utils_1.Pair(2, 2)), Terrains_1.ImpassableMountain.create(new Utils_1.Pair(3, 2)), Terrains_1.Hills.create(new Utils_1.Pair(2, 3))],
     cursorPosition: new Utils_1.Pair(0, 0),
     map: null,
     selectedUnit: null,
@@ -988,7 +988,7 @@ exports.Reducer = function (state, action) {
                 position: state.position,
                 enemyposition: state.enemyposition,
                 visitables: state.visitables,
-                obstacles: state.obstacles,
+                terrains: state.terrains,
                 map: state.map,
                 selectedUnit: action.selectedUnit,
                 cursorPosition: state.cursorPosition,
@@ -1001,7 +1001,7 @@ exports.Reducer = function (state, action) {
                 position: state.position,
                 enemyposition: state.enemyposition,
                 visitables: state.visitables,
-                obstacles: state.obstacles,
+                terrains: state.terrains,
                 map: state.map,
                 selectedUnit: action.selectedUnit,
                 cursorPosition: state.cursorPosition,
@@ -1011,22 +1011,37 @@ exports.Reducer = function (state, action) {
             // Para reducir los cálculos del movimiento, vamos a realizar en este punto el cálculo de las celdas visitables
             var visitables_cubic = [new Utils_1.Cubic(action.player ? state.position[action.unit_id] : state.enemyposition[action.unit_id])];
             var movements = Unit_1.InitialStats.movement;
-            var neighbours = [];
+            // Los vecinos estarán compuestos por la posición cúbica y el número de movimientos para pasar la posición
+            var neighbours = new Array();
             // Primero, iteraremos desde 0 hasta el número de movimientos
             for (var i = 0; i <= movements; i++) {
-                // Primero, filtramos de los vecinos los que sean obstáculos
-                neighbours.filter(function (possible_cubic) { return Utils_1.myIndexOf(state.obstacles, possible_cubic.getPair()) == -1; });
                 // Añadimos los vecinos que queden, son celdas visitables:
-                visitables_cubic = visitables_cubic.concat(neighbours);
+                visitables_cubic = visitables_cubic.concat(neighbours.filter(function (possible_tuple) { return possible_tuple[1] == 0; }).map(function (x) { return x[0]; }));
                 // Calculamos los próximos vecinos:
                 var new_neighbours = [];
                 for (var index_directions = 0; index_directions < Utils_1.cubic_directions.length; index_directions++) {
-                    console.log(index_directions);
                     visitables_cubic.forEach(function (cubic) {
                         var new_cubic = cubic.add(Utils_1.cubic_directions[index_directions]);
-                        if (Utils_1.myIndexOf(state.obstacles, new_cubic.getPair()) == -1 && Utils_1.myIndexOfCubic(visitables_cubic, new_cubic)
-                            && Utils_1.myIndexOf(action.player ? state.position : state.enemyposition, new_cubic.getPair()) == -1) {
-                            new_neighbours.push(new_cubic);
+                        // Siempre que la nueva casilla no esté en la lista de visitables ni sea una posición no alcanzable.
+                        if (Utils_1.myIndexOfCubic(visitables_cubic, new_cubic) == -1) {
+                            var indexOfNeighbours = Utils_1.myIndexOfCubic(neighbours.map(function (x) { return x[0]; }), new_cubic);
+                            // Para añadir la posición, comprobamos primero que no esté la posición:
+                            if (indexOfNeighbours == -1) {
+                                // Si es el caso, debemos comprobar que la posición no esté ocupada por una de las unidades del jugador
+                                if (Utils_1.myIndexOf(action.player ? state.position : state.enemyposition, new_cubic.getPair()) == -1) {
+                                    // Obtenemos el índice del obstáculo si está en la lista.
+                                    var indexOfObstacle = Utils_1.myIndexOf(state.terrains.map(function (x) { return x.position; }), new_cubic.getPair());
+                                    // Si se admite, añadimos la posición y la cantidad de movimientos para pasar por la casilla
+                                    new_neighbours.push([new_cubic,
+                                        // Por ahora se comprueba si está en la lista de obstáculos, en cuyo caso coge la cantidad. En caso contrario, asumimos Plains
+                                        indexOfObstacle > -1 ? (state.terrains[indexOfObstacle].movement_penalty - 1) : 0]);
+                                }
+                            }
+                            else {
+                                // Actualizamos el movimiento de la unidad, si es el caso.
+                                var cell = neighbours[indexOfNeighbours];
+                                new_neighbours.push([cell[0], cell[1] - 1]);
+                            }
                         }
                     });
                 }
@@ -1038,7 +1053,7 @@ exports.Reducer = function (state, action) {
                 position: state.position,
                 enemyposition: state.enemyposition,
                 visitables: visitables_pair,
-                obstacles: state.obstacles,
+                terrains: state.terrains,
                 map: state.map,
                 selectedUnit: action.unit_id,
                 cursorPosition: state.cursorPosition,
@@ -1049,7 +1064,7 @@ exports.Reducer = function (state, action) {
                 position: state.position,
                 enemyposition: state.enemyposition,
                 visitables: state.visitables,
-                obstacles: state.obstacles,
+                terrains: state.terrains,
                 map: action.map,
                 selectedUnit: state.selectedUnit,
                 cursorPosition: state.cursorPosition,
@@ -1060,7 +1075,7 @@ exports.Reducer = function (state, action) {
                 position: state.position,
                 enemyposition: state.enemyposition,
                 visitables: state.visitables,
-                obstacles: state.obstacles,
+                terrains: state.terrains,
                 map: state.map,
                 cursorPosition: action.position,
                 selectedUnit: state.selectedUnit,
@@ -1072,14 +1087,24 @@ exports.Reducer = function (state, action) {
                 position: state.position,
                 enemyposition: state.enemyposition,
                 visitables: state.visitables,
-                obstacles: state.obstacles,
+                terrains: state.terrains,
                 map: state.map,
                 cursorPosition: state.cursorPosition,
                 selectedUnit: state.selectedUnit,
                 type: "MOVE"
             };
         case "FINISH":
-            return state;
+            console.log(exports.InitialState);
+            return {
+                position: [new Utils_1.Pair(0, 0), new Utils_1.Pair(0, 1), new Utils_1.Pair(1, 0)],
+                enemyposition: [new Utils_1.Pair(0, 4), new Utils_1.Pair(1, 4), new Utils_1.Pair(0, 3)],
+                visitables: null,
+                terrains: [Terrains_1.ImpassableMountain.create(new Utils_1.Pair(2, 2)), Terrains_1.ImpassableMountain.create(new Utils_1.Pair(3, 2)), Terrains_1.Hills.create(new Utils_1.Pair(2, 3))],
+                cursorPosition: new Utils_1.Pair(0, 0),
+                map: state.map,
+                selectedUnit: null,
+                type: "SET_LISTENER"
+            }; // POR QUE TYPESCRIPT NO COPIA EL OBJETO !!!!
         default:
             return state;
     }
@@ -1103,18 +1128,49 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var Cursor = /** @class */ (function (_super) {
-    __extends(Cursor, _super);
-    function Cursor(props) {
-        return _super.call(this, props) || this;
+var Terrain = /** @class */ (function () {
+    function Terrain(name, image, movement_penalty, position) {
+        this.name = name;
+        this.image = image;
+        this.movement_penalty = movement_penalty;
+        this.position = position;
     }
-    Cursor.prototype.render = function () {
-        return (React.createElement("img", { src: "imgs/hex_numpad_selected.png", id: "selector", className: "selector" }));
+    return Terrain;
+}());
+exports.Terrain = Terrain;
+var Plains = /** @class */ (function (_super) {
+    __extends(Plains, _super);
+    function Plains() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Plains.create = function (position) {
+        return new Terrain("Plains", "imgs/terrain_plains.png", 0, position);
     };
-    return Cursor;
-}(React.Component));
-exports.Cursor = Cursor;
+    return Plains;
+}(Terrain));
+exports.Plains = Plains;
+var ImpassableMountain = /** @class */ (function (_super) {
+    __extends(ImpassableMountain, _super);
+    function ImpassableMountain() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    ImpassableMountain.create = function (position) {
+        return new Terrain("Mountains (impassable)", "imgs/terrain_mountain.png", -1, position);
+    };
+    return ImpassableMountain;
+}(Terrain));
+exports.ImpassableMountain = ImpassableMountain;
+var Hills = /** @class */ (function (_super) {
+    __extends(Hills, _super);
+    function Hills() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Hills.create = function (position) {
+        return new Terrain("Hills", "imgs/terrain_hills.png", 2, position);
+    };
+    return Hills;
+}(Terrain));
+exports.Hills = Hills;
 
 
 /***/ }),
@@ -1128,7 +1184,11 @@ var React = __webpack_require__(0);
 var ReactDOM = __webpack_require__(14);
 var Game_1 = __webpack_require__(15);
 // Representa la aplicación, por ahora únicamente el mapa
-ReactDOM.render(React.createElement(Game_1.Game, null), document.getElementById("root"));
+function main() {
+    ReactDOM.render(React.createElement(Game_1.Game, null), document.getElementById("root"));
+}
+exports.main = main;
+main();
 
 
 /***/ }),
@@ -1259,12 +1319,15 @@ var Map = /** @class */ (function (_super) {
     /** @constructor  Deben introducirse los elementos horizontal y vertical **/
     function Map(props) {
         var _this = _super.call(this, props) || this;
-        _this.turn = 0;
-        _this.actualstate = 0;
-        _this.state = { cells: new Array(_this.props.horizontal) };
-        Store_1.store.dispatch(GameState_1.Actions.generateSetListener(_this));
+        _this.restartState();
         return _this;
     }
+    Map.prototype.restartState = function () {
+        this.turn = 0;
+        this.actualstate = 0;
+        this.state = { cells: new Array(this.props.horizontal), rows: this.props.vertical, columns: this.props.horizontal };
+        Store_1.store.dispatch(GameState_1.Actions.generateSetListener(this));
+    };
     /** Renderiza el mapa **/
     Map.prototype.render = function () {
         // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
@@ -1442,10 +1505,12 @@ var Map = /** @class */ (function (_super) {
             //Si no quedan más unidades enemigas es una victoria y si no quedan más unidades del jugador es una derrota
             if (Store_1.store.getState().enemyposition.length == 0) {
                 this.actualstate = 1;
+                // Reiniciamos el estado
                 Store_1.saveState(GameState_1.Actions.finish());
             }
             else if (Store_1.store.getState().position.length == 0) {
                 this.actualstate = 2;
+                // Reiniciamos el estado
                 Store_1.saveState(GameState_1.Actions.finish());
             }
             this.turn++;
@@ -1454,60 +1519,6 @@ var Map = /** @class */ (function (_super) {
             Store_1.saveState(GameState_1.Actions.generateSetListener(this));
         }
     };
-    /*
-        getValidPosition(actual: Cubic){
-            let valid: Array<Cubic> = [];
-            let last: Cubic = actual;
-            let pos: Cubic;
-            let r: number = 0;
-            var row = [];
-            for(var k = 1; k <= storeStats.getState().movement; k++) {
-                row[k] = [];
-                console.log("k="+k);
-                if(k-1>0){
-                    for(var j = 0; j < row[k-1].length; j++){
-                        last = row[k-1][j];
-                        console.log("j="+j);
-                        console.log("last: "+last.x+","+last.y+","+last.z);
-                        for (var i = 0; i < cubic_directions.length; i++) {
-                            console.log("i="+i);
-                            pos = last;
-                            pos.sum(cubic_directions[i]);
-                            console.log("pos: "+pos.getPair().x+","+pos.getPair().y);
-                            console.log("posCubic: "+pos.x+","+pos.y+","+pos.z);
-                            if(myIndexOf(store.getState().obstacles,pos.getPair())==-1 && myIndexOfCubic(valid,pos)==-1){
-                                console.log("obstacles: "+myIndexOf(store.getState().obstacles,pos.getPair()));
-                                console.log("valid: "+myIndexOfCubic(valid,pos));
-                                row[k].push(pos);
-                                valid.push(pos);
-                                console.log("introduceCubic "+valid[r].x+","+valid[r].y+","+valid[r].z);
-                                console.log("introduce "+valid[r].getPair().x+","+valid[r].getPair().y);
-                                r++;
-                            }
-                        }
-                    }
-                }else{
-                    for (var i = 0; i < cubic_directions.length; i++) {
-                        console.log("i="+i);
-                        pos = last;
-                        pos.sum(cubic_directions[i]);
-                        console.log("pos: "+pos.getPair().x+","+pos.getPair().y);
-                        console.log("posCubic: "+pos.x+","+pos.y+","+pos.z);
-                        console.log("obstacles: "+myIndexOf(store.getState().obstacles,pos.getPair()));
-                        console.log("valid: "+myIndexOfCubic(valid,pos));
-                        if(myIndexOf(store.getState().obstacles,pos.getPair())==-1 && myIndexOfCubic(valid,pos)==-1){
-                            row[k].push(pos);
-                            valid.push(pos);
-                            console.log("introduceCubic "+valid[r].x+","+valid[r].y+","+valid[r].z);
-                            console.log("introduce "+valid[0].x+","+valid[0].y+","+valid[0].z);
-                        }
-                    }
-                }
-    
-            }
-            return valid;
-        }
-    */
     // Calcula si dado los datos del circulo y  un punto cualquiuera, el punto cualquiera está dentro del círculo
     Map.prototype.getInCircle = function (centerX, centerY, radius, x, y) {
         // Raiz cuadrada de la distancia vectorial entre el centro y el punto debe ser menor al radio
@@ -2212,10 +2223,10 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var Cursor_1 = __webpack_require__(12);
 var Store_1 = __webpack_require__(1);
-var Obstacle_1 = __webpack_require__(34);
+var TerrainCell_1 = __webpack_require__(34);
 var Utils_1 = __webpack_require__(2);
+var Terrain = __webpack_require__(12);
 /**
     Esta clase consiste en la representación de una casilla dentro del mapa
     @constructor Incluye los atributos HTML: horizontal y vertical.
@@ -2225,23 +2236,23 @@ var Cell = /** @class */ (function (_super) {
     /** Debe introducirse los atributos horizontal y vertical
         @param props debe contener horizontal y vertical**/
     function Cell(props) {
-        return _super.call(this, props) || this;
+        var _this = _super.call(this, props) || this;
+        var pair = new Utils_1.Pair(props.row, props.column);
+        var index = Utils_1.myIndexOf(Store_1.store.getState().terrains.map(function (x) { return x.position; }), pair);
+        _this.state = {
+            terrain: index > -1 ? Store_1.store.getState().terrains[index] : Terrain.Plains.create(new Utils_1.Pair(props.row, props.column))
+        };
+        return _this;
     }
     /** Renderiza el objeto **/
     Cell.prototype.render = function () {
         // Comprobamos si la casilla actual contiene el cursor, primero obteniendo su posición
         var positionCursor = Store_1.store.getState().cursorPosition;
         // Despues comprobando que esta casilla esté en esa posición
-        var cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row ? React.createElement(Cursor_1.Cursor, null) : null;
-        // Le añadiremos el resultado de la comprobación anterior.
-        // De igual forma, obtenemos las posiciones de los obstaculos:
-        var obstacles = Store_1.store.getState().obstacles;
-        // Comprobamos si esta posición contiene el obstaculo:
-        var obstacle = Utils_1.myIndexOf(obstacles, new Utils_1.Pair(this.props.row, this.props.column)) == -1 ? null : React.createElement(Obstacle_1.Obstacle, { column: this.props.column, row: this.props.row });
+        var cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row;
         return (React.createElement("div", { className: "div_cell" },
-            React.createElement("img", { className: "cell", id: "hex" + this.props.row + "_" + this.props.column, src: this.props.selected ? "imgs/hex_base_selected.png" : "imgs/hex_base.png" }),
-            cursor,
-            obstacle));
+            React.createElement("img", { className: "cell", id: "hex" + this.props.row + "_" + this.props.column, src: cursor ? this.props.selected ? "imgs/hex_base_numpad_selected.png" : "imgs/hex_base_numpad.png" : this.props.selected ? "imgs/hex_base_selected.png" : "imgs/hex_base.png" }),
+            React.createElement(TerrainCell_1.TerrainCell, { terrain: this.state.terrain })));
     };
     return Cell;
 }(React.Component));
@@ -2266,19 +2277,19 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var Obstacle = /** @class */ (function (_super) {
-    __extends(Obstacle, _super);
-    function Obstacle(props) {
+var TerrainCell = /** @class */ (function (_super) {
+    __extends(TerrainCell, _super);
+    function TerrainCell(props) {
         return _super.call(this, props) || this;
     }
     //Este es el render del obstacle
-    Obstacle.prototype.render = function () {
+    TerrainCell.prototype.render = function () {
         return (React.createElement("div", { className: "obstacle" },
-            React.createElement("img", { id: "obstacle" + this.props.horizontal + "_" + this.props.vertical, src: "imgs/obstacle.png" })));
+            React.createElement("img", { id: "obstacle" + this.props.terrain.position.getRow() + "_" + this.props.terrain.position.getColumn(), src: this.props.terrain.image })));
     };
-    return Obstacle;
+    return TerrainCell;
 }(React.Component));
-exports.Obstacle = Obstacle;
+exports.TerrainCell = TerrainCell;
 
 
 /***/ })

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
+import * as Index from './index';
 import { store, saveState, storeStats } from './Store';
 import { Actions, State, InitialState, Reducer } from './GameState';
 import { Cell } from './Cell';
@@ -14,13 +15,17 @@ export class Map extends React.Component<any, any> {
     turn : number;
     actualstate : number; //El valor 0 es por defecto, 1 es victoria y 2 es derrota
 
-    /** @constructor  Deben introducirse los elementos horizontal y vertical **/
-    constructor(props: any) {
-        super(props);
+    restartState() {
         this.turn = 0;
         this.actualstate = 0;
         this.state = { cells: new Array<Array<Cell>>(this.props.horizontal), rows: this.props.vertical, columns: this.props.horizontal };
         store.dispatch(Actions.generateSetListener(this));
+    }
+
+    /** @constructor  Deben introducirse los elementos horizontal y vertical **/
+    constructor(props: any) {
+        super(props);
+        this.restartState();
     }
 
     /** Renderiza el mapa **/
@@ -209,9 +214,11 @@ export class Map extends React.Component<any, any> {
             //Si no quedan más unidades enemigas es una victoria y si no quedan más unidades del jugador es una derrota
             if(store.getState().enemyposition.length==0){
                 this.actualstate=1;
+                // Reiniciamos el estado
                 saveState(Actions.finish());
             }else if(store.getState().position.length==0){
                 this.actualstate=2;
+                // Reiniciamos el estado
                 saveState(Actions.finish());
             }
             this.turn++;

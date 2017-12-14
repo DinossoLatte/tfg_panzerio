@@ -62,7 +62,8 @@ export class Actions {
         }
     }
 
-    static finish() : Redux.AnyAction{
+    // Se le pasa el mapa porque es necesario, en caso contrario no se podría reiniciar correctamente.
+    static finish() : Redux.AnyAction {
         //Este estado por ahora simplemente hace que no se pueda jugar hasta que se reinicie la partida
         return {
             type: "FINISH"
@@ -212,7 +213,17 @@ export const Reducer : Redux.Reducer<State> =
                     type: "MOVE"
                 }
             case "FINISH":
-                return state;
+                console.log(InitialState);
+                return {
+                    position: [new Pair (0,0), new Pair(0,1), new Pair (1,0)],
+                    enemyposition: [new Pair (0,4), new Pair(1,4), new Pair (0,3)],
+                    visitables: null,
+                    terrains: [ImpassableMountain.create(new Pair(2, 2)), ImpassableMountain.create(new Pair(3,2)), Hills.create(new Pair(2,3))],
+                    cursorPosition: new Pair(0,0),
+                    map: state.map,
+                    selectedUnit: null,
+                    type: "SET_LISTENER" 
+                } // POR QUE TYPESCRIPT NO COPIA EL OBJETO !!!!
             default:
                 return state;
         }
