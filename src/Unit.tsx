@@ -27,3 +27,9 @@ export class Tank extends Unit {
         return new Unit("Tank", "tank", 1, position, player);
     }
 }
+
+export class General extends Unit {
+    static create(position: Pair, player: boolean) : Unit {
+        return new Unit("General", "general", 0, position, player);
+    }
+}

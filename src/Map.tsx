@@ -169,10 +169,11 @@ export class Map extends React.Component<any, any> {
             }
         }
 
-
-        //Guardamos la posición actual y la nueva posición
-
-        this.clickAction(row, column); // TODO Solucionar esto!
+        //Si el juego está terminado entonces no hace nada, por eso comprueba si todavía sigue la partida
+        if(store.getState().type != "FINISH"){
+            //Guardamos la posición actual y la nueva posición
+            this.clickAction(row, column);
+        }
     }
 
     clickAction(row: number, column: number) {
@@ -186,8 +187,7 @@ export class Map extends React.Component<any, any> {
                 :unitEnemy = store.getState().units[unitIndex].player // Asigna como enemigo la unidad que ha hecho click
             :false; // En caso contrario, no hagas nada?
         //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
-        if(
-            (unitIndex!= -1 && !unitEnemy) // La unidad clickeada existe y es del jugador
+        if((unitIndex!= -1 && !unitEnemy) // La unidad clickeada existe y es del jugador
              && store.getState().type == "SET_LISTENER" // El tipo de estado es esperando selección
             ){
             saveState(Actions.generateMove(unitIndex, side));
@@ -213,23 +213,21 @@ export class Map extends React.Component<any, any> {
                     selectedUnit--; // Restamos uno, para mantener la consistencia de la lista.
                 }
                 saveState(Actions.attack(unitIndex, side));
-                
+
             }
             // Ejecutamos el movimiento
             // El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
             saveState(Actions.generateChangeUnitPos(selectedUnit, newPosition, null, side));
 
-            //Si no quedan más unidades enemigas es una victoria y si no quedan más unidades del jugador es una derrota
-            if(store.getState().units.filter(x => !x.player).length==0){
+            //Si no está el general del jugador entonces se considerará victoria o derrota (esto ya incluye también que no queden más unidades)
+            if(store.getState().units.filter(x => !x.player && x.name=="General").length==0){
                 this.actualstate=1;
                 saveState(Actions.finish());
-            }else if(store.getState().units.filter(x => x.player).length==0){
+            }else if(store.getState().units.filter(x => x.player && x.name=="General").length==0){
                 this.actualstate=2;
                 saveState(Actions.finish());
             }
             this.turn++;
-        }else{
-            saveState(Actions.generateSetListener(this));
         }
     }
 

@@ -4,7 +4,7 @@ import * as Redux from 'redux';
 import { store, saveState } from './Store';
 import { Map } from './Map';
 import { Pair, Cubic, cubic_directions, myIndexOf, myIndexOfCubic} from './Utils';
-import { Unit, Infantry, Tank } from './Unit';
+import { Unit, Infantry, Tank, General } from './Unit';
 import { Terrain, Plains, ImpassableMountain, Hills } from './Terrains';
 
 export class Actions {
@@ -74,7 +74,7 @@ export type State = {
 
 //El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
 export const InitialState: State = {
-    units: [Infantry.create(new Pair (0,0), true), Infantry.create(new Pair(0,1), true), Tank.create(new Pair (1,0), true), Infantry.create(new Pair (0,4), false)
+    units: [General.create(new Pair (0,0), true), Infantry.create(new Pair(0,1), true), Tank.create(new Pair (1,0), true), General.create(new Pair (0,4), false)
     , Infantry.create(new Pair(1,4), false), Tank.create(new Pair (0,3), false)],
     visitables: null,
     terrains: [ImpassableMountain.create(new Pair(2, 2)), ImpassableMountain.create(new Pair(3,2)), Hills.create(new Pair(2,3))],
@@ -190,7 +190,15 @@ export const Reducer : Redux.Reducer<State> =
                     type: "MOVE"
                 }
             case "FINISH":
-                return state;
+                return {
+                    units: state.units,
+                    visitables: state.visitables,
+                    terrains: state.terrains,
+                    map: state.map,
+                    cursorPosition: state.cursorPosition,
+                    selectedUnit: state.selectedUnit,
+                    type: action.type
+                }
             default:
                 return state;
         }
