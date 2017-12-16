@@ -205,13 +205,19 @@ export class Map extends React.Component<any, any> {
              store.getState().selectedUnit != null // Se tiene seleccionada una unidad
              && myIndexOf(store.getState().visitables, newPosition) != -1 // Y la posición de la unidad es alcanzable
             ){
+            let selectedUnit = store.getState().selectedUnit; // Índice de la unidad seleccionada
             //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
             if(unitIndex != -1 && unitEnemy){ // Si se ha escogido una unidad y ésta es enemiga
+                // Debemos actualizar el id de la unidad seleccionada ahora
+                if(store.getState().selectedUnit > unitIndex) { // Si el índice de la unidad eliminada es inferior a la seleccionada
+                    selectedUnit--; // Restamos uno, para mantener la consistencia de la lista.
+                }
                 saveState(Actions.attack(unitIndex, side));
+                
             }
             // Ejecutamos el movimiento
             // El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
-            saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null, side));
+            saveState(Actions.generateChangeUnitPos(selectedUnit, newPosition, null, side));
 
             //Si no quedan más unidades enemigas es una victoria y si no quedan más unidades del jugador es una derrota
             if(store.getState().units.filter(x => !x.player).length==0){
