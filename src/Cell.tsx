@@ -18,15 +18,17 @@ class Cell extends React.Component<any, any> {
     constructor(props : any) {
         super(props);
         let pair = new Pair(props.row, props.column);
-        let index = myIndexOf(store.getState().terrains.map(x => x.position), pair);
+        let indexTerrain = myIndexOf(store.getState().terrains.map(x => x.position), pair);
         this.state = {
-            terrain: index > -1?store.getState().terrains[index]:Terrain.Plains.create(new Pair(props.row, props.column)),
-            unit: props.unit!=null?store.getState().units[props.unit]:null
+            terrain: indexTerrain > -1?store.getState().terrains[indexTerrain]:Terrain.Plains.create(new Pair(props.row, props.column)),
         }
     }
 
     /** Renderiza el objeto **/
     render() {
+        // Comprobamos si una unidad está en esta posición
+        let indexUnit = myIndexOf(store.getState().units.map(x => x.position), this.state.terrain.position);
+        let unit = indexUnit == -1?null:store.getState().units[indexUnit];
         // Comprobamos si la casilla actual contiene el cursor, primero obteniendo su posición
         let positionCursor = store.getState().cursorPosition;
         // Despues comprobando que esta casilla esté en esa posición
@@ -36,7 +38,7 @@ class Cell extends React.Component<any, any> {
                     <img className="cell" id={"hex"+this.props.row+"_"+this.props.column}
                         src={cursor?this.props.selected?"imgs/hex_base_numpad_selected.png":"imgs/hex_base_numpad.png":this.props.selected?"imgs/hex_base_selected.png":"imgs/hex_base.png"} />
                     <TerrainCell terrain={this.state.terrain} />
-                    {this.state.unit!=null?<UnitCell unit={this.state.unit} />:""}
+                    {unit!=null?<UnitCell unit={unit} />:""}
                 </div>
         );
     }

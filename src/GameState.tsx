@@ -123,7 +123,9 @@ export const Reducer : Redux.Reducer<State> =
                                 // Para añadir la posición, comprobamos primero que no esté la posición:
                                 if(indexOfNeighbours == -1) {
                                     // Si es el caso, debemos comprobar que la posición no esté ocupada por una de las unidades del jugador
-                                    var positionIndex = state.units.filter(x => x.player==action.player).map(y => y.position);
+                                    var positionIndex = state.units
+                                        .filter(x => x.player==action.player) // Si debe estar ocupada por una unidad, que sea únicamente la enemigas
+                                        .map(y => y.position);
                                     if(myIndexOf(positionIndex, new_cubic.getPair()) == -1) {
                                         // Obtenemos el índice del obstáculo si está en la lista.
                                         let indexOfObstacle = myIndexOf(state.terrains.map(x => x.position), new_cubic.getPair());

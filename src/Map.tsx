@@ -177,24 +177,41 @@ export class Map extends React.Component<any, any> {
 
     clickAction(row: number, column: number) {
         let newPosition: Pair = new Pair(row,column);
-        let unitIndex: number = myIndexOf(store.getState().units.map(x=>x.position), newPosition);
+        let side : boolean = this.turn%2 == 0; // Representa el bando del jugador actual
+        let unitIndex: number = myIndexOf(store.getState().units.map(x=>x.position), newPosition); // Obtenemos la posición de la unidad donde ha realizado click o -1.
         let unitEnemy: boolean; //Vale true si la unidad seleccionada es enemiga de las unidades del turno actual
-        unitIndex!=-1?this.turn%2==0?unitEnemy = !store.getState().units[unitIndex].player:unitEnemy = store.getState().units[unitIndex].player:false;
+        unitIndex!=-1? // Si se ha seleccionado una unidad
+            side? // Si el turno es del "aliado"
+                unitEnemy = !store.getState().units[unitIndex].player // Asigna como enemigo el contrario de la unidad que ha hecho click
+                :unitEnemy = store.getState().units[unitIndex].player // Asigna como enemigo la unidad que ha hecho click
+            :false; // En caso contrario, no hagas nada?
         //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
-        if(unitIndex!= -1 && store.getState().type == "SET_LISTENER"){
-            saveState(Actions.generateMove(unitIndex,this.turn%2==0));
-        //Si hace clic en una possición exterior, mantieene el estado de en movimiento (seleccionado) y sigue almacenando la unidad seleccionada
-        }else if((newPosition.column<0 || newPosition.column>this.props.horizontal || newPosition.row<0 || newPosition.row>this.props.vertical)){
-            saveState(Actions.generateMove(store.getState().selectedUnit,this.turn%2==0));
+        if(
+            (unitIndex!= -1 && !unitEnemy) // La unidad clickeada existe y es del jugador
+             && store.getState().type == "SET_LISTENER" // El tipo de estado es esperando selección
+            ){
+            saveState(Actions.generateMove(unitIndex, side));
+        //Si hace clic en una possición exterior, mantiene el estado de en movimiento (seleccionado) y sigue almacenando la unidad seleccionada
+        }else if(
+            newPosition.column<0 // La posición no es negativa en columnas
+             || newPosition.column>this.props.horizontal // Ni es superior al número de celdas horizontales
+             || newPosition.row<0 // La posición no es negativa en filas
+             || newPosition.row>this.props.vertical // Ni es superior al número de celdas verticales
+            ){
+            saveState(Actions.generateMove(store.getState().selectedUnit, side));
         //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
-        }else if((unitIndex==-1 || unitEnemy) && store.getState().selectedUnit != null && myIndexOf(store.getState().visitables, newPosition) != -1){
+        }else if(
+            // unitIndex!=-1 // La unidad existe
+             store.getState().selectedUnit != null // Se tiene seleccionada una unidad
+             && myIndexOf(store.getState().visitables, newPosition) != -1 // Y la posición de la unidad es alcanzable
+            ){
             //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
-            if(unitEnemy){
-                //Si es así se ataca
-                saveState(Actions.attack(unitIndex,this.turn%2==0));
+            if(unitIndex != -1 && unitEnemy){ // Si se ha escogido una unidad y ésta es enemiga
+                saveState(Actions.attack(unitIndex, side));
             }
-            //El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
-            saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null, this.turn%2==0));
+            // Ejecutamos el movimiento
+            // El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
+            saveState(Actions.generateChangeUnitPos(store.getState().selectedUnit, newPosition, null, side));
 
             //Si no quedan más unidades enemigas es una victoria y si no quedan más unidades del jugador es una derrota
             if(store.getState().units.filter(x => !x.player).length==0){

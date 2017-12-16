@@ -17,7 +17,7 @@ export class UnitCell extends React.Component<any, any> {
         // Le añadiremos el resultado de la comprobación anterior.
         return (
             <div className ="unit">
-                <img id={"unit"+this.props.unit.position.getRow()+"_"+this.props.unit.position.getRow()} src={"imgs/"+enemy+this.props.unit.type+".png"} />
+                <img id={"unit"+this.props.unit.position.getRow()+"_"+this.props.unit.position.getColumn()} src={"imgs/"+enemy+this.props.unit.type+".png"} />
             </div>
         );
     }
