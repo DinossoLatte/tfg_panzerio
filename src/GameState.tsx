@@ -137,8 +137,7 @@ export const Reducer : Redux.Reducer<State> =
                                 } else { // Si no, esta casilla ya la tenemos en vecinos, pero tiene un movimiento != 0, por lo que reducimos el movimiento de la casilla
                                     // Actualizamos el movimiento de la unidad, si es el caso.
                                     var cell = neighbours[indexOfNeighbours];
-                                    cell[1]--;
-                                    new_neighbours.push(cell);
+                                    new_neighbours.push([cell[0], cell[1]-1]);
                                 }
                             }
                         });
