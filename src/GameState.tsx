@@ -75,8 +75,8 @@ export type State = {
 
 //El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
 export const InitialState: State = {
-    units: [General.create(new Pair (0,0), true), Infantry.create(new Pair(0,1), true), Tank.create(new Pair (1,0), true), General.create(new Pair (0,4), false)
-    , Infantry.create(new Pair(1,4), false), Tank.create(new Pair (0,3), false)],
+    units: [General.create(new Pair (0,0), true), Infantry.create(new Pair(0,1), true), General.create(new Pair (0,2), false)
+    , Infantry.create(new Pair(1,2), false), Tank.create(new Pair (2,0), false)],
     visitables: null,
     terrains: [ImpassableMountain.create(new Pair(2, 2)), ImpassableMountain.create(new Pair(3,2)), Hills.create(new Pair(2,3))],
     cursorPosition: new Pair(0,0),
@@ -109,6 +109,8 @@ export const Reducer : Redux.Reducer<State> =
                 var movements : number = state.units[action.unit_id].movement;
                 // Los vecinos estarán compuestos por la posición cúbica y el número de movimientos para pasar la posición
                 var neighbours : [Cubic, number][] = new Array<[Cubic, number]>();
+                // En esta variable se guardarán las posiciones de las unidades atacables, que deben separarse porque no se pueden considerar como atravesables.
+                var enemyUnits : Cubic[] = new Array<Cubic>();
                 // Primero, iteraremos desde 0 hasta el número de movimientos
                 for(var i = 0 ; i <= movements ; i++) {
                     // Añadimos los vecinos que queden, son celdas visitables:
@@ -128,24 +130,37 @@ export const Reducer : Redux.Reducer<State> =
                                         .filter(x => x.player==action.player) // Si debe estar ocupada por una unidad, que sea únicamente la enemigas
                                         .map(y => y.position);
                                     if(myIndexOf(positionIndex, new_cubic.getPair()) == -1) {
-                                        // Obtenemos el índice del obstáculo si está en la lista.
-                                        let indexOfObstacle = myIndexOf(state.terrains.map(x => x.position), new_cubic.getPair());
-                                        // Si se admite, añadimos la posición y la cantidad de movimientos para pasar por la casilla
-                                        new_neighbours.push([new_cubic,
-                                            // Por ahora se comprueba si está en la lista de obstáculos, en cuyo caso coge la cantidad. En caso contrario, asumimos Plains
-                                            indexOfObstacle > -1?state.terrains[indexOfObstacle].movement_penalty:0]);
+                                        // Primero, comprobamos que se trate de una unidad enemiga, simplemente comprobando si está en la lista es suficiente
+                                        let indexUnit = myIndexOf(state.units.map(x => x.position), new_cubic.getPair());
+                                        // En el caso en el que esté, la añadimos a la lista de atacables y acabamos
+                                        if(indexUnit != -1) {
+                                            // Añadimos a lista de atacables, sólo si no está en la lista
+                                            myIndexOfCubic(enemyUnits, new_cubic) == -1?enemyUnits.push(new_cubic):false;
+                                        } else { // En caso contrario, es una posición sin unidades
+                                            // Obtenemos el índice del obstáculo, si es que está.
+                                            let indexOfObstacle = myIndexOf(state.terrains.map(x => x.position), new_cubic.getPair());
+                                            // Si se admite, añadimos la posición y la cantidad de movimientos para pasar por la casilla
+                                            new_neighbours.push([new_cubic,
+                                                // Por ahora se comprueba si está en la lista de obstáculos, en cuyo caso coge la cantidad. En caso contrario, asumimos Plains
+                                                indexOfObstacle > -1?state.terrains[indexOfObstacle].movement_penalty:0]);
+                                        }
                                     }
                                 } else { // Si no, esta casilla ya la tenemos en vecinos, pero tiene un movimiento != 0, por lo que reducimos el movimiento de la casilla
                                     // Actualizamos el movimiento de la unidad, si es el caso.
                                     var cell = neighbours[indexOfNeighbours];
-                                    cell[1]--;
+                                    new_neighbours.push([cell[0], cell[1] - 1]);
+                                }
                             }
                         });
-                    neighbours = new_neighbours;
+                        neighbours = new_neighbours;
+                    }
                 }
 
                 // Finalmente convertimos el resultado a Pair:
                 var visitables_pair : Array<Pair> = visitables_cubic.map(cubic => cubic.getPair());
+                console.log(JSON.stringify(enemyUnits.map(x => x.getPair().toString()))); // DEBUG
+                // Sin olvidar las unidades atacables!
+                visitables_pair = visitables_pair.concat(enemyUnits.map(x => x.getPair()));
 
                 return {
                     units: state.units,
@@ -188,14 +203,14 @@ export const Reducer : Redux.Reducer<State> =
                     type: "MOVE"
                 }
             case "FINISH":
-                return {
-                    units: state.units,
-                    visitables: state.visitables,
-                    terrains: state.terrains,
+                return { // Esta solución no es la mejor, pero debido a la mutabilidad de la constante(!!!), se tiene que hacer así
+                    units: [General.create(new Pair (0,0), true), Infantry.create(new Pair(0,1), true), Tank.create(new Pair (1,0), true), General.create(new Pair (0,4), false), Infantry.create(new Pair(1,4), false), Tank.create(new Pair (0,3), false)],
+                    visitables: null,
+                    terrains: [ImpassableMountain.create(new Pair(2, 2)), ImpassableMountain.create(new Pair(3,2)), Hills.create(new Pair(2,3))],
+                    cursorPosition: new Pair(0,0),
                     map: state.map,
-                    cursorPosition: state.cursorPosition,
-                    selectedUnit: state.selectedUnit,
-                    type: action.type
+                    selectedUnit: null,
+                    type: "SET_LISTENER"
                 }
             default:
                 return state;
