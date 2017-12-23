@@ -237,10 +237,8 @@ export class Map extends React.Component<any, any> {
             //Si no está el general del jugador entonces se considerará victoria o derrota (esto ya incluye también que no queden más unidades)
             if(store.getState().units.filter(x => !x.player && x.name=="General").length==0){
                 this.actualstate=1;
-                saveState(Actions.finish());
             }else if(store.getState().units.filter(x => x.player && x.name=="General").length==0){
                 this.actualstate=2;
-                saveState(Actions.finish());
             }
             //Si son distintas se pasa de turno, sino se cancela el movimiento (se mantiene el turno)
             if(!actualPosition.equals(newPosition)){

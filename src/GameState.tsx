@@ -5,11 +5,7 @@ import { store, saveState } from './Store';
 import { Map } from './Map';
 import { Pair, Cubic, cubic_directions, myIndexOf, myIndexOfCubic} from './Utils';
 import { Unit, Infantry, Tank, General } from './Unit';
-<<<<<<< HEAD
-import { Terrain, Plains, ImpassableMountain, Hills } from './Terrains';
-=======
 import { Terrain, Plains, ImpassableMountain, Hills, Forest } from './Terrains';
->>>>>>> javrombay
 
 export class Actions {
     //Estos son los estados posibles

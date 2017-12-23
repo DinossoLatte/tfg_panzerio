@@ -60,3 +60,6 @@ typings/
 # Resultado de la compilación también debería ignorarse
 dist/bundle.js
 dist/bundle.js.map
+
+# IDEs
+.vscode
