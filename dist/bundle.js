@@ -895,7 +895,7 @@ exports.InitialState = {
     units: [Unit_1.General.create(new Utils_1.Pair(0, 0), true), Unit_1.Infantry.create(new Utils_1.Pair(0, 1), true), Unit_1.Tank.create(new Utils_1.Pair(1, 0), true), Unit_1.General.create(new Utils_1.Pair(0, 4), false),
         Unit_1.Infantry.create(new Utils_1.Pair(1, 4), false), Unit_1.Tank.create(new Utils_1.Pair(0, 3), false)],
     visitables: null,
-    terrains: [Terrains_1.ImpassableMountain.create(new Utils_1.Pair(2, 2)), Terrains_1.ImpassableMountain.create(new Utils_1.Pair(3, 2)), Terrains_1.Hills.create(new Utils_1.Pair(2, 3))],
+    terrains: [Terrains_1.ImpassableMountain.create(new Utils_1.Pair(2, 2)), Terrains_1.ImpassableMountain.create(new Utils_1.Pair(3, 2)), Terrains_1.Hills.create(new Utils_1.Pair(2, 3)), Terrains_1.Forest.create(new Utils_1.Pair(3, 3))],
     cursorPosition: new Utils_1.Pair(0, 0),
     map: null,
     selectedUnit: null,
@@ -1080,6 +1080,17 @@ var Hills = /** @class */ (function (_super) {
     return Hills;
 }(Terrain));
 exports.Hills = Hills;
+var Forest = /** @class */ (function (_super) {
+    __extends(Forest, _super);
+    function Forest() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Forest.create = function (position) {
+        return new Terrain("Forest", "imgs/terrain_forest.png", 1, position);
+    };
+    return Forest;
+}(Terrain));
+exports.Forest = Forest;
 
 
 /***/ }),
@@ -1240,12 +1251,20 @@ var Map = /** @class */ (function (_super) {
                 this.turn,
                 this.actualstate == 1 ? ". Victoria" : this.actualstate == 2 ? ". Derrota" : ""),
             React.createElement("button", { id: "exitButton", name: "exitButton", onClick: this.onClickExit.bind(this) }, "Salir del juego"),
+            React.createElement("button", { id: "nextTurn", name: "nextTurn", onClick: this.onClickTurn.bind(this) }, "Pasar turno"),
             React.createElement("div", { id: "map", className: "map", onClick: this.onClick.bind(this), tabIndex: 0, onKeyDown: this.onKey.bind(this) }, this.generateMap.bind(this)().map(function (a) {
                 return a;
             }))));
     };
     Map.prototype.onClickExit = function (event) {
         this.props.parentObject.changeGameState(0); // Salir de la partida.
+    };
+    Map.prototype.onClickTurn = function (event) {
+        //Si se pulsa al botón se pasa de turno esto se hace para asegurar que el jugador no quiere hacer nada o no puede en su turno
+        //Evitando pasar turno automaticamente ya que el jugador quiera ver alguna cosa de sus unidades o algo aunque no tenga movimientos posibles
+        //Esto pasa en muchos otros juegos
+        this.turn++;
+        Store_1.saveState(GameState_1.Actions.generateSetListener(this));
     };
     Map.prototype.onKey = function (keyEvent) {
         var keyCode = keyEvent.key;
@@ -1402,6 +1421,7 @@ var Map = /** @class */ (function (_super) {
             && Utils_1.myIndexOf(Store_1.store.getState().visitables, newPosition) != -1 // Y la posición de la unidad es alcanzable
         ) {
             var selectedUnit = Store_1.store.getState().selectedUnit; // Índice de la unidad seleccionada
+            var actualPosition = Store_1.store.getState().units[selectedUnit].position; //Obtenemos la posición actual
             //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
             if (unitIndex != -1 && unitEnemy) {
                 // Debemos actualizar el id de la unidad seleccionada ahora
@@ -1422,7 +1442,10 @@ var Map = /** @class */ (function (_super) {
                 this.actualstate = 2;
                 Store_1.saveState(GameState_1.Actions.finish());
             }
-            this.turn++;
+            //Si son distintas se pasa de turno, sino se cancela el movimiento (se mantiene el turno)
+            if (!actualPosition.equals(newPosition)) {
+                this.turn++;
+            }
         }
     };
     // Calcula si dado los datos del circulo y  un punto cualquiuera, el punto cualquiera está dentro del círculo

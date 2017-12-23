@@ -5,7 +5,7 @@ import { store, saveState } from './Store';
 import { Map } from './Map';
 import { Pair, Cubic, cubic_directions, myIndexOf, myIndexOfCubic} from './Utils';
 import { Unit, Infantry, Tank, General } from './Unit';
-import { Terrain, Plains, ImpassableMountain, Hills } from './Terrains';
+import { Terrain, Plains, ImpassableMountain, Hills, Forest } from './Terrains';
 
 export class Actions {
     //Estos son los estados posibles
@@ -77,7 +77,7 @@ export const InitialState: State = {
     units: [General.create(new Pair (0,0), true), Infantry.create(new Pair(0,1), true), Tank.create(new Pair (1,0), true), General.create(new Pair (0,4), false)
     , Infantry.create(new Pair(1,4), false), Tank.create(new Pair (0,3), false)],
     visitables: null,
-    terrains: [ImpassableMountain.create(new Pair(2, 2)), ImpassableMountain.create(new Pair(3,2)), Hills.create(new Pair(2,3))],
+    terrains: [ImpassableMountain.create(new Pair(2, 2)), ImpassableMountain.create(new Pair(3,2)), Hills.create(new Pair(2,3)), Forest.create(new Pair(3,3))],
     cursorPosition: new Pair(0,0),
     map: null,
     selectedUnit: null,

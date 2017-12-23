@@ -31,6 +31,7 @@ export class Map extends React.Component<any, any> {
             <div>
                 <p>Turno del {this.turn%2==0?"Jugador":"Enemigo"}. Día {this.turn}{this.actualstate==1?". Victoria":this.actualstate==2?". Derrota":""}</p>
                 <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
+                <button id="nextTurn" name="nextTurn" onClick={this.onClickTurn.bind(this)}>Pasar turno</button>
                 <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)}>
                     {this.generateMap.bind(this)().map((a: any) => {
                         return a;
@@ -42,6 +43,14 @@ export class Map extends React.Component<any, any> {
 
     onClickExit(event : React.MouseEvent<HTMLElement>) {
         this.props.parentObject.changeGameState(0); // Salir de la partida.
+    }
+
+    onClickTurn(event : React.MouseEvent<HTMLElement>) {
+        //Si se pulsa al botón se pasa de turno esto se hace para asegurar que el jugador no quiere hacer nada o no puede en su turno
+        //Evitando pasar turno automaticamente ya que el jugador quiera ver alguna cosa de sus unidades o algo aunque no tenga movimientos posibles
+        //Esto pasa en muchos otros juegos
+        this.turn++;
+        saveState(Actions.generateSetListener(this)); //Se usa para obligar a actualizar el estado
     }
 
     onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
@@ -206,6 +215,7 @@ export class Map extends React.Component<any, any> {
              && myIndexOf(store.getState().visitables, newPosition) != -1 // Y la posición de la unidad es alcanzable
             ){
             let selectedUnit = store.getState().selectedUnit; // Índice de la unidad seleccionada
+            let actualPosition = store.getState().units[selectedUnit].position; //Obtenemos la posición actual
             //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
             if(unitIndex != -1 && unitEnemy){ // Si se ha escogido una unidad y ésta es enemiga
                 // Debemos actualizar el id de la unidad seleccionada ahora
@@ -227,7 +237,10 @@ export class Map extends React.Component<any, any> {
                 this.actualstate=2;
                 saveState(Actions.finish());
             }
-            this.turn++;
+            //Si son distintas se pasa de turno, sino se cancela el movimiento (se mantiene el turno)
+            if(!actualPosition.equals(newPosition)){
+                this.turn++;
+            }
         }
     }
 

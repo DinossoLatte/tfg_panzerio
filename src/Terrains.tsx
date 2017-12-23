@@ -31,3 +31,9 @@ export class Hills extends Terrain {
         return new Terrain("Hills", "imgs/terrain_hills.png", 2, position);
     }
 }
+
+export class Forest extends Terrain {
+    static create(position: Pair) : Terrain {
+        return new Terrain("Forest", "imgs/terrain_forest.png", 1, position);
+    }
+}
