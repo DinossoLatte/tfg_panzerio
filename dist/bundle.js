@@ -887,6 +887,11 @@ var Actions = /** @class */ (function () {
             type: "FINISH"
         };
     };
+    Actions.nextTurn = function () {
+        return {
+            type: "NEXT_TURN"
+        };
+    };
     return Actions;
 }());
 exports.Actions = Actions;
@@ -1013,6 +1018,16 @@ exports.Reducer = function (state, action) {
                 cursorPosition: state.cursorPosition,
                 selectedUnit: state.selectedUnit,
                 type: action.type
+            };
+        case "NEXT_TURN":
+            return {
+                units: state.units,
+                visitables: null,
+                terrains: state.terrains,
+                map: state.map,
+                cursorPosition: state.cursorPosition,
+                selectedUnit: null,
+                type: "SET_LISTENER"
             };
         default:
             return state;
@@ -1251,7 +1266,7 @@ var Map = /** @class */ (function (_super) {
                 this.turn,
                 this.actualstate == 1 ? ". Victoria" : this.actualstate == 2 ? ". Derrota" : ""),
             React.createElement("button", { id: "exitButton", name: "exitButton", onClick: this.onClickExit.bind(this) }, "Salir del juego"),
-            React.createElement("button", { id: "nextTurn", name: "nextTurn", onClick: this.onClickTurn.bind(this) }, "Pasar turno"),
+            this.actualstate == 0 ? React.createElement("button", { id: "nextTurn", name: "nextTurn", onClick: this.onClickTurn.bind(this) }, "Pasar turno") : "",
             React.createElement("div", { id: "map", className: "map", onClick: this.onClick.bind(this), tabIndex: 0, onKeyDown: this.onKey.bind(this) }, this.generateMap.bind(this)().map(function (a) {
                 return a;
             }))));
@@ -1259,12 +1274,13 @@ var Map = /** @class */ (function (_super) {
     Map.prototype.onClickExit = function (event) {
         this.props.parentObject.changeGameState(0); // Salir de la partida.
     };
+    //Se debe permitir solo si esta en pardida (this.actualstate==0), sino no hace nada
     Map.prototype.onClickTurn = function (event) {
         //Si se pulsa al botón se pasa de turno esto se hace para asegurar que el jugador no quiere hacer nada o no puede en su turno
         //Evitando pasar turno automaticamente ya que el jugador quiera ver alguna cosa de sus unidades o algo aunque no tenga movimientos posibles
         //Esto pasa en muchos otros juegos
         this.turn++;
-        Store_1.saveState(GameState_1.Actions.generateSetListener(this));
+        Store_1.saveState(GameState_1.Actions.nextTurn()); //Se usa para obligar a actualizar el estado
     };
     Map.prototype.onKey = function (keyEvent) {
         var keyCode = keyEvent.key;
@@ -1479,7 +1495,13 @@ var Map = /** @class */ (function (_super) {
             //Se generan las unidades
             var indexUnit = Utils_1.myIndexOf(Store_1.store.getState().units.map(function (x) { return x.position; }), pos);
             if (indexUnit != -1) {
-                var cell = React.createElement(Cell_1.Cell, { row: row, column: column, unit: indexUnit });
+                //Si hay una unidad seleccionada y dicha posición esta dentro de las posiciones visitables entonces es accesible
+                var visitable = Store_1.store.getState().selectedUnit != null && Utils_1.myIndexOf(Store_1.store.getState().visitables, pos) != -1;
+                //Si además de ser accesible es una unidad enemiga (dependiendo del turno) entonces es atacable
+                var attack = visitable && ((Store_1.store.getState().units[indexUnit].player && this.turn % 2 != 0) || (!Store_1.store.getState().units[indexUnit].player && this.turn % 2 == 0));
+                //Si además de ser accesible es la misma posicion que la unidad actual entonces es la unidad elegida
+                var actual = visitable && (Store_1.store.getState().units[Store_1.store.getState().selectedUnit].position.equals(pos));
+                var cell = React.createElement(Cell_1.Cell, { row: row, column: column, unit: indexUnit, attack: attack, actual: actual });
                 this.state.cells[row][column] = cell;
                 accum2.push(cell);
             }
@@ -2236,7 +2258,14 @@ var Cell = /** @class */ (function (_super) {
         // Despues comprobando que esta casilla esté en esa posición
         var cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row;
         return (React.createElement("div", { className: "div_cell" },
-            React.createElement("img", { className: "cell", id: "hex" + this.props.row + "_" + this.props.column, src: cursor ? this.props.selected ? "imgs/hex_base_numpad_selected.png" : "imgs/hex_base_numpad.png" : this.props.selected ? "imgs/hex_base_selected.png" : "imgs/hex_base.png" }),
+            React.createElement("img", { className: "cell", id: "hex" + this.props.row + "_" + this.props.column, src: cursor ? this.props.selected ? "imgs/hex_base_numpad_selected.png"
+                    : this.props.attack ? "imgs/hex_base_numpad_attack.png"
+                        : this.props.actual ? "imgs/hex_base_numpad_actual.png"
+                            : "imgs/hex_base_numpad.png"
+                    : this.props.selected ? "imgs/hex_base_selected.png"
+                        : this.props.attack ? "imgs/hex_base_attack.png"
+                            : this.props.actual ? "imgs/hex_base_actual.png"
+                                : "imgs/hex_base.png" }),
             React.createElement(TerrainCell_1.TerrainCell, { terrain: this.state.terrain }),
             unit != null ? React.createElement(UnitCell_1.UnitCell, { unit: unit }) : ""));
     };

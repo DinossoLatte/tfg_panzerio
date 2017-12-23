@@ -36,7 +36,15 @@ class Cell extends React.Component<any, any> {
         return (
                 <div className="div_cell">
                     <img className="cell" id={"hex"+this.props.row+"_"+this.props.column}
-                        src={cursor?this.props.selected?"imgs/hex_base_numpad_selected.png":"imgs/hex_base_numpad.png":this.props.selected?"imgs/hex_base_selected.png":"imgs/hex_base.png"} />
+                        src={
+                            cursor?this.props.selected?"imgs/hex_base_numpad_selected.png"
+                                :this.props.attack?"imgs/hex_base_numpad_attack.png"
+                                :this.props.actual?"imgs/hex_base_numpad_actual.png"
+                                :"imgs/hex_base_numpad.png"
+                            :this.props.selected?"imgs/hex_base_selected.png"
+                            :this.props.attack?"imgs/hex_base_attack.png"
+                            :this.props.actual?"imgs/hex_base_actual.png"
+                            :"imgs/hex_base.png"} />
                     <TerrainCell terrain={this.state.terrain} />
                     {unit!=null?<UnitCell unit={unit} />:""}
                 </div>

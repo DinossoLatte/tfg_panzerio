@@ -31,7 +31,7 @@ export class Map extends React.Component<any, any> {
             <div>
                 <p>Turno del {this.turn%2==0?"Jugador":"Enemigo"}. Día {this.turn}{this.actualstate==1?". Victoria":this.actualstate==2?". Derrota":""}</p>
                 <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
-                <button id="nextTurn" name="nextTurn" onClick={this.onClickTurn.bind(this)}>Pasar turno</button>
+                {this.actualstate==0?<button id="nextTurn" name="nextTurn" onClick={this.onClickTurn.bind(this)}>Pasar turno</button>:""}
                 <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)}>
                     {this.generateMap.bind(this)().map((a: any) => {
                         return a;
@@ -45,12 +45,13 @@ export class Map extends React.Component<any, any> {
         this.props.parentObject.changeGameState(0); // Salir de la partida.
     }
 
+    //Se debe permitir solo si esta en pardida (this.actualstate==0), sino no hace nada
     onClickTurn(event : React.MouseEvent<HTMLElement>) {
         //Si se pulsa al botón se pasa de turno esto se hace para asegurar que el jugador no quiere hacer nada o no puede en su turno
         //Evitando pasar turno automaticamente ya que el jugador quiera ver alguna cosa de sus unidades o algo aunque no tenga movimientos posibles
         //Esto pasa en muchos otros juegos
         this.turn++;
-        saveState(Actions.generateSetListener(this)); //Se usa para obligar a actualizar el estado
+        saveState(Actions.nextTurn()); //Se usa para obligar a actualizar el estado
     }
 
     onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
@@ -279,7 +280,13 @@ export class Map extends React.Component<any, any> {
             //Se generan las unidades
             let indexUnit = myIndexOf(store.getState().units.map(x=>x.position), pos);
             if (indexUnit!=-1){
-                var cell = <Cell row={row} column={column} unit={indexUnit}/>;
+                //Si hay una unidad seleccionada y dicha posición esta dentro de las posiciones visitables entonces es accesible
+                let visitable = store.getState().selectedUnit!=null && myIndexOf(store.getState().visitables, pos)!=-1;
+                //Si además de ser accesible es una unidad enemiga (dependiendo del turno) entonces es atacable
+                let attack = visitable && ((store.getState().units[indexUnit].player && this.turn%2!=0) || (!store.getState().units[indexUnit].player && this.turn%2==0));
+                //Si además de ser accesible es la misma posicion que la unidad actual entonces es la unidad elegida
+                let actual = visitable && (store.getState().units[store.getState().selectedUnit].position.equals(pos));
+                var cell = <Cell row={row} column={column} unit={indexUnit} attack={attack} actual={actual}/>;
                 this.state.cells[row][column] = cell;
                 accum2.push(cell);
             }else if(store.getState().selectedUnit!=null){

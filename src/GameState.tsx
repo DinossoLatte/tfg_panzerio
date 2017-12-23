@@ -59,6 +59,12 @@ export class Actions {
             type: "FINISH"
         }
     }
+
+    static nextTurn() : Redux.AnyAction{
+        return {
+            type: "NEXT_TURN"
+        }
+    }
 }
 
 //Aquí declaramos las variables del estado
@@ -197,6 +203,16 @@ export const Reducer : Redux.Reducer<State> =
                     cursorPosition: state.cursorPosition,
                     selectedUnit: state.selectedUnit,
                     type: action.type
+                }
+            case "NEXT_TURN":
+                return {
+                    units: state.units,
+                    visitables: null,
+                    terrains: state.terrains,
+                    map: state.map,
+                    cursorPosition: state.cursorPosition,
+                    selectedUnit: null,
+                    type: "SET_LISTENER"
                 }
             default:
                 return state;
