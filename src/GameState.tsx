@@ -140,8 +140,8 @@ export const Reducer : Redux.Reducer<State> =
                                         let indexUnit = myIndexOf(state.units.map(x => x.position), new_cubic.getPair());
                                         // En el caso en el que esté, la añadimos a la lista de atacables y acabamos
                                         if(indexUnit != -1) {
-                                            // Añadimos a lista de atacables, sólo si no está en la lista
-                                            myIndexOfCubic(enemyUnits, new_cubic) == -1?enemyUnits.push(new_cubic):false;
+                                            // Añadimos a lista de atacables, sólo si no está en la lista y ésta iteración no es el último movimiento (porque entonces los vecinos no deben tenerse en cuenta)
+                                            myIndexOfCubic(enemyUnits, new_cubic) == -1 && i != movements?enemyUnits.push(new_cubic):false;
                                         } else { // En caso contrario, es una posición sin unidades
                                             // Obtenemos el índice del obstáculo, si es que está.
                                             let indexOfObstacle = myIndexOf(state.terrains.map(x => x.position), new_cubic.getPair());
