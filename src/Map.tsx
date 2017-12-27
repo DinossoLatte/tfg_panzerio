@@ -13,7 +13,7 @@ import { UnitCell } from './UnitCell';
 export class Map extends React.Component<any, any> {
     //Esta variable controla el turno del juego
     turn : number;
-    actualstate : number; //El valor 0 es por defecto, 1 es victoria y 2 es derrota
+    actualstate : number = 0; //El valor 0 es por defecto, 1 es victoria y 2 es derrota
 
     restartState() {
         this.turn = 0;
