@@ -223,16 +223,13 @@ export class Map extends React.Component<any, any> {
             let actualPosition = store.getState().units[selectedUnit].position; //Obtenemos la posición actual
             //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
             if(unitIndex != -1 && unitEnemy){ // Si se ha escogido una unidad y ésta es enemiga
-                // Debemos actualizar el id de la unidad seleccionada ahora
-                if(store.getState().selectedUnit > unitIndex) { // Si el índice de la unidad eliminada es inferior a la seleccionada
-                    selectedUnit--; // Restamos uno, para mantener la consistencia de la lista.
-                }
-                saveState(Actions.attack(unitIndex, side));
-
+                // Se atacará, esto incluye el movimiento si es aplicable
+                saveState(Actions.attack(unitIndex, side, null));
+            } else {
+                // En caso contrario, se ejecutará el movimiento como siempre
+                // El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
+                saveState(Actions.generateChangeUnitPos(selectedUnit, newPosition, null, side));
             }
-            // Ejecutamos el movimiento
-            // El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
-            saveState(Actions.generateChangeUnitPos(selectedUnit, newPosition, null, side));
 
             //Si no está el general del jugador entonces se considerará victoria o derrota (esto ya incluye también que no queden más unidades)
             if(store.getState().units.filter(x => !x.player && x.name=="General").length==0){

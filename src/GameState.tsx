@@ -44,11 +44,12 @@ export class Actions {
         };
     }
 
-    static attack(unit_id: number, player: boolean) : Redux.AnyAction {
+    static attack( defendingUnitId: number, player: boolean, selectedUnit: number) : Redux.AnyAction {
         //Este estado se envía la unidad a atacar (se eliminará del array) y si es del jugador o no
         return {
             type: "ATTACK",
-            unit_id: unit_id,
+            defendingUnitId: defendingUnitId,
+            selectedUnit: selectedUnit,
             player: player
         }
     }
@@ -208,15 +209,37 @@ export const Reducer : Redux.Reducer<State> =
                     type: state.type
                 };
             case "ATTACK":
-                state.units.splice(action.unit_id, 1);
+                // Lógica de ataque
+                // Primero, obtenemos la unidad atacando y defendiendo
+                let defendingUnit = state.units[action.defendingUnitId];
+                let attackingUnit = state.units[state.selectedUnit];
+                // Necesitamos externalizar también el índice de la unidad actual, porque será útil al eliminar la unidad
+                let selectedUnit = action.selectedUnit;
+                // Después, calculamos la cantidad de vida a eliminar
+                let healthRemoved = attackingUnit.calculateAttack(defendingUnit);
+                // Comprobamos que la unidad defendiendo le queden todavía vida
+                if (defendingUnit.health - healthRemoved > 0) {
+                    // Si es el caso, le cambiamos la cantidad de vida
+                    defendingUnit.health -= healthRemoved;
+                    console.log("Vida defensor: "+defendingUnit.health);
+                } else {
+                    // Esta unidad ha dejado de existir
+                    state.units.splice(action.defendingUnitId, 1);
+                    // Y por lo tanto no podemos estar apuntandole como seleccionada
+                    if (action.selectedUnit > action.defendingUnitId) {
+                        selectedUnit -= 1;
+                    }
+                    // También desplazamos la unidad a esa posición, si consigue realizar el ataque
+                    attackingUnit.position = defendingUnit.position;
+                }
                 return {
                     units: state.units,
                     visitables: state.visitables,
                     terrains: state.terrains,
                     map: state.map,
                     cursorPosition: state.cursorPosition,
-                    selectedUnit: state.selectedUnit,
-                    type: "MOVE"
+                    selectedUnit: selectedUnit,
+                    type: "SET_LISTENER"
                 }
             case "FINISH":
                 return { // Esta solución no es la mejor, pero debido a la mutabilidad de la constante(!!!), se tiene que hacer así
