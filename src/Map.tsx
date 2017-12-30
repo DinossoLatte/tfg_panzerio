@@ -33,9 +33,9 @@ export class Map extends React.Component<any, any> {
         // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
         return (
             <div>
-                <p>Turno del {this.turn%2==0?"Jugador":"Enemigo"}. Día {this.turn}{this.actualstate==1?". Victoria":this.actualstate==2?". Derrota":""}</p>
+                <p>Turno del {store.getState().turn%2==0?"Jugador":"Enemigo"}. Día {store.getState().turn}{store.getState().actualState==1?". Victoria":store.getState().actualState==2?". Derrota":""}</p>
                 <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
-                {this.actualstate==0?<button id="nextTurn" name="nextTurn" onClick={this.onClickTurn.bind(this)}>Pasar turno</button>:""}
+                {store.getState().actualState==0?<button id="nextTurn" name="nextTurn" onClick={this.onClickTurn.bind(this)}>Pasar turno</button>:""}
                 <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)}>
                     {this.generateMap.bind(this)().map((a: any) => {
                         return a;
@@ -54,8 +54,7 @@ export class Map extends React.Component<any, any> {
         //Si se pulsa al botón se pasa de turno esto se hace para asegurar que el jugador no quiere hacer nada o no puede en su turno
         //Evitando pasar turno automaticamente ya que el jugador quiera ver alguna cosa de sus unidades o algo aunque no tenga movimientos posibles
         //Esto pasa en muchos otros juegos
-        this.turn++;
-        saveState(Actions.nextTurn()); //Se usa para obligar a actualizar el estado
+        saveState(Actions.nextTurn()); //Se usa para obligar a actualizar el estado (tambien actualiza los used)
     }
 
     onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
@@ -192,7 +191,7 @@ export class Map extends React.Component<any, any> {
 
     clickAction(row: number, column: number) {
         let newPosition: Pair = new Pair(row,column);
-        let side : boolean = this.turn%2 == 0; // Representa el bando del jugador actual
+        let side : boolean = store.getState().turn%2 == 0; // Representa el bando del jugador actual
         let unitIndex: number = myIndexOf(store.getState().units.map(x=>x.position), newPosition); // Obtenemos la posición de la unidad donde ha realizado click o -1.
         let unitEnemy: boolean; //Vale true si la unidad seleccionada es enemiga de las unidades del turno actual
         unitIndex!=-1? // Si se ha seleccionado una unidad
@@ -200,49 +199,45 @@ export class Map extends React.Component<any, any> {
                 unitEnemy = !store.getState().units[unitIndex].player // Asigna como enemigo el contrario de la unidad que ha hecho click
                 :unitEnemy = store.getState().units[unitIndex].player // Asigna como enemigo la unidad que ha hecho click
             :false; // En caso contrario, no hagas nada?
-        //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
-        if((unitIndex!= -1 && !unitEnemy) // La unidad clickeada existe y es del jugador
-             && store.getState().type == "SET_LISTENER" // El tipo de estado es esperando selección
-            ){
-            saveState(Actions.generateMove(unitIndex, side));
-        //Si hace clic en una possición exterior, mantiene el estado de en movimiento (seleccionado) y sigue almacenando la unidad seleccionada
-        }else if(
-            newPosition.column<0 // La posición no es negativa en columnas
-             || newPosition.column>this.props.horizontal // Ni es superior al número de celdas horizontales
-             || newPosition.row<0 // La posición no es negativa en filas
-             || newPosition.row>this.props.vertical // Ni es superior al número de celdas verticales
-            ){
-            saveState(Actions.generateMove(store.getState().selectedUnit, side));
-        //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
-        }else if(
-            // unitIndex!=-1 // La unidad existe
-             store.getState().selectedUnit != null // Se tiene seleccionada una unidad
-             && myIndexOf(store.getState().visitables, newPosition) != -1 // Y la posición de la unidad es alcanzable
-            ){
-            let selectedUnit = store.getState().selectedUnit; // Índice de la unidad seleccionada
-            let actualPosition = store.getState().units[selectedUnit].position; //Obtenemos la posición actual
-            //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
-            if(unitIndex != -1 && unitEnemy){ // Si se ha escogido una unidad y ésta es enemiga
-                // Debemos actualizar el id de la unidad seleccionada ahora
-                if(store.getState().selectedUnit > unitIndex) { // Si el índice de la unidad eliminada es inferior a la seleccionada
-                    selectedUnit--; // Restamos uno, para mantener la consistencia de la lista.
+        //Vemos si la unidad ha sido usada (si hay una unidad seleccionada vemos si esta ha sido usada o no, y sino vemos si la unidad del click es seleccionada)
+
+        let used: boolean = store.getState().selectedUnit!=null?
+            store.getState().units[store.getState().selectedUnit].used:
+            unitIndex!=-1?store.getState().units[unitIndex].used:false;
+        if(!used){
+            //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
+            if((unitIndex!= -1 && !unitEnemy) // La unidad clickeada existe y es del jugador
+                && store.getState().type == "SET_LISTENER" // El tipo de estado es esperando selección
+                ){
+                    saveState(Actions.generateMove(unitIndex, side));
+            //Si hace clic en una possición exterior, mantiene el estado de en movimiento (seleccionado) y sigue almacenando la unidad seleccionada
+            }else if(
+                newPosition.column<0 // La posición no es negativa en columnas
+                 || newPosition.column>this.props.horizontal // Ni es superior al número de celdas horizontales
+                 || newPosition.row<0 // La posición no es negativa en filas
+                 || newPosition.row>this.props.vertical // Ni es superior al número de celdas verticales
+                ){
+                saveState(Actions.generateMove(store.getState().selectedUnit, side));
+            //En caso de que no esté incluida en la lista de unidades y esté en estado de movimiento
+            }else if(
+                // unitIndex!=-1 // La unidad existe
+                 store.getState().selectedUnit != null // Se tiene seleccionada una unidad
+                 && myIndexOf(store.getState().visitables, newPosition) != -1 // Y la posición de la unidad es alcanzable
+                ){
+                let selectedUnit = store.getState().selectedUnit; // Índice de la unidad seleccionada
+                let actualPosition = store.getState().units[selectedUnit].position; //Obtenemos la posición actual
+                //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
+                if(unitIndex != -1 && unitEnemy){ // Si se ha escogido una unidad y ésta es enemiga
+                    // Debemos actualizar el id de la unidad seleccionada ahora
+                    if(store.getState().selectedUnit > unitIndex) { // Si el índice de la unidad eliminada es inferior a la seleccionada
+                        selectedUnit--; // Restamos uno, para mantener la consistencia de la lista.
+                    }
+                    saveState(Actions.attack(unitIndex, side));
+
                 }
-                saveState(Actions.attack(unitIndex, side));
-
-            }
-            // Ejecutamos el movimiento
-            // El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
-            saveState(Actions.generateChangeUnitPos(selectedUnit, newPosition, null, side));
-
-            //Si no está el general del jugador entonces se considerará victoria o derrota (esto ya incluye también que no queden más unidades)
-            if(store.getState().units.filter(x => !x.player && x.name=="General").length==0){
-                this.actualstate=1;
-            }else if(store.getState().units.filter(x => x.player && x.name=="General").length==0){
-                this.actualstate=2;
-            }
-            //Si son distintas se pasa de turno, sino se cancela el movimiento (se mantiene el turno)
-            if(!actualPosition.equals(newPosition)){
-                this.turn++;
+                // Ejecutamos el movimiento
+                // El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
+                saveState(Actions.generateChangeUnitPos(selectedUnit, newPosition, null, side));
             }
         }
     }
@@ -282,13 +277,15 @@ export class Map extends React.Component<any, any> {
             //Se generan las unidades
             let indexUnit = myIndexOf(store.getState().units.map(x=>x.position), pos);
             if (indexUnit!=-1){
+                //Si la unidad ha sido usada entonces se mostrará como usada
+                let used = store.getState().units[indexUnit].used;
                 //Si hay una unidad seleccionada y dicha posición esta dentro de las posiciones visitables entonces es accesible
                 let visitable = store.getState().selectedUnit!=null && myIndexOf(store.getState().visitables, pos)!=-1;
                 //Si además de ser accesible es una unidad enemiga (dependiendo del turno) entonces es atacable
-                let attack = visitable && ((store.getState().units[indexUnit].player && this.turn%2!=0) || (!store.getState().units[indexUnit].player && this.turn%2==0));
+                let attack = visitable && ((store.getState().units[indexUnit].player && store.getState().turn%2!=0) || (!store.getState().units[indexUnit].player && store.getState().turn%2==0));
                 //Si además de ser accesible es la misma posicion que la unidad actual entonces es la unidad elegida
-                let actual = visitable && (store.getState().units[store.getState().selectedUnit].position.equals(pos));
-                var cell = <Cell row={row} column={column} unit={indexUnit} attack={attack} actual={actual}/>;
+                let actual = visitable && store.getState().units[store.getState().selectedUnit].position.equals(pos);
+                var cell = <Cell row={row} column={column} unit={indexUnit} attack={attack} actual={actual} used={used}/>;
                 this.state.cells[row][column] = cell;
                 accum2.push(cell);
             }else if(store.getState().selectedUnit!=null){
