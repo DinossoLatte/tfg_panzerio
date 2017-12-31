@@ -34,7 +34,7 @@ export class Pair {
         return this.row == pair.row && this.column == pair.column;
     }
 
-    public toString() : string {
+    public toString = () : string => {
         return "("+this.row+", "+this.column+")";
     }
 }
@@ -85,7 +85,7 @@ export class Cubic {
         this.z = this.z+cubic.getZ();
     }
 
-    public toString() : string {
+    public toString = () : string => {
         return "("+this.x+", "+this.y+", "+this.z+")";
     }
 }

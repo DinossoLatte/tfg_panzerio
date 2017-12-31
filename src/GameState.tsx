@@ -44,11 +44,12 @@ export class Actions {
         };
     }
 
-    static attack(unit_id: number, player: boolean) : Redux.AnyAction {
+    static attack( defendingUnitId: number, player: boolean, selectedUnit: number) : Redux.AnyAction {
         //Este estado se envía la unidad a atacar (se eliminará del array) y si es del jugador o no
         return {
             type: "ATTACK",
-            unit_id: unit_id,
+            defendingUnitId: defendingUnitId,
+            selectedUnit: selectedUnit,
             player: player
         }
     }
@@ -85,8 +86,8 @@ export type State = {
 export const InitialState: State = {
     turn: 0,
     actualState: 0,
-    units: [General.create(new Pair (0,0), true), Infantry.create(new Pair(0,1), true), Tank.create(new Pair (1,0), true), General.create(new Pair (0,6), false)
-    , Infantry.create(new Pair(1,6), false), Tank.create(new Pair (0,5), false)],
+    units: [General.create(new Pair (0,0), true), Infantry.create(new Pair(1,2), true), Tank.create(new Pair (1,0), true), General.create(new Pair (0,4), false)
+    , Infantry.create(new Pair(1,4), false), Tank.create(new Pair (0,3), false)],
     visitables: null,
     terrains: [ImpassableMountain.create(new Pair(2, 2)), ImpassableMountain.create(new Pair(3,2)), Hills.create(new Pair(2,3)), Forest.create(new Pair(3,3))],
     cursorPosition: new Pair(0,0),
@@ -127,10 +128,10 @@ export const Reducer : Redux.Reducer<State> =
                 var enemyUnits : Cubic[] = new Array<Cubic>();
                 // Primero, iteraremos desde 0 hasta el número de movimientos
                 for(var i = 0 ; i <= movements ; i++) {
-                    // Añadimos los vecinos que queden, son celdas visitables:
-                    visitables_cubic = visitables_cubic.concat(neighbours.filter(possible_tuple => possible_tuple[1] == 0).map(x => x[0]));
                     // Calculamos los próximos vecinos:
                     var new_neighbours: [Cubic, number][] = [];
+                    visitables_cubic = visitables_cubic.concat(neighbours.filter(possible_tuple => possible_tuple[1] == 0).map(x => x[0]));
+
                     for(var index_directions = 0; index_directions < cubic_directions.length; index_directions++) {
                         visitables_cubic.forEach(cubic => {
                             var new_cubic = cubic.add(cubic_directions[index_directions]);
@@ -154,15 +155,26 @@ export const Reducer : Redux.Reducer<State> =
                                             // Obtenemos el índice del obstáculo, si es que está.
                                             let indexOfObstacle = myIndexOf(state.terrains.map(x => x.position), new_cubic.getPair());
                                             // Si se admite, añadimos la posición y la cantidad de movimientos para pasar por la casilla
-                                            new_neighbours.push([new_cubic,
-                                                // Por ahora se comprueba si está en la lista de obstáculos, en cuyo caso coge la cantidad. En caso contrario, asumimos Plains
-                                                indexOfObstacle > -1?state.terrains[indexOfObstacle].movement_penalty:0]);
+                                            // Por ahora se comprueba si está en la lista de obstáculos, en cuyo caso coge la cantidad. En caso contrario, asumimos Plains
+                                            new_neighbours.push([new_cubic, indexOfObstacle > -1?state.terrains[indexOfObstacle].movement_penalty-1:0]);
                                         }
                                     }
                                 } else { // Si no, esta casilla ya la tenemos en vecinos, pero tiene un movimiento != 0, por lo que reducimos el movimiento de la casilla
                                     // Actualizamos el movimiento de la unidad, si es el caso.
                                     var cell = neighbours[indexOfNeighbours];
-                                    new_neighbours.push([cell[0], cell[1]-1]);
+                                    // Siempre que sea reducible
+                                    if (cell[1] > 0) {
+                                        // Obtenemos el índice de la iteración actual
+                                        var index = myIndexOfCubic(new_neighbours.map(x => x[0]), cell[0]);
+                                        // Si no está en nuestra lista de vecinos
+                                        if (index == -1) {
+                                            // Lo añadimos y le reducimos el peso
+                                            new_neighbours.push([new_cubic, cell[1] - 1]);
+                                        } else {
+                                            // Si ya está en nuestra lista de vecinos, accedemos y lo reemplazamos reducciendo en uno
+                                            new_neighbours[index] = [new_cubic, cell[1] - 1];
+                                        }
+                                    }
                                 }
                             }
                         });
@@ -172,7 +184,6 @@ export const Reducer : Redux.Reducer<State> =
 
                 // Finalmente convertimos el resultado a Pair:
                 var visitables_pair : Array<Pair> = visitables_cubic.map(cubic => cubic.getPair());
-                console.log(JSON.stringify(enemyUnits.map(x => x.getPair().toString()))); // DEBUG
                 // Sin olvidar las unidades atacables!
                 visitables_pair = visitables_pair.concat(enemyUnits.map(x => x.getPair()));
 
@@ -212,8 +223,32 @@ export const Reducer : Redux.Reducer<State> =
                     type: state.type
                 };
             case "ATTACK":
-                state.units.splice(action.unit_id, 1);
-                let actualstate : number = state.actualState;
+                // Lógica de ataque
+                // Primero, obtenemos la unidad atacando y defendiendo
+                let defendingUnit = state.units[action.defendingUnitId];
+                let attackingUnit = state.units[state.selectedUnit];
+                // Necesitamos externalizar también el índice de la unidad actual, porque será útil al eliminar la unidad
+                let selectedUnit = action.selectedUnit;
+                // Después, calculamos la cantidad de vida a eliminar
+                let healthRemoved = attackingUnit.calculateAttack(defendingUnit);
+                // Comprobamos que la unidad defendiendo le queden todavía vida
+                if (defendingUnit.health - healthRemoved > 0) {
+                    // Si es el caso, le cambiamos la cantidad de vida
+                    defendingUnit.health -= healthRemoved;
+                    console.log("Vida defensor: "+defendingUnit.health);
+                } else {
+                    // Esta unidad ha dejado de existir
+                    state.units.splice(action.defendingUnitId, 1);
+                    // Y por lo tanto no podemos estar apuntandole como seleccionada
+                    if (action.selectedUnit > action.defendingUnitId) {
+                        selectedUnit -= 1;
+                    }
+                    // También desplazamos la unidad a esa posición, si consigue realizar el ataque
+                    attackingUnit.position = defendingUnit.position;
+                }
+                // Debemos actualizar el estado de la unidad, al realizarse un movimiento
+                attackingUnit.used = true;
+                var actualstate = state.actualState;
                 //Si no está el general del jugador entonces se considerará victoria o derrota (esto ya incluye también que no queden más unidades)
                 if(state.units.filter(x => !x.player && x.name=="General").length==0){
                     actualstate=1;
@@ -228,8 +263,8 @@ export const Reducer : Redux.Reducer<State> =
                     terrains: state.terrains,
                     map: state.map,
                     cursorPosition: state.cursorPosition,
-                    selectedUnit: state.selectedUnit,
-                    type: "MOVE"
+                    selectedUnit: selectedUnit,
+                    type: "SET_LISTENER"
                 }
             case "FINISH":
                 return { // Esta solución no es la mejor, pero debido a la mutabilidad de la constante(!!!), se tiene que hacer así
