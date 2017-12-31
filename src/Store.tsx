@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
 import { Map } from './Map';
-import { InitialState, Reducer, State } from './GameState';
+import { Reducer, State } from './GameState';
 import { Pair, Cubic } from './Utils';
 import { Unit } from './Unit';
 import { Terrain } from './Terrains';

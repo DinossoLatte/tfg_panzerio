@@ -80,17 +80,22 @@ export type State = {
     readonly type: string
 }
 
-//El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
-export const InitialState: State = {
-    units: [General.create(new Pair (0,0), true), Infantry.create(new Pair(1,2), true), Tank.create(new Pair (1,0), true), General.create(new Pair (0,4), false)
-    , Infantry.create(new Pair(1,4), false), Tank.create(new Pair (0,3), false)],
-    visitables: null,
-    terrains: [ImpassableMountain.create(new Pair(2, 2)), ImpassableMountain.create(new Pair(3,2)), Hills.create(new Pair(2,3)), Forest.create(new Pair(3,3))],
-    cursorPosition: new Pair(0,0),
-    map: null,
-    selectedUnit: null,
-    type: "SET_LISTENER"
+// Esta función se encargará de devolver el estado inicial, es la única forma de ofrecer un objeto inmutable:
+function getInitialState(): State {
+    return {
+        units: [General.create(new Pair (0,0), true), Infantry.create(new Pair(1,2), true), Tank.create(new Pair (1,0), true), General.create(new Pair (0,4), false)
+        , Infantry.create(new Pair(1,4), false), Tank.create(new Pair (0,3), false)],
+        visitables: null,
+        terrains: [ImpassableMountain.create(new Pair(2, 2)), ImpassableMountain.create(new Pair(3,2)), Hills.create(new Pair(2,3)), Forest.create(new Pair(3,3))],
+        cursorPosition: new Pair(0,0),
+        map: null,
+        selectedUnit: null,
+        type: "SET_LISTENER"
+    };
 }
+
+//El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
+export const InitialState: State = getInitialState();
 
 //Y aquí se producirá el cambio
 export const Reducer : Redux.Reducer<State> =
@@ -242,14 +247,17 @@ export const Reducer : Redux.Reducer<State> =
                     type: "SET_LISTENER"
                 }
             case "FINISH":
-                return { // Esta solución no es la mejor, pero debido a la mutabilidad de la constante(!!!), se tiene que hacer así
-                    units: [General.create(new Pair (0,0), true), Infantry.create(new Pair(0,1), true), Tank.create(new Pair (1,0), true), General.create(new Pair (0,4), false), Infantry.create(new Pair(1,4), false), Tank.create(new Pair (0,3), false)],
-                    visitables: null,
-                    terrains: [ImpassableMountain.create(new Pair(2, 2)), ImpassableMountain.create(new Pair(3,2)), Hills.create(new Pair(2,3))],
-                    cursorPosition: new Pair(0,0),
+                // Asignamos de nuevo el estado usando la función de estado inicial
+                var newState = getInitialState();
+                // Retornamos el estado, asignamos el mapa porque algunas funciones dependen de éste.
+                return {
+                    units: newState.units,
+                    visitables: newState.visitables,
+                    terrains: newState.terrains,
                     map: state.map,
-                    selectedUnit: null,
-                    type: "SET_LISTENER"
+                    cursorPosition: newState.cursorPosition,
+                    selectedUnit: newState.selectedUnit,
+                    type: newState.type
                 }
             case "NEXT_TURN":
                 return {
