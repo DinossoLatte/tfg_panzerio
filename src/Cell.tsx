@@ -37,10 +37,12 @@ class Cell extends React.Component<any, any> {
                 <div className="div_cell">
                     <img className="cell" id={"hex"+this.props.row+"_"+this.props.column}
                         src={
-                            cursor?this.props.selected?"imgs/hex_base_numpad_selected.png"
+                            cursor?this.props.used?"imgs/hex_base_numpad_used.png"
+                                :this.props.selected?"imgs/hex_base_numpad_selected.png"
                                 :this.props.attack?"imgs/hex_base_numpad_attack.png"
                                 :this.props.actual?"imgs/hex_base_numpad_actual.png"
                                 :"imgs/hex_base_numpad.png"
+                            :this.props.used?"imgs/hex_base_used.png"
                             :this.props.selected?"imgs/hex_base_selected.png"
                             :this.props.attack?"imgs/hex_base_attack.png"
                             :this.props.actual?"imgs/hex_base_actual.png"
