@@ -12,8 +12,9 @@ export class Unit {
     defenseWeak: number;
     defenseStrong: number;
     health: number; // Cantidad de vida
+    range: number; // Alcance del ataque
 
-    constructor(name: string, type: string, movement: number, position: Pair, player: boolean, attackWeak: number, attackStrong: number, defenseWeak: number, defenseStrong: number, health: number) {
+    constructor(name: string, type: string, movement: number, position: Pair, player: boolean, attackWeak: number, attackStrong: number, defenseWeak: number, defenseStrong: number, health: number, range: number) {
         this.name = name;
         this.type = type;
         this.movement = movement;
@@ -24,6 +25,7 @@ export class Unit {
         this.defenseWeak = defenseWeak;
         this.defenseStrong = defenseStrong;
         this.health = health;
+        this.range = range;
     }
 
     // Esta función calculará la cantidad de vida eliminada de la unidad defendiendo.
@@ -47,7 +49,9 @@ export class Infantry extends Unit {
         // Características de defensa débil y fuerte
          1, 2,
         // Vida
-        2);
+        2,
+        // Alcance
+        1);
     }
 }
 
@@ -59,18 +63,22 @@ export class Tank extends Unit {
         // Características de defensa débil y fuerte
          2, 1,
         // Vida
-        3);
+        3,
+        // Alcance
+        1);
     }
 }
 
 export class General extends Unit {
     static create(position: Pair, player: boolean) : Unit {
-        return new Unit("General", "general", 0, position, player,
+        return new Unit("General", "general", 1, position, player,
         // Características de ataque débil y fuerte
          1, 0,
         // Características de defensa débil y fuerte
          1, 2,
         // Vida
-        2);
+        2,
+        // Alcance
+        0);
     }
 }

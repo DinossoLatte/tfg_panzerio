@@ -146,8 +146,8 @@ export const Reducer : Redux.Reducer<State> =
                                         let indexUnit = myIndexOf(state.units.map(x => x.position), new_cubic.getPair());
                                         // En el caso en el que esté, la añadimos a la lista de atacables y acabamos
                                         if(indexUnit != -1) {
-                                            // Añadimos a lista de atacables, sólo si no está en la lista y ésta iteración no es el último movimiento (porque entonces los vecinos no deben tenerse en cuenta)
-                                            myIndexOfCubic(enemyUnits, new_cubic) == -1 && i != movements?enemyUnits.push(new_cubic):false;
+                                            // Añadimos a lista de atacables, sólo si no está en la lista y ésta iteración es el alcance del ataque más uno.
+                                            myIndexOfCubic(enemyUnits, new_cubic) == -1 && i < state.units[action.unit_id].range?enemyUnits.push(new_cubic):false;
                                         } else { // En caso contrario, es una posición sin unidades
                                             // Obtenemos el índice del obstáculo, si es que está.
                                             let indexOfObstacle = myIndexOf(state.terrains.map(x => x.position), new_cubic.getPair());
@@ -234,8 +234,6 @@ export const Reducer : Redux.Reducer<State> =
                     if (action.selectedUnit > action.defendingUnitId) {
                         selectedUnit -= 1;
                     }
-                    // También desplazamos la unidad a esa posición, si consigue realizar el ataque
-                    attackingUnit.position = defendingUnit.position;
                 }
                 return {
                     units: state.units,
