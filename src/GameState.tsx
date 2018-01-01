@@ -71,6 +71,8 @@ export class Actions {
 
 //Aquí declaramos las variables del estado
 export type State = {
+    readonly turn: number,
+    readonly actualState: number,
     readonly units: Array<Unit>,
     readonly visitables: Array<Pair>,
     readonly terrains: Array<Terrain>,
@@ -83,6 +85,8 @@ export type State = {
 // Esta función se encargará de devolver el estado inicial, es la única forma de ofrecer un objeto inmutable:
 function getInitialState(): State {
     return {
+        turn: 0,
+        actualState: 0,
         units: [General.create(new Pair (0,0), true), Infantry.create(new Pair(1,2), true), Tank.create(new Pair (1,0), true), General.create(new Pair (0,4), false)
         , Infantry.create(new Pair(1,4), false), Tank.create(new Pair (0,3), false)],
         visitables: null,
@@ -103,10 +107,14 @@ export const Reducer : Redux.Reducer<State> =
         //Dependiendo del tipo se cambiarán las variables del estado
         switch(action.type) {
             case "CHANGE_UNIT_POS":
-                if(action.player==state.units[action.unit_id].player){
+                //Si es una unidad del jugador actual y no es la misma posición, actualiza su uso y su posición, sino el movimiento se considera cancelado
+                if(action.player==state.units[action.unit_id].player && !state.units[action.unit_id].position.equals(action.new_position)){
                     state.units[action.unit_id].position = action.new_position;
+                    state.units[action.unit_id].used = true;
                 }
                 return {
+                    turn: state.turn,
+                    actualState: state.actualState,
                     units: state.units,
                     visitables: state.visitables,
                     terrains: state.terrains,
@@ -185,6 +193,8 @@ export const Reducer : Redux.Reducer<State> =
                 visitables_pair = visitables_pair.concat(enemyUnits.map(x => x.getPair()));
 
                 return {
+                    turn: state.turn,
+                    actualState: state.actualState,
                     units: state.units,
                     visitables: visitables_pair,
                     terrains: state.terrains,
@@ -195,6 +205,8 @@ export const Reducer : Redux.Reducer<State> =
                 };
             case "SET_LISTENER":
                 return {
+                    turn: state.turn,
+                    actualState: state.actualState,
                     units: state.units,
                     visitables: state.visitables,
                     terrains: state.terrains,
@@ -205,6 +217,8 @@ export const Reducer : Redux.Reducer<State> =
                 };
             case "CURSOR_MOVE":
                 return {
+                    turn: state.turn,
+                    actualState: state.actualState,
                     units: state.units,
                     visitables: state.visitables,
                     terrains: state.terrains,
@@ -235,7 +249,18 @@ export const Reducer : Redux.Reducer<State> =
                         selectedUnit -= 1;
                     }
                 }
+                // Debemos actualizar el estado de la unidad, al realizarse un movimiento
+                attackingUnit.used = true;
+                var actualstate = state.actualState;
+                //Si no está el general del jugador entonces se considerará victoria o derrota (esto ya incluye también que no queden más unidades)
+                if(state.units.filter(x => !x.player && x.name=="General").length==0){
+                    actualstate=1;
+                }else if(state.units.filter(x => x.player && x.name=="General").length==0){
+                    actualstate=2;
+                }
                 return {
+                    turn: state.turn,
+                    actualState: actualstate,
                     units: state.units,
                     visitables: state.visitables,
                     terrains: state.terrains,
@@ -249,6 +274,8 @@ export const Reducer : Redux.Reducer<State> =
                 var newState = getInitialState();
                 // Retornamos el estado, asignamos el mapa porque algunas funciones dependen de éste.
                 return {
+                    turn: newState.turn,
+                    actualState: newState.actualState,
                     units: newState.units,
                     visitables: newState.visitables,
                     terrains: newState.terrains,
@@ -258,7 +285,13 @@ export const Reducer : Redux.Reducer<State> =
                     type: newState.type
                 }
             case "NEXT_TURN":
+                //Se actualizan los used
+                for(var i = 0 ; i < state.units.length ; i++) {
+                    state.units[i].used = false;
+                }
                 return {
+                    turn: state.turn+1,
+                    actualState: state.actualState,
                     units: state.units,
                     visitables: null,
                     terrains: state.terrains,
