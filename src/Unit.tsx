@@ -7,7 +7,7 @@ export class Unit {
     position: Pair;
     player: boolean; //Unidad jugadora
     used: boolean; //Si la unidad ha sido usada en este turno valdrá true
-    
+    hasAttacked: boolean;
     // - A partir de aqui ponemos los atributos de ataque y defensa
     attackWeak: number;
     attackStrong: number;
@@ -16,7 +16,7 @@ export class Unit {
     health: number; // Cantidad de vida
     range: number; // Alcance del ataque
 
-    constructor(name: string, type: string, movement: number, position: Pair, player: boolean, used: boolean, attackWeak: number, attackStrong: number, defenseWeak: number, defenseStrong: number, health: number, range: number) {
+    constructor(name: string, type: string, movement: number, position: Pair, player: boolean, used: boolean, attackWeak: number, attackStrong: number, defenseWeak: number, defenseStrong: number, health: number, range: number, hasAttacked?: boolean) {
         this.name = name;
         this.type = type;
         this.movement = movement;
@@ -29,6 +29,7 @@ export class Unit {
         this.defenseStrong = defenseStrong;
         this.health = health;
         this.range = range;
+        this.hasAttacked = hasAttacked?hasAttacked:false;
     }
 
     // Esta función calculará la cantidad de vida eliminada de la unidad defendiendo.

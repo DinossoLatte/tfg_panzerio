@@ -3,7 +3,7 @@ import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
 import { store, saveState } from './Store';
 import { Map } from './Map';
-import { Pair, Cubic, cubic_directions, myIndexOf, myIndexOfCubic} from './Utils';
+import { Pair, Cubic, cubic_directions, myIndexOf, myIndexOfCubic, Pathfinding} from './Utils';
 import { Unit, Infantry, Tank, General } from './Unit';
 import { Terrain, Plains, ImpassableMountain, Hills, Forest } from './Terrains';
 
@@ -107,16 +107,22 @@ export const Reducer : Redux.Reducer<State> =
         //Dependiendo del tipo se cambiarán las variables del estado
         switch(action.type) {
             case "CHANGE_UNIT_POS":
+                let visitables = state.visitables;
                 //Si es una unidad del jugador actual y no es la misma posición, actualiza su uso y su posición, sino el movimiento se considera cancelado
                 if(action.player==state.units[action.unit_id].player && !state.units[action.unit_id].position.equals(action.new_position)){
                     state.units[action.unit_id].position = action.new_position;
                     state.units[action.unit_id].used = true;
                 }
+                // Si la unidad tiene posiblidad de atacar
+                if(!state.units[action.unit_id].hasAttacked) {
+                    // Regeneramos los visitables, pero esta vez sólo obteniendo la distancia absoluta para los enemigos
+                    visitables = Pathfinding.getAttackableUnits(state.units[action.unit_id]);
+                }
                 return {
                     turn: state.turn,
                     actualState: state.actualState,
                     units: state.units,
-                    visitables: state.visitables,
+                    visitables: visitables,
                     terrains: state.terrains,
                     map: state.map,
                     selectedUnit: action.selectedUnit,
@@ -240,7 +246,6 @@ export const Reducer : Redux.Reducer<State> =
                 if (defendingUnit.health - healthRemoved > 0) {
                     // Si es el caso, le cambiamos la cantidad de vida
                     defendingUnit.health -= healthRemoved;
-                    console.log("Vida defensor: "+defendingUnit.health);
                 } else {
                     // Esta unidad ha dejado de existir
                     state.units.splice(action.defendingUnitId, 1);
@@ -251,6 +256,8 @@ export const Reducer : Redux.Reducer<State> =
                 }
                 // Debemos actualizar el estado de la unidad, al realizarse un movimiento
                 attackingUnit.used = true;
+                // También actualizamos el estado para avisar que ha atacado
+                attackingUnit.hasAttacked = true;
                 var actualstate = state.actualState;
                 //Si no está el general del jugador entonces se considerará victoria o derrota (esto ya incluye también que no queden más unidades)
                 if(state.units.filter(x => !x.player && x.name=="General").length==0){
@@ -288,6 +295,8 @@ export const Reducer : Redux.Reducer<State> =
                 //Se actualizan los used
                 for(var i = 0 ; i < state.units.length ; i++) {
                     state.units[i].used = false;
+                    // Actualizamos también el estado de ataque
+                    state.units[i].hasAttacked = false;
                 }
                 return {
                     turn: state.turn+1,

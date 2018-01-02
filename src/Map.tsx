@@ -112,7 +112,6 @@ export class Map extends React.Component<any, any> {
         }
     }
 
-    /** Placeholder, contendrá la lógica de selección de la casilla correcta. **/
     onClick(event : React.MouseEvent<HTMLElement>) {
         // Para obtener las posiciones relativas al mapa, obtenemos las posiciones absolutas del primer objeto, que es el hexágono primero.
         var dimensions = document.getElementById("hex0_0").getBoundingClientRect();
@@ -205,6 +204,11 @@ export class Map extends React.Component<any, any> {
         let used: boolean = store.getState().selectedUnit!=null?
             store.getState().units[store.getState().selectedUnit].used:
             unitIndex!=-1?store.getState().units[unitIndex].used:false;
+        // También comprobaremos si la unidad ha realizado un ataque, que permitirá que la unidad ataque por separado con respecto al movimiento
+        let hasAttacked: boolean = store.getState().selectedUnit != null?
+            // Se activará este boolean cuando se ha seleccionado una unidad y además se ha seleccionado un enemigo
+            store.getState().units[store.getState().selectedUnit].hasAttacked && unitEnemy:
+            true;
         if(!used){
             //Si el indice es != -1 (está incluido en la lista de unidades) y está en modo de espera de movimiento se generará el estado de movimiento
             if((unitIndex!= -1 && !unitEnemy) // La unidad clickeada existe y es del jugador
@@ -234,9 +238,12 @@ export class Map extends React.Component<any, any> {
                 } else {
                     // En caso contrario, se ejecutará el movimiento como siempre
                     // El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
-                    saveState(Actions.generateChangeUnitPos(selectedUnit, newPosition, null, side));
+                    saveState(Actions.generateChangeUnitPos(selectedUnit, newPosition, hasAttacked?null:selectedUnit, side));
                 }
             }
+        } else if(!hasAttacked) { // En el caso de que tenga posiblidad de atacar y ha hecho click a la unidad enemiga
+            // Realizamos el ataque:
+            saveState(Actions.attack(unitIndex, side, null));
         }
     }
 
@@ -275,8 +282,8 @@ export class Map extends React.Component<any, any> {
             //Se generan las unidades
             let indexUnit = myIndexOf(store.getState().units.map(x=>x.position), pos);
             if (indexUnit!=-1){
-                //Si la unidad ha sido usada entonces se mostrará como usada
-                let used = store.getState().units[indexUnit].used;
+                // Si la unidad ha sido usada y ha realizado un ataque entonces se mostrará como usada
+                let used = store.getState().units[indexUnit].used && store.getState().units[indexUnit].hasAttacked;
                 //Si hay una unidad seleccionada y dicha posición esta dentro de las posiciones visitables entonces es accesible
                 let visitable = store.getState().selectedUnit!=null && myIndexOf(store.getState().visitables, pos)!=-1;
                 //Si además de ser accesible es una unidad enemiga (dependiendo del turno) entonces es atacable

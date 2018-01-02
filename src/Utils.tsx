@@ -1,3 +1,6 @@
+import { Unit } from './Unit';
+import { store } from './Store';
+
 export class Pair {
     row : any;
     column : any;
@@ -114,4 +117,41 @@ export function myIndexOfCubic(arr: Array<Cubic>, o: Cubic) {
         }
     }
     return -1;
+}
+
+// Esta clase contendrá funciones relacionadas con el Pathfinding y encontrar si una unidad tiene acceso a cierta casilla o unidad
+export class Pathfinding {
+    public static getAttackableUnits(unit: Unit) {
+        // Primero, necesitamos encontrar las casillas de las unidades enemigas
+        let enemyUnitsPos: Pair[] = store.getState().units.filter(x => x.player != unit.player).map(x => x.position);
+        let enemyUnitsReachable: Pair[] = [];
+        // Ahora, realizaremos una iteración igual que el proceso de obtener las posiciones accesibles por la unidad.
+        var visitables_cubic : Array<Cubic> = [new Cubic(unit.position)];
+        // Los vecinos estarán compuestos por la posición cúbica y el número de movimientos para pasar la posición
+        var neighbours : Cubic[] = new Array<Cubic>();
+        for(var i = 0 ; i < unit.range ; i++) {
+            // Calculamos los próximos vecinos:
+            var new_neighbours: Cubic[] = [];
+            visitables_cubic = visitables_cubic.concat(neighbours);
+
+            for(var index_directions = 0; index_directions < cubic_directions.length; index_directions++) {
+                visitables_cubic.forEach(cubic => {
+                    var new_cubic = cubic.add(cubic_directions[index_directions]);
+                    // Mientras la casilla actual no sea ya visitada o esté contenida en los vecinos anteriores
+                    if(myIndexOfCubic(visitables_cubic, new_cubic) == -1 && myIndexOfCubic(neighbours, new_cubic) == -1) {
+                        // En el caso de que no sea ninguno de los anteriores, la añadiremos a los visitados
+                        new_neighbours.push(new_cubic);
+                        // Y comprobamos que exista una unidad enemiga en esa posición
+                        let index = myIndexOf(enemyUnitsPos, new_cubic.getPair())
+                        if(index > -1) {
+                            // En el caso de exista, la añadimos a los alcanzables
+                            enemyUnitsReachable.push(enemyUnitsPos[index]);
+                        }
+                    }
+                });
+                neighbours = new_neighbours;
+            }
+        }
+        return enemyUnitsReachable;
+    }
 }
