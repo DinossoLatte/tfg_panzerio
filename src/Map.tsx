@@ -5,15 +5,18 @@ import { store, saveState } from './Store';
 import { Actions, State, InitialState, Reducer } from './GameState';
 import { Cell } from './Cell';
 import { TerrainCell } from './TerrainCell';
-import { Pair, Cubic, myIndexOf, cubic_directions, myIndexOfCubic } from './Utils';
+import { Pair, Cubic, myIndexOf, cubic_directions, myIndexOfCubic, Pathfinding } from './Utils';
 import { Unit } from './Unit';
+import { Plains } from './Terrains';
 import { UnitCell } from './UnitCell';
+import { UnitStats } from './UnitStats';
 
 /** Representa el mapa que contendrá las unidades y las casillas **/
 export class Map extends React.Component<any, any> {
     //Esta variable controla el turno del juego
     turn : number;
     actualstate : number = 0; //El valor 0 es por defecto, 1 es victoria y 2 es derrota
+    unitStats: UnitStats = null;
 
     restartState() {
         this.turn = 0;
@@ -36,10 +39,13 @@ export class Map extends React.Component<any, any> {
                 <p>Turno del {store.getState().turn%2==0?"Jugador":"Enemigo"}. Día {store.getState().turn}{store.getState().actualState==1?". Victoria":store.getState().actualState==2?". Derrota":""}</p>
                 <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
                 {store.getState().actualState==0?<button id="nextTurn" name="nextTurn" onClick={this.onClickTurn.bind(this)}>Pasar turno</button>:""}
-                <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)}>
-                    {this.generateMap.bind(this)().map((a: any) => {
-                        return a;
-                    })}
+                <div>
+                    <UnitStats />
+                    <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)} onContextMenu={this.onRightClick.bind(this)}>
+                        {this.generateMap.bind(this)().map((a: any) => {
+                            return a;
+                        })}
+                    </div>
                 </div>
             </div>
         );
@@ -113,79 +119,33 @@ export class Map extends React.Component<any, any> {
     }
 
     onClick(event : React.MouseEvent<HTMLElement>) {
-        // Para obtener las posiciones relativas al mapa, obtenemos las posiciones absolutas del primer objeto, que es el hexágono primero.
-        var dimensions = document.getElementById("hex0_0").getBoundingClientRect();
-
-        // Para soportar mejor los cambios de pantalla, obtenemos las dimensiones del hex primero, para los demás será igual.
-        var height = dimensions.bottom - dimensions.top; // Hardcoded, se deberían realizar más pruebas
-        var width = Math.round(height*1.153846154); // El valor que se multiplica es la proporción entre el height y width
-
-        var x = event.clientX - dimensions.left; // A las coordenadas absolutas les restamos las dimensiones en el extremo superior izquierdo del primer hex.
-        var y = event.clientY - dimensions.top;
-
-        var column: number = Math.floor(x/(3/4*width)); // Primero, encontramos la columna aproximada, dividiendo la posición por 3/4 la anchura (debido a los siguientes cálculos)
-        var row: number; // Definimos el número de fila.
-
-        var isOdd = column%2==1; // Comprobamos si la columna de hexes es impar, ya que estará bajada por la mitad de la altura
-        switch(isOdd) {
-            case true:
-                // Se le restará la mitad de la altura del hex.
-                row = Math.floor((y - (height/2)) / height);
-                break;
-            case false:
-                // En otro caso, se obtendrá de forma parecida a la columna. Dividiendo la altura del hex (como se verá, no es multiplicado por 3/4 al no existir un extremo en esa posición).
-                row = Math.floor(y / height);
-        }
-
-        // En este momento, tendrémos la casilla correcta aproximada.
-        var centerX = Math.round(column*(3/4*width)+width/2); // Para encontrar el punto central del hex más cercano. 3/4 ya que los hexes están solapados.
-        var centerY;
-        switch(isOdd) {
-            case true:
-                // El punto central equivale a la fila por el tamaño del hex más la mitad (punto medio) más el offset por la fila impar
-                centerY = Math.round(row*height+height);
-                break;
-            case false:
-                // En otro caso, no existirá el offset por la fila impar.
-                centerY = Math.round(row*height+(height/2));
-        }
-        var radius = Math.round(height/4); // Tomamos el radio más pequeño, siendo este la mitad de la altura del hex.
-
-        // Comprobación de si está el punto en el círculo
-        if(!this.getInCircle(centerX, centerY, radius, x, y)) {
-            // Debemos calcular la distancia entre los otros hexágonos:
-            // Debe tenerse en cuenta que estamos intentando encontrar si el punto está en el extremo de forma "<"
-            // Primero comprobamos si debemos escoger el hexágono superior o inferior
-            var isUpper = y < centerY;
-            // Recogemos la posición del hex horizontal siguiente:
-            var comparingHexX = Math.round(centerX - (width*3/4));
-            // Y dependiendo de que esté arriba o debajo, la posición vertical del hex posible:
-            var comparingHexY = Math.round(isUpper?(centerY - (height/2)):(centerY + (height/2)));
-            // Calculamos la distancia entre todos los posibles hexes:
-            var distanceCircle = this.calculateDistance(centerX, centerY, x, y);
-            var distancePossibleHex = this.calculateDistance(comparingHexX, comparingHexY, x, y);
-            // Si la distancia del hex posible es menor al del círculo, entonces cambiamos el row y column
-            if(distancePossibleHex < distanceCircle) {
-                // Debido al sistema de identificación usado, es necesario añadir reglas si el hex es impar o par.
-                if(isOdd) {
-                    column--;
-                    if(!isUpper) {
-                        row++;
-                    }
-                } else {
-                    column--;
-                    if(isUpper) {
-                        row--;
-                    }
-                }
-            }
-        }
+        let position = Pathfinding.getPositionClicked(event.clientX, event.clientY);
 
         //Si el juego está terminado entonces no hace nada, por eso comprueba si todavía sigue la partida
         if(store.getState().type != "FINISH"){
             //Guardamos la posición actual y la nueva posición
-            this.clickAction(row, column);
+            this.clickAction(position.row, position.column);
         }
+    }
+
+    onRightClick(event: React.MouseEvent<HTMLElement>) {
+        // Primero, evitamos que genere el menú del navegador
+        event.preventDefault();
+        // Obtenemos la posición donde ha realizado click
+        let position = Pathfinding.getPositionClicked(event.clientX, event.clientY);
+        // Comprobamos que exista una unidad en esa posición
+        let unit = store.getState().units[myIndexOf(store.getState().units.map(x => x.position), position)];
+        // También comprobamos que exista un terreno en la posición
+        // Pero antes, vemos que la posición sea alcanzable
+        let terrain = null;
+        if(position.row >= 0 && position.row <= this.props.vertical &&
+            position.column >= 0 && position.column <= this.props.horizontal) {
+                // Si es válida, iteramos por los terrenos y si no se encuentra, se emite un Plains
+                let terrainIndex = myIndexOf(store.getState().terrains.map(x => x.position), position);
+                terrain = terrainIndex > -1?store.getState().terrains[terrainIndex]:Plains.create(position);
+        }
+        // Actualizamos el estado de la barra de estadísticas
+        this.unitStats.setState({ unit: unit, terrain: terrain });
     }
 
     clickAction(row: number, column: number) {
@@ -245,17 +205,6 @@ export class Map extends React.Component<any, any> {
             // Realizamos el ataque:
             saveState(Actions.attack(unitIndex, side, null));
         }
-    }
-
-    // Calcula si dado los datos del circulo y  un punto cualquiuera, el punto cualquiera está dentro del círculo
-    getInCircle(centerX: number, centerY: number, radius: number, x: number, y: number) {
-        // Raiz cuadrada de la distancia vectorial entre el centro y el punto debe ser menor al radio
-        return this.calculateDistance(centerX, centerY, x, y) < radius;
-    }
-
-    // Calcula la distancia vectorial entre dos puntos
-    calculateDistance(x0: number, y0: number, x1: number, y1: number) {
-        return Math.sqrt(Math.pow((x0-x1),2) + Math.pow((y0-y1),2));
     }
 
     /** Función auxiliar usada para renderizar el mapa. Consiste en recorrer todas las columnas acumulando las casillas. **/

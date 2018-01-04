@@ -154,4 +154,87 @@ export class Pathfinding {
         }
         return enemyUnitsReachable;
     }
+
+    public static getPositionClicked(xCoor: number, yCoor: number) : Pair {
+        // Para obtener las posiciones relativas al mapa, obtenemos las posiciones absolutas del primer objeto, que es el hexágono primero.
+        var dimensions = document.getElementById("hex0_0").getBoundingClientRect();
+
+        // Para soportar mejor los cambios de pantalla, obtenemos las dimensiones del hex primero, para los demás será igual.
+        var height = dimensions.bottom - dimensions.top; // Hardcoded, se deberían realizar más pruebas
+        var width = Math.round(height * 1.153846154); // El valor que se multiplica es la proporción entre el height y width
+
+        var x = xCoor - dimensions.left; // A las coordenadas absolutas les restamos las dimensiones en el extremo superior izquierdo del primer hex.
+        var y = yCoor - dimensions.top;
+
+        var column: number = Math.floor(x / (3 / 4 * width)); // Primero, encontramos la columna aproximada, dividiendo la posición por 3/4 la anchura (debido a los siguientes cálculos)
+        var row: number; // Definimos el número de fila.
+
+        var isOdd = column % 2 == 1; // Comprobamos si la columna de hexes es impar, ya que estará bajada por la mitad de la altura
+        switch (isOdd) {
+            case true:
+                // Se le restará la mitad de la altura del hex.
+                row = Math.floor((y - (height / 2)) / height);
+                break;
+            case false:
+                // En otro caso, se obtendrá de forma parecida a la columna. Dividiendo la altura del hex (como se verá, no es multiplicado por 3/4 al no existir un extremo en esa posición).
+                row = Math.floor(y / height);
+        }
+
+        // En este momento, tendrémos la casilla correcta aproximada.
+        var centerX = Math.round(column * (3 / 4 * width) + width / 2); // Para encontrar el punto central del hex más cercano. 3/4 ya que los hexes están solapados.
+        var centerY;
+        switch (isOdd) {
+            case true:
+                // El punto central equivale a la fila por el tamaño del hex más la mitad (punto medio) más el offset por la fila impar
+                centerY = Math.round(row * height + height);
+                break;
+            case false:
+                // En otro caso, no existirá el offset por la fila impar.
+                centerY = Math.round(row * height + (height / 2));
+        }
+        var radius = Math.round(height / 4); // Tomamos el radio más pequeño, siendo este la mitad de la altura del hex.
+
+        // Comprobación de si está el punto en el círculo
+        if (!Pathfinding.getInCircle(centerX, centerY, radius, x, y)) {
+            // Debemos calcular la distancia entre los otros hexágonos:
+            // Debe tenerse en cuenta que estamos intentando encontrar si el punto está en el extremo de forma "<"
+            // Primero comprobamos si debemos escoger el hexágono superior o inferior
+            var isUpper = y < centerY;
+            // Recogemos la posición del hex horizontal siguiente:
+            var comparingHexX = Math.round(centerX - (width * 3 / 4));
+            // Y dependiendo de que esté arriba o debajo, la posición vertical del hex posible:
+            var comparingHexY = Math.round(isUpper ? (centerY - (height / 2)) : (centerY + (height / 2)));
+            // Calculamos la distancia entre todos los posibles hexes:
+            var distanceCircle = Pathfinding.calculateDistance(centerX, centerY, x, y);
+            var distancePossibleHex = Pathfinding.calculateDistance(comparingHexX, comparingHexY, x, y);
+            // Si la distancia del hex posible es menor al del círculo, entonces cambiamos el row y column
+            if (distancePossibleHex < distanceCircle) {
+                // Debido al sistema de identificación usado, es necesario añadir reglas si el hex es impar o par.
+                if (isOdd) {
+                    column--;
+                    if (!isUpper) {
+                        row++;
+                    }
+                } else {
+                    column--;
+                    if (isUpper) {
+                        row--;
+                    }
+                }
+            }
+        }
+
+        return new Pair(row, column);
+    }
+
+    // Calcula si dado los datos del circulo y  un punto cualquiuera, el punto cualquiera está dentro del círculo
+    static getInCircle(centerX: number, centerY: number, radius: number, x: number, y: number) {
+        // Raiz cuadrada de la distancia vectorial entre el centro y el punto debe ser menor al radio
+        return this.calculateDistance(centerX, centerY, x, y) < radius;
+    }
+
+    // Calcula la distancia vectorial entre dos puntos
+    public static calculateDistance(x0: number, y0: number, x1: number, y1: number) {
+        return Math.sqrt(Math.pow((x0-x1),2) + Math.pow((y0-y1),2));
+    }
 }

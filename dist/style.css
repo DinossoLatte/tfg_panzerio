@@ -55,3 +55,9 @@ body {
     top: -1px;
     margin-right: -223.7px;
 }
+
+.leftPanel {
+    float: left;
+    width: 400px;
+    padding: 25px;
+}
