@@ -23,6 +23,7 @@ export class UnitStats extends React.Component<any, any> {
                     <p>Unidad: </p>
                     <p>    Posición: {this.state.unit.position.toString()}</p>
                     <p>    Tipo: {this.state.unit.type}</p>
+                    <p>    Acción disponible: {this.state.unit.action==0?"Movimiento":this.state.unit.action==1?"Ataque":"Ninguna"}</p>
                     <p>    Movimiento: {this.state.unit.movement}</p>
                     <p>    Alcance: {this.state.unit.range}</p>
                     <p>    Vida: {this.state.unit.health}</p>
