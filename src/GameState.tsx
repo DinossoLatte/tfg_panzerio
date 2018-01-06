@@ -286,7 +286,7 @@ export const Reducer : Redux.Reducer<State> =
                     units: newState.units,
                     visitables: newState.visitables,
                     terrains: newState.terrains,
-                    map: state.map,
+                    map: newState.map,
                     cursorPosition: newState.cursorPosition,
                     selectedUnit: newState.selectedUnit,
                     type: newState.type

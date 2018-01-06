@@ -13,14 +13,9 @@ import { UnitStats } from './UnitStats';
 
 /** Representa el mapa que contendrá las unidades y las casillas **/
 export class Map extends React.Component<any, any> {
-    //Esta variable controla el turno del juego
-    turn : number;
-    actualstate : number = 0; //El valor 0 es por defecto, 1 es victoria y 2 es derrota
     unitStats: UnitStats = null;
 
     restartState() {
-        this.turn = 0;
-        this.actualstate = 0;
         this.state = { cells: new Array<Array<Cell>>(this.props.horizontal), rows: this.props.vertical, columns: this.props.horizontal };
         store.dispatch(Actions.generateSetListener(this));
     }
@@ -122,7 +117,7 @@ export class Map extends React.Component<any, any> {
         let position = Pathfinding.getPositionClicked(event.clientX, event.clientY);
 
         //Si el juego está terminado entonces no hace nada, por eso comprueba si todavía sigue la partida
-        if(store.getState().type != "FINISH"){
+        if(store.getState().actualState == 0){
             //Guardamos la posición actual y la nueva posición
             this.clickAction(position.row, position.column);
         }
@@ -158,7 +153,7 @@ export class Map extends React.Component<any, any> {
                 unitEnemy = !store.getState().units[unitIndex].player // Asigna como enemigo el contrario de la unidad que ha hecho click
                 :unitEnemy = store.getState().units[unitIndex].player // Asigna como enemigo la unidad que ha hecho click
             :false; // En caso contrario, no hagas nada?
-        
+
         //Vemos si la unidad ha sido usada (si hay una unidad seleccionada vemos si esta ha sido usada o no, y sino vemos si la unidad del click es seleccionada)
 
         let used: boolean = store.getState().selectedUnit!=null?

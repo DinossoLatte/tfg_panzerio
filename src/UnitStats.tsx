@@ -22,7 +22,14 @@ export class UnitStats extends React.Component<any, any> {
                     <h4>Seleccionada: </h4>
                     <p>Unidad: </p>
                     <p>    Posición: {this.state.unit.position.toString()}</p>
-                    <p>    Unidad: {this.state.unit.type}</p>
+                    <p>    Tipo: {this.state.unit.type}</p>
+                    <p>    Movimiento: {this.state.unit.movement}</p>
+                    <p>    Alcance: {this.state.unit.range}</p>
+                    <p>    Vida: {this.state.unit.health}</p>
+                    <p>    Ataque débil: {this.state.unit.attackWeak}</p>
+                    <p>    Ataque fuerte: {this.state.unit.attackStrong}</p>
+                    <p>    Defensa débil: {this.state.unit.defenseWeak}</p>
+                    <p>    Defensa fuerte: {this.state.unit.defenseStrong}</p>
                 </div>
             );
         }
