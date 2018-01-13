@@ -116,7 +116,8 @@ export const Reducer : Redux.Reducer<State> =
             case "CHANGE_UNIT_POS":
                 let visitables = state.visitables;
                 //Si es una unidad del jugador actual y no es la misma posición, actualiza su uso y su posición, sino el movimiento se considera cancelado
-                if(action.player==state.units[action.unit_id].player && !state.units[action.unit_id].position.equals(action.new_position)){
+                //if(action.player==state.units[action.unit_id].player && !state.units[action.unit_id].position.equals(action.new_position)){
+                if(action.player==state.units[action.unit_id].player){
                     state.units[action.unit_id].position = action.new_position;
                     //state.units[action.unit_id].used = true;
                     state.units[action.unit_id].action = 1;
@@ -230,7 +231,7 @@ export const Reducer : Redux.Reducer<State> =
                     visitables: state.visitables,
                     terrains: state.terrains,
                     map: action.map,
-                    selectedUnit: state.selectedUnit,
+                    selectedUnit: null,
                     cursorPosition: state.cursorPosition,
                     type: "SET_LISTENER"
                 };

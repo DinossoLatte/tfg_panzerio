@@ -34,6 +34,7 @@ export class Map extends React.Component<any, any> {
                 <p>Turno del {store.getState().turn%2==0?"Jugador":"Enemigo"}. Día {store.getState().turn}{store.getState().actualState==1?". Victoria":store.getState().actualState==2?". Derrota":""}</p>
                 <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
                 {store.getState().actualState==0?<button id="nextTurn" name="nextTurn" onClick={this.onClickTurn.bind(this)}>Pasar turno</button>:""}
+                {store.getState().selectedUnit!=null?<button id="cancelAction" name="cancelAction" onClick={this.onClickCancelAction.bind(this)}>Cancelar acción</button>:""}
                 {store.getState().selectedUnit!=null && store.getState().units[store.getState().selectedUnit].action<2?<button id="nextAction" name="nextAction" onClick={this.onClickUnitAction.bind(this)}>Pasar acción</button>:""}
                 <div>
                     <UnitStats />
@@ -62,6 +63,11 @@ export class Map extends React.Component<any, any> {
     onClickUnitAction(event : React.MouseEvent<HTMLElement>) {
         //Dependiendo de la accion de la unidad pasará a la siguiente acción y será usada o no
         saveState(Actions.nextAction(store.getState().selectedUnit));
+    }
+
+    onClickCancelAction(event : React.MouseEvent<HTMLElement>) {
+        //Con esto se cancela la acción actual para que se pueda seleccionar otra unidad
+        saveState(Actions.generateSetListener(this));
     }
 
     onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
@@ -105,6 +111,18 @@ export class Map extends React.Component<any, any> {
                 // La tecla 9 del numpad (+1, -1)
                 cursorPosition = store.getState().cursorPosition;
                 newCursorPosition = new Pair(cursorPosition.row - (cursorPosition.column&1?0:1), cursorPosition.column + 1);
+                break;
+            case '4':
+                if(store.getState().selectedUnit!=null){
+                    //Con esto se cancela la acción actual para que se pueda seleccionar otra unidad
+                    saveState(Actions.generateSetListener(this));
+                }
+                break;
+            case '6':
+                if(store.getState().selectedUnit!=null && store.getState().units[store.getState().selectedUnit].action<2){
+                    //Dependiendo de la accion de la unidad pasará a la siguiente acción y será usada o no
+                    saveState(Actions.nextAction(store.getState().selectedUnit));
+                }
                 break;
             case '5':
             case ' ':
