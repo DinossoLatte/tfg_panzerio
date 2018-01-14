@@ -67,6 +67,13 @@ export class Actions {
             type: "NEXT_TURN"
         }
     }
+
+    static nextAction(selectedUnit: number) : Redux.AnyAction{
+        return {
+            selectedUnit: selectedUnit,
+            type: "NEXT_ACTION"
+        }
+    }
 }
 
 //Aquí declaramos las variables del estado
@@ -109,12 +116,14 @@ export const Reducer : Redux.Reducer<State> =
             case "CHANGE_UNIT_POS":
                 let visitables = state.visitables;
                 //Si es una unidad del jugador actual y no es la misma posición, actualiza su uso y su posición, sino el movimiento se considera cancelado
-                if(action.player==state.units[action.unit_id].player && !state.units[action.unit_id].position.equals(action.new_position)){
+                //if(action.player==state.units[action.unit_id].player && !state.units[action.unit_id].position.equals(action.new_position)){
+                if(action.player==state.units[action.unit_id].player){
                     state.units[action.unit_id].position = action.new_position;
-                    state.units[action.unit_id].used = true;
+                    //state.units[action.unit_id].used = true;
+                    state.units[action.unit_id].action = 1;
                 }
                 // Si la unidad tiene posiblidad de atacar
-                if(!state.units[action.unit_id].hasAttacked) {
+                if(!state.units[action.unit_id].hasAttacked && state.units[action.unit_id].action==1) {
                     // Regeneramos los visitables, pero esta vez sólo obteniendo la distancia absoluta para los enemigos
                     visitables = Pathfinding.getAttackableUnits(state.units[action.unit_id]);
                 }
@@ -122,7 +131,7 @@ export const Reducer : Redux.Reducer<State> =
                     turn: state.turn,
                     actualState: state.actualState,
                     units: state.units,
-                    visitables: visitables,
+                    visitables: [],
                     terrains: state.terrains,
                     map: state.map,
                     selectedUnit: action.selectedUnit,
@@ -192,11 +201,16 @@ export const Reducer : Redux.Reducer<State> =
                         neighbours = new_neighbours;
                     }
                 }
-
+                var visitables_pair : Array<Pair>;
+                if(state.units[action.unit_id].action==0){
+                    visitables_pair = visitables_cubic.map(cubic => cubic.getPair());
+                }else{
+                    visitables_pair = enemyUnits.map(x => x.getPair());
+                }
                 // Finalmente convertimos el resultado a Pair:
-                var visitables_pair : Array<Pair> = visitables_cubic.map(cubic => cubic.getPair());
+                //var visitables_pair : Array<Pair> = visitables_cubic.map(cubic => cubic.getPair());
                 // Sin olvidar las unidades atacables!
-                visitables_pair = visitables_pair.concat(enemyUnits.map(x => x.getPair()));
+                //visitables_pair = visitables_pair.concat(enemyUnits.map(x => x.getPair()));
 
                 return {
                     turn: state.turn,
@@ -217,7 +231,7 @@ export const Reducer : Redux.Reducer<State> =
                     visitables: state.visitables,
                     terrains: state.terrains,
                     map: action.map,
-                    selectedUnit: state.selectedUnit,
+                    selectedUnit: null,
                     cursorPosition: state.cursorPosition,
                     type: "SET_LISTENER"
                 };
@@ -258,6 +272,7 @@ export const Reducer : Redux.Reducer<State> =
                 attackingUnit.used = true;
                 // También actualizamos el estado para avisar que ha atacado
                 attackingUnit.hasAttacked = true;
+                attackingUnit.action = 2;
                 var actualstate = state.actualState;
                 //Si no está el general del jugador entonces se considerará victoria o derrota (esto ya incluye también que no queden más unidades)
                 if(state.units.filter(x => !x.player && x.name=="General").length==0){
@@ -269,7 +284,7 @@ export const Reducer : Redux.Reducer<State> =
                     turn: state.turn,
                     actualState: actualstate,
                     units: state.units,
-                    visitables: state.visitables,
+                    visitables: [],
                     terrains: state.terrains,
                     map: state.map,
                     cursorPosition: state.cursorPosition,
@@ -286,7 +301,7 @@ export const Reducer : Redux.Reducer<State> =
                     units: newState.units,
                     visitables: newState.visitables,
                     terrains: newState.terrains,
-                    map: state.map,
+                    map: newState.map,
                     cursorPosition: newState.cursorPosition,
                     selectedUnit: newState.selectedUnit,
                     type: newState.type
@@ -297,9 +312,27 @@ export const Reducer : Redux.Reducer<State> =
                     state.units[i].used = false;
                     // Actualizamos también el estado de ataque
                     state.units[i].hasAttacked = false;
+                    state.units[i].action = 0;
                 }
                 return {
                     turn: state.turn+1,
+                    actualState: state.actualState,
+                    units: state.units,
+                    visitables: null,
+                    terrains: state.terrains,
+                    map: state.map,
+                    cursorPosition: state.cursorPosition,
+                    selectedUnit: null,
+                    type: "SET_LISTENER"
+                }
+            case "NEXT_ACTION":
+                state.units[action.selectedUnit].action++;
+                if(state.units[action.selectedUnit].action>=2){
+                    state.units[action.selectedUnit].used = true;
+                    state.units[action.selectedUnit].hasAttacked = true;
+                }
+                return {
+                    turn: state.turn,
                     actualState: state.actualState,
                     units: state.units,
                     visitables: null,

@@ -15,8 +15,9 @@ export class Unit {
     defenseStrong: number;
     health: number; // Cantidad de vida
     range: number; // Alcance del ataque
+    action: number; //Variable que indica si está en movimiento (0), ataque (1) o usada (2)
 
-    constructor(name: string, type: string, movement: number, position: Pair, player: boolean, used: boolean, attackWeak: number, attackStrong: number, defenseWeak: number, defenseStrong: number, health: number, range: number, hasAttacked?: boolean) {
+    constructor(name: string, type: string, movement: number, position: Pair, player: boolean, used: boolean, attackWeak: number, attackStrong: number, defenseWeak: number, defenseStrong: number, health: number, range: number, action: number, hasAttacked?: boolean) {
         this.name = name;
         this.type = type;
         this.movement = movement;
@@ -30,6 +31,7 @@ export class Unit {
         this.health = health;
         this.range = range;
         this.hasAttacked = hasAttacked?hasAttacked:false;
+        this.action = action;
     }
 
     // Esta función calculará la cantidad de vida eliminada de la unidad defendiendo.
@@ -55,7 +57,8 @@ export class Infantry extends Unit {
         // Vida
         2,
         // Alcance
-        1);
+        1,
+        0);
     }
 }
 
@@ -69,7 +72,8 @@ export class Tank extends Unit {
         // Vida
         3,
         // Alcance
-        1);
+        1,
+        0);
     }
 }
 
@@ -83,6 +87,7 @@ export class General extends Unit {
         // Vida
         2,
         // Alcance
+        0,
         0);
     }
 }
