@@ -1,5 +1,8 @@
 import { Unit } from './Unit';
 import { store } from './Store';
+import { Terrain } from './Terrains';
+import { Map } from './Map';
+import { State } from './GameState';
 
 export class Pair {
     row : any;
@@ -236,5 +239,54 @@ export class Pathfinding {
     // Calcula la distancia vectorial entre dos puntos
     public static calculateDistance(x0: number, y0: number, x1: number, y1: number) {
         return Math.sqrt(Math.pow((x0-x1),2) + Math.pow((y0-y1),2));
+    }
+}
+
+// Esta clase contendrán métodos auxiliares con respecto a la conexión entre cliente y servidor
+export class Network {
+    public static parseStateFromServer(data: string): State {
+        // Definimos la salida, un mapa, y lo populamos con datos por defecto
+        let result = {
+            turn: 0,
+            actualState: 0,
+            units: [] as Array<Unit>,
+            visitables: [] as Array<Pair>,
+            terrains: [] as Array<Terrain>,
+            cursorPosition: new Pair(0, 0),
+            map: undefined as Map,
+            selectedUnit: 0,
+            type: ""
+        };
+        // Primero, convertimos el objeto en un mapa
+        let json = JSON.parse(data);
+        // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
+        // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
+        result.turn = json.turn;
+        result.actualState = json.actualState;
+        result.selectedUnit = json.selectedUnit;
+        result.type = json.type;
+        // Después, creamos un Pair con los datos introducidos
+        result.cursorPosition = new Pair(json.cursorPosition.row, json.cursorPosition.column);
+        // Ahora nos encargamos de visitables
+        // Inicializamos una lista con los datos de las casillas visitables
+        let visitables: Array<{row: number, column:number}> = json.visitables;
+        // Y asignamos al estado las casillas
+        if(visitables) 
+            result.visitables = visitables.map(pair => new Pair(pair.row, pair.column));
+        // Ahora vamos con las unidades:
+        let units: Array<{name: string, type: string, movement: number, position:{row: number,column: number}, player: boolean, used: boolean, attackWeak: number, attackStrong: number, defenseWeak: number, defenseStrong: number, health: number, range: number, hasAttacked: boolean}> = json.units
+        // Para cada uno, crearemos una unidad con esos datos.
+        if(units) {
+            result.units = units.map(unit => new Unit(unit.name, unit.type, unit.movement, new Pair(unit.position.row, unit.position.column),
+                unit.player, unit.used, unit.attackWeak, unit.attackStrong, unit.defenseWeak, unit.defenseStrong, unit.health, unit.range, unit.hasAttacked));
+        }
+        // Finalmente, nos quedan los terrenos, mismo proceso
+        let terrains: Array<{ name: string, image: string, movement_penalty: number, position:{ row: number, column: number}}> = json.terrains;
+        if(terrains) {
+            result.terrains = terrains.map(terrain => new Terrain(terrain.name, terrain.image, terrain.movement_penalty,
+                new Pair(terrain.position.row, terrain.position.column)));
+        }
+        // Retornamos el estado final
+        return result;
     }
 }

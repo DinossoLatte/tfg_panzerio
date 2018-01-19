@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
 import { store, saveState } from './Store';
-import { Actions, State, InitialState, Reducer } from './GameState';
+import { Actions, State, InitialState, Reducer, getInitialState } from './GameState';
 import { Cell } from './Cell';
 import { TerrainCell } from './TerrainCell';
 import { Pair, Cubic, myIndexOf, cubic_directions, myIndexOfCubic, Pathfinding } from './Utils';
@@ -19,6 +19,7 @@ export class Map extends React.Component<any, any> {
     unitStats: UnitStats = null;
 
     restartState() {
+        // Hacemos que el estado se reinicie ejecutando getInitialState
         this.turn = 0;
         this.actualstate = 0;
         this.state = { cells: new Array<Array<Cell>>(this.props.horizontal), rows: this.props.vertical, columns: this.props.horizontal };
