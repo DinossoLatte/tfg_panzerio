@@ -7,7 +7,8 @@
     "build": "webpack --config config.webpack.js",
     "purge": "rm ./dist/bundle.js && rm ./dist/bundle.js.map",
     "start": "node srv/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rm src/*.js"
   },
   "author": "ignalelop@alum.us.es",
   "license": "GNU GPL2",
