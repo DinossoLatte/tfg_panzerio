@@ -13,15 +13,9 @@ import { UnitStats } from './UnitStats';
 
 /** Representa el mapa que contendrá las unidades y las casillas **/
 export class Map extends React.Component<any, any> {
-    //Esta variable controla el turno del juego
-    turn : number;
-    actualstate : number = 0; //El valor 0 es por defecto, 1 es victoria y 2 es derrota
     unitStats: UnitStats = null;
 
     restartState() {
-        // Hacemos que el estado se reinicie ejecutando getInitialState
-        this.turn = 0;
-        this.actualstate = 0;
         this.state = { cells: new Array<Array<Cell>>(this.props.horizontal), rows: this.props.vertical, columns: this.props.horizontal };
         store.dispatch(Actions.generateSetListener(this));
     }
@@ -40,6 +34,8 @@ export class Map extends React.Component<any, any> {
                 <p>Turno del {store.getState().turn%2==0?"Jugador":"Enemigo"}. Día {store.getState().turn}{store.getState().actualState==1?". Victoria":store.getState().actualState==2?". Derrota":""}</p>
                 <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
                 {store.getState().actualState==0?<button id="nextTurn" name="nextTurn" onClick={this.onClickTurn.bind(this)}>Pasar turno</button>:""}
+                {store.getState().selectedUnit!=null?<button id="cancelAction" name="cancelAction" onClick={this.onClickCancelAction.bind(this)}>Cancelar acción</button>:""}
+                {store.getState().selectedUnit!=null && store.getState().units[store.getState().selectedUnit].action<2?<button id="nextAction" name="nextAction" onClick={this.onClickUnitAction.bind(this)}>Pasar acción</button>:""}
                 <div>
                     <UnitStats />
                     <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)} onContextMenu={this.onRightClick.bind(this)}>
@@ -62,6 +58,16 @@ export class Map extends React.Component<any, any> {
         //Evitando pasar turno automaticamente ya que el jugador quiera ver alguna cosa de sus unidades o algo aunque no tenga movimientos posibles
         //Esto pasa en muchos otros juegos
         saveState(Actions.nextTurn()); //Se usa para obligar a actualizar el estado (tambien actualiza los used)
+    }
+
+    onClickUnitAction(event : React.MouseEvent<HTMLElement>) {
+        //Dependiendo de la accion de la unidad pasará a la siguiente acción y será usada o no
+        saveState(Actions.nextAction(store.getState().selectedUnit));
+    }
+
+    onClickCancelAction(event : React.MouseEvent<HTMLElement>) {
+        //Con esto se cancela la acción actual para que se pueda seleccionar otra unidad
+        saveState(Actions.generateSetListener(this));
     }
 
     onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
@@ -106,6 +112,18 @@ export class Map extends React.Component<any, any> {
                 cursorPosition = store.getState().cursorPosition;
                 newCursorPosition = new Pair(cursorPosition.row - (cursorPosition.column&1?0:1), cursorPosition.column + 1);
                 break;
+            case '4':
+                if(store.getState().selectedUnit!=null){
+                    //Con esto se cancela la acción actual para que se pueda seleccionar otra unidad
+                    saveState(Actions.generateSetListener(this));
+                }
+                break;
+            case '6':
+                if(store.getState().selectedUnit!=null && store.getState().units[store.getState().selectedUnit].action<2){
+                    //Dependiendo de la accion de la unidad pasará a la siguiente acción y será usada o no
+                    saveState(Actions.nextAction(store.getState().selectedUnit));
+                }
+                break;
             case '5':
             case ' ':
                 // Realizar el click en la posición
@@ -123,7 +141,7 @@ export class Map extends React.Component<any, any> {
         let position = Pathfinding.getPositionClicked(event.clientX, event.clientY);
 
         //Si el juego está terminado entonces no hace nada, por eso comprueba si todavía sigue la partida
-        if(store.getState().type != "FINISH"){
+        if(store.getState().actualState == 0){
             //Guardamos la posición actual y la nueva posición
             this.clickAction(position.row, position.column);
         }
@@ -159,7 +177,7 @@ export class Map extends React.Component<any, any> {
                 unitEnemy = !store.getState().units[unitIndex].player // Asigna como enemigo el contrario de la unidad que ha hecho click
                 :unitEnemy = store.getState().units[unitIndex].player // Asigna como enemigo la unidad que ha hecho click
             :false; // En caso contrario, no hagas nada?
-        
+
         //Vemos si la unidad ha sido usada (si hay una unidad seleccionada vemos si esta ha sido usada o no, y sino vemos si la unidad del click es seleccionada)
 
         let used: boolean = store.getState().selectedUnit!=null?
@@ -193,19 +211,21 @@ export class Map extends React.Component<any, any> {
                 let selectedUnit = store.getState().selectedUnit; // Índice de la unidad seleccionada
                 let actualPosition = store.getState().units[selectedUnit].position; //Obtenemos la posición actual
                 //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
-                if(unitIndex != -1 && unitEnemy){ // Si se ha escogido una unidad y ésta es enemiga
+                if(unitIndex != -1 && unitEnemy && store.getState().units[selectedUnit].action == 1 && !store.getState().units[selectedUnit].hasAttacked){ // Si se ha escogido una unidad y ésta es enemiga
+                    saveState(Actions.generateMove(store.getState().selectedUnit, side));
                     // Se atacará, esto incluye el movimiento si es aplicable
                     saveState(Actions.attack(unitIndex, side, null));
                 } else {
                     // En caso contrario, se ejecutará el movimiento como siempre
                     // El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
-                    saveState(Actions.generateChangeUnitPos(selectedUnit, newPosition, hasAttacked?null:selectedUnit, side));
+                    saveState(Actions.generateChangeUnitPos(selectedUnit, newPosition, null, side));
                 }
             }
         } else if(!hasAttacked) { // En el caso de que tenga posiblidad de atacar y ha hecho click a la unidad enemiga
             // Realizamos el ataque:
             saveState(Actions.attack(unitIndex, side, null));
         }
+        console.log("numero unidades "+store.getState().units.length);
     }
 
     /** Función auxiliar usada para renderizar el mapa. Consiste en recorrer todas las columnas acumulando las casillas. **/
@@ -239,13 +259,13 @@ export class Map extends React.Component<any, any> {
                 //Si además de ser accesible es una unidad enemiga (dependiendo del turno) entonces es atacable
                 let attack = visitable && ((store.getState().units[indexUnit].player && store.getState().turn%2!=0) || (!store.getState().units[indexUnit].player && store.getState().turn%2==0));
                 //Si además de ser accesible es la misma posicion que la unidad actual entonces es la unidad elegida
-                let actual = visitable && store.getState().units[store.getState().selectedUnit].position.equals(pos);
+                let actual = store.getState().selectedUnit!=null && store.getState().units[store.getState().selectedUnit].position.equals(pos);
                 var cell = <Cell row={row} column={column} unit={indexUnit} attack={attack} actual={actual} used={used}/>;
                 this.state.cells[row][column] = cell;
                 accum2.push(cell);
             }else if(store.getState().selectedUnit!=null){
                 //Si la distancia es menor o igual a la distancia máxima entonces son posiciones validas y se seleccionaran, además se comprueba que no sea un obstáculo
-                if(myIndexOf(store.getState().visitables, pos) != -1){
+                if(myIndexOf(store.getState().visitables, pos) != -1 && !store.getState().units[store.getState().selectedUnit].hasAttacked){
                     var cell = <Cell row={row} column={column} selected={true} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                     this.state.cells[row][column] = cell;
                     //Para no añadir una nueva clase de celda seleccionada simplemente hacemos esto

@@ -13,9 +13,11 @@ export interface Store extends Redux.Store<State> {
 
 export var store = Redux.createStore<State>(Reducer);
 
-export function saveState(action: Redux.AnyAction) {
-    store.dispatch(action);
+export function saveState(act: Redux.AnyAction) {
+    store.dispatch(act);
     // Refresca el mapa y el resto de variables del estado
+    var turn: number = store.getState().turn;
+    var actualState: number = store.getState().actualState;
     var map: Map = store.getState().map;
     var units: Array<Unit> = store.getState().units;
     var terrains: Array<Terrain> = store.getState().terrains;
