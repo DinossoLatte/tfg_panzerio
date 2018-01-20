@@ -225,7 +225,6 @@ export class Map extends React.Component<any, any> {
             // Realizamos el ataque:
             saveState(Actions.attack(unitIndex, side, null));
         }
-        console.log("numero unidades "+store.getState().units.length);
     }
 
     /** Función auxiliar usada para renderizar el mapa. Consiste en recorrer todas las columnas acumulando las casillas. **/
