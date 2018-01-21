@@ -13,9 +13,9 @@ import { EditStats } from './EditStats';
 import { Unit, Infantry, Tank, General } from './Unit';
 import { Terrain, Plains, ImpassableMountain, Hills, Forest } from './Terrains';
 
-/** Representa el mapa que contendrá las unidades y las casillas **/
+
 export class EditMap extends React.Component<any, any> {
-    unitStats: UnitStats = null;
+    editStats: EditStats = null;
 
     restartState() {
         this.state = { cells: new Array<Array<EditCell>>(this.props.horizontal), rows: this.props.vertical, columns: this.props.horizontal };
@@ -75,6 +75,7 @@ export class EditMap extends React.Component<any, any> {
         );
     }
 
+    //Todos estos son métodos de actualización de los botones y los estados correspondientes de borrar, crear unidad, crear terreno, seleccionar y cambiar bando
     selected(evt: string) {
         saveState(EditActions.selected(this, evt));
     }
@@ -99,6 +100,7 @@ export class EditMap extends React.Component<any, any> {
         this.props.parentObject.changeGameState(0); // Salir de la partida.
     }
 
+    //Igual que en Map solo que se actualiza el cursor del estado de edición
     onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
         let keyCode = keyEvent.key;
         let cursorPosition, newCursorPosition : Pair;
@@ -167,6 +169,7 @@ export class EditMap extends React.Component<any, any> {
         this.clickAction(position.row, position.column);
     }
 
+    //Se usa editStats ya que necesitamos obtener los datos de los array de terrain y unit del estado de edición
     onRightClick(event: React.MouseEvent<HTMLElement>) {
         // Primero, evitamos que genere el menú del navegador
         event.preventDefault();
@@ -184,7 +187,7 @@ export class EditMap extends React.Component<any, any> {
                 terrain = terrainIndex > -1?storeEdit.getState().terrains[terrainIndex]:Plains.create(position);
         }
         // Actualizamos el estado de la barra de estadísticas
-        this.unitStats.setState({ unit: unit, terrain: terrain });
+        this.editStats.setState({ unit: unit, terrain: terrain });
     }
 
     clickAction(row: number, column: number) {
@@ -193,9 +196,12 @@ export class EditMap extends React.Component<any, any> {
         let unitIndex: number = myIndexOf(storeEdit.getState().units.map(x=>x.position), newPosition); // Obtenemos la posición de la unidad donde ha realizado click o -1.
         let terrainIndex: number = myIndexOf(storeEdit.getState().terrains.map(x=>x.position), newPosition);
 
+        //Si es borrado y hay una unidad entonces se procede a borrar
         if(unitIndex!=-1 && storeEdit.getState().type=="DELETE"){
             let arr = storeEdit.getState().units;
+            //Esta es la manera óptima de borrado, javascript no tiene una mejor manera para borrar elementos de un array
             arr = arr.filter(x => !x.position.equals(newPosition));
+            //Se guarda el estado
             saveState(EditActions.saveState(this,
                 storeEdit.getState().side,
                 arr,
@@ -203,8 +209,10 @@ export class EditMap extends React.Component<any, any> {
                 storeEdit.getState().cursorPosition,
                 storeEdit.getState().selected,
                 storeEdit.getState().type));
+        //Si no hay una unidad, si hubiera un terreno que no sea Montaña y es creación de unidad
         }else if(unitIndex==-1 && (terrainIndex==-1 ||(terrainIndex!=-1 && storeEdit.getState().terrains[terrainIndex].name!="Mountains")) && storeEdit.getState().type=="CREATE_UNIT"){
             let unit: Unit;
+            //Se crea la unidad dependiendo de la que sea, solo puede haber un General.
             switch(storeEdit.getState().selected) {
                 case "General":
                     if(storeEdit.getState().units.filter(x => x.player==storeEdit.getState().side && x.name=="General").length==0){
@@ -229,6 +237,7 @@ export class EditMap extends React.Component<any, any> {
                 storeEdit.getState().cursorPosition,
                 storeEdit.getState().selected,
                 storeEdit.getState().type));
+        //Si no hay terreno y es creación de terreno, se crea el terreno (realmente Plains no sirve de nada aquí pero bueno)
         }else if(terrainIndex==-1 && storeEdit.getState().type=="CREATE_TERRAIN"){
             let terrain: Terrain;
             let arr = storeEdit.getState().terrains;
@@ -260,6 +269,7 @@ export class EditMap extends React.Component<any, any> {
                 storeEdit.getState().cursorPosition,
                 storeEdit.getState().selected,
                 storeEdit.getState().type));
+        //Si hay terreno, es creación de terreno y está seleccionado Plains, se usará como goma para borrar los terrenos
         }else if(terrainIndex!=-1 && storeEdit.getState().type=="CREATE_TERRAIN" && storeEdit.getState().selected=="Plains"){
             let arr = storeEdit.getState().terrains;
             arr = arr.filter(x => !x.position.equals(newPosition));
@@ -285,7 +295,7 @@ export class EditMap extends React.Component<any, any> {
         return accum;
     }
 
-    /** Función auxiliar que servirá para generar las casillas en una fila **/
+    //Se generan las celdas con EditCell ya que se necesita que vaya por la lista del estado de edit
     generateCellRow(num_row: number) {
         var accum2 = [];
         this.state.cells[num_row] = new Array<EditCell>(this.props.horizontal);

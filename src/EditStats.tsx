@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import { storeEdit } from './StoreEdit';
 
-
+//Esta clase funciona igual que UnitStats pero simplemente obtiene los datos de storeEdit
 export class EditStats extends React.Component<any, any> {
     constructor(props: any) {
         super(props);

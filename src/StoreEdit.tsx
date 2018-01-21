@@ -8,6 +8,7 @@ import { Pair, Cubic } from './Utils';
 import { Unit } from './Unit';
 import { Terrain } from './Terrains';
 
+//Igual que Store pero con el estado de edición
 export interface StoreEdit extends Redux.Store<StateEdit> {
     dispatch: Redux.Dispatch<StateEdit>
 }

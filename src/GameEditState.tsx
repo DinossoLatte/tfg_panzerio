@@ -8,6 +8,7 @@ import { Pair, Cubic } from './Utils';
 import { Unit } from './Unit';
 import { Terrain } from './Terrains';
 
+//Funciona igual que GameState solo que tiene acciones de edición
 export class EditActions {
 
     static selected(map: EditMap, evt: string) : Redux.AnyAction {
@@ -66,6 +67,7 @@ export class EditActions {
     }
 }
 
+//Este es el estado de la edición
 export type StateEdit = {
     readonly map: EditMap;
     readonly side: boolean,
@@ -88,9 +90,9 @@ function getInitialStateEdit(): StateEdit {
     };
 }
 
-//El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
 export const InitialStateEdit: StateEdit = getInitialStateEdit();
 
+//Se actualizan cada uno de los estados, está puesto un forceUpdate ya que no se actualizaba
 export const ReducerEdit : Redux.Reducer<StateEdit> =
     (state: StateEdit = InitialStateEdit, action: Redux.AnyAction) => {
         switch(action.type) {

@@ -8,10 +8,7 @@ import { UnitCell } from './UnitCell';
 import { Pair, myIndexOf } from './Utils';
 import * as Terrain from './Terrains';
 
-/**
-    Esta clase consiste en la representación de una casilla dentro del mapa
-    @constructor Incluye los atributos HTML: horizontal y vertical.
-**/
+//ESta clase es similar a Cell pero obteniendo los datos de storeEdit (quizas se pudiera generalizar y de esa forma juntar con Cell)
 class EditCell extends React.Component<any, any> {
     /** Debe introducirse los atributos horizontal y vertical
         @param props debe contener horizontal y vertical**/
