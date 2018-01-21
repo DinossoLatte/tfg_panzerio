@@ -1,13 +1,13 @@
 import * as React from 'react';
 
-import { store } from './Store';
+import { storeEdit } from './StoreEdit';
 
 
 export class EditStats extends React.Component<any, any> {
     constructor(props: any) {
         super(props);
         // Actualizamos el atributo de Mapa para que el mapa pueda actualizar el estado de este componente.
-        this.props.map.unitStats = this;
+        storeEdit.getState().map.unitStats = this;
         this.state = {
             unit: null,
             terrain: null

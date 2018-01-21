@@ -16,7 +16,6 @@ export var storeEdit = Redux.createStore<StateEdit>(ReducerEdit);
 
 export function saveState(act: Redux.AnyAction) {
     storeEdit.dispatch(act);
-    console.log("entra en store");
     // Refresca el mapa y el resto de variables del estado
     var map: EditMap = storeEdit.getState().map;
     var side: boolean = storeEdit.getState().side;

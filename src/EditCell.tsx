@@ -33,6 +33,9 @@ class EditCell extends React.Component<any, any> {
         let positionCursor = storeEdit.getState().cursorPosition;
         // Despues comprobando que esta casilla esté en esa posición
         let cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row;
+        let pair = new Pair(this.props.row, this.props.column);
+        let indexTerrain = myIndexOf(storeEdit.getState().terrains.map(x => x.position), pair);
+        let terrain = indexTerrain > -1?storeEdit.getState().terrains[indexTerrain]:Terrain.Plains.create(pair);
         return (
                 <div className="div_cell">
                     <img className="cell" id={"hex"+this.props.row+"_"+this.props.column}
@@ -47,7 +50,7 @@ class EditCell extends React.Component<any, any> {
                             :this.props.attack?"imgs/hex_base_attack.png"
                             :this.props.actual?"imgs/hex_base_actual.png"
                             :"imgs/hex_base.png"} />
-                    <TerrainCell terrain={this.state.terrain} />
+                    <TerrainCell terrain={terrain} />
                     {unit!=null?<UnitCell unit={unit} />:""}
                 </div>
         );

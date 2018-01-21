@@ -19,7 +19,6 @@ export class EditActions {
     }
 
     static onClickCreateUnit(map: EditMap) :Redux.AnyAction {
-        console.log("entra en action");
         return {
             map: map,
             type: "CREATE_UNIT"
@@ -96,18 +95,18 @@ export const ReducerEdit : Redux.Reducer<StateEdit> =
     (state: StateEdit = InitialStateEdit, action: Redux.AnyAction) => {
         switch(action.type) {
             case "SELECTED":
+                action.map.forceUpdate();
                 return{
                     map: action.map,
                     side: state.side,
                     units: state.units,
                     terrains: state.terrains,
                     cursorPosition: state.cursorPosition,
-                    selected: action.evt,
+                    selected: action.selected,
                     type: state.type
                 };
             case "CREATE_UNIT":
-                console.log("valor del action de type: "+action.type);
-                console.log("entra en reducer");
+                action.map.forceUpdate();
                 return{
                     map: action.map,
                     side: state.side,
@@ -118,6 +117,7 @@ export const ReducerEdit : Redux.Reducer<StateEdit> =
                     type: action.type
                 };
             case "SIDE":
+                action.map.forceUpdate();
                 return{
                     map: action.map,
                     side: !state.side,
@@ -128,6 +128,7 @@ export const ReducerEdit : Redux.Reducer<StateEdit> =
                     type: state.type
                 };
             case "CREATE_TERRAIN":
+                action.map.forceUpdate();
                 return{
                     map: action.map,
                     side: state.side,
@@ -138,6 +139,7 @@ export const ReducerEdit : Redux.Reducer<StateEdit> =
                     type: action.type
                 };
             case "DELETE":
+                action.map.forceUpdate();
                 return{
                     map: action.map,
                     side: state.side,
@@ -148,6 +150,7 @@ export const ReducerEdit : Redux.Reducer<StateEdit> =
                     type: action.type
                 };
             case "SAVE":
+                action.map.forceUpdate();
                 return{
                     map: action.map,
                     side: action.side,
@@ -158,6 +161,7 @@ export const ReducerEdit : Redux.Reducer<StateEdit> =
                     type: state.type
                 };
             case "SET_LISTENER":
+                action.map.forceUpdate();
                 return{
                     map: action.map,
                     side: state.side,
