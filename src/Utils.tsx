@@ -50,7 +50,7 @@ export class Cubic {
     x : number;
     y : number;
     z : number;
-    
+
     constructor(x: number, y: number, z: number) {
         this.x = x;
         this.y = y;
@@ -103,10 +103,10 @@ export class Cubic {
     }
 }
 
-export var cubic_directions = [
-   Cubic.create(new Pair(0,1)), Cubic.create(new Pair(-1,1)), Cubic.create(new Pair(-1,0)),
-   Cubic.create(new Pair(-1,-1)), Cubic.create(new Pair(0,-1)), Cubic.create(new Pair(1,0))
-]
+export const CUBIC_DIRECTIONS = [
+    new Cubic(0,1,-1), new Cubic(1,0,-1), new Cubic(1,-1,0),
+    new Cubic(0,-1,1), new Cubic(-1,0,1), new Cubic(-1,1,0)
+];
 
 //Debido a que indexOf de los array iguala con ===, no es posible saber si un objeto está dentro de un array sino es identicamente el mismo objeto
 //por eso se ha creado este método auxiliar para ayudar al cálculo
@@ -144,9 +144,9 @@ export class Pathfinding {
             var new_neighbours: Cubic[] = [];
             visitables_cubic = visitables_cubic.concat(neighbours);
 
-            for(var index_directions = 0; index_directions < cubic_directions.length; index_directions++) {
+            for(var index_directions = 0; index_directions < CUBIC_DIRECTIONS.length; index_directions++) {
                 visitables_cubic.forEach(cubic => {
-                    var new_cubic = cubic.add(cubic_directions[index_directions]);
+                    var new_cubic = cubic.add(CUBIC_DIRECTIONS[index_directions]);
                     // Mientras la casilla actual no sea ya visitada o esté contenida en los vecinos anteriores
                     if(myIndexOfCubic(visitables_cubic, new_cubic) == -1 && myIndexOfCubic(neighbours, new_cubic) == -1) {
                         // En el caso de que no sea ninguno de los anteriores, la añadiremos a los visitados
