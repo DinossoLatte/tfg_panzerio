@@ -22,7 +22,7 @@ export class Plains extends Terrain {
 
 export class ImpassableMountain extends Terrain {
     static create(position: Pair) : Terrain {
-        return new Terrain("Mountains (impassable)", "imgs/terrain_mountain.png", -1, position);
+        return new Terrain("Mountains", "imgs/terrain_mountain.png", -1, position);
     }
 }
 

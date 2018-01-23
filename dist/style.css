@@ -61,3 +61,7 @@ body {
     width: 400px;
     padding: 25px;
 }
+
+#error {
+    color: red;
+}
