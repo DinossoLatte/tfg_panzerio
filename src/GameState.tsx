@@ -152,7 +152,7 @@ export const Reducer : Redux.Reducer<State> =
                 };
             case "MOVE":
                 // Para reducir los cálculos del movimiento, vamos a realizar en este punto el cálculo de las celdas visitables
-                var visitables_cubic : Array<Cubic> = [new Cubic(state.units[action.unit_id].position)];
+                var visitables_cubic : Array<Cubic> = [Cubic.create(state.units[action.unit_id].position)];
                 var movements : number = state.units[action.unit_id].movement;
                 // Los vecinos estarán compuestos por la posición cúbica y el número de movimientos para pasar la posición
                 var neighbours : [Cubic, number][] = new Array<[Cubic, number]>();

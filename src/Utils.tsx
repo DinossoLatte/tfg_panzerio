@@ -50,12 +50,19 @@ export class Cubic {
     x : number;
     y : number;
     z : number;
+    
+    constructor(x: number, y: number, z: number) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
 
-    // TODO: Este constructor debe sólo admitir x,y y z. Se debe poner un método estático de conversión!!!
-    constructor(pair : Pair) {
-        this.x = pair.column;
-        this.z = pair.row - (pair.column - (pair.column&1))/2
-        this.y = -this.x-this.z;
+    static create(pair : Pair): Cubic{
+        let cubic = new Cubic(0, 0, 0);
+        cubic.x = pair.column;
+        cubic.z = pair.row - (pair.column - (pair.column&1))/2
+        cubic.y = -cubic.x-cubic.z;
+        return cubic;
     }
 
     /* Calcula la distancia Manhattan */
@@ -97,8 +104,8 @@ export class Cubic {
 }
 
 export var cubic_directions = [
-   new Cubic(new Pair(0,1)), new Cubic(new Pair(-1,1)), new Cubic(new Pair(-1,0)),
-   new Cubic(new Pair(-1,-1)), new Cubic(new Pair(0,-1)), new Cubic(new Pair(1,0))
+   Cubic.create(new Pair(0,1)), Cubic.create(new Pair(-1,1)), Cubic.create(new Pair(-1,0)),
+   Cubic.create(new Pair(-1,-1)), Cubic.create(new Pair(0,-1)), Cubic.create(new Pair(1,0))
 ]
 
 //Debido a que indexOf de los array iguala con ===, no es posible saber si un objeto está dentro de un array sino es identicamente el mismo objeto
@@ -129,7 +136,7 @@ export class Pathfinding {
         let enemyUnitsPos: Pair[] = store.getState().units.filter(x => x.player != unit.player).map(x => x.position);
         let enemyUnitsReachable: Pair[] = [];
         // Ahora, realizaremos una iteración igual que el proceso de obtener las posiciones accesibles por la unidad.
-        var visitables_cubic : Array<Cubic> = [new Cubic(unit.position)];
+        var visitables_cubic : Array<Cubic> = [Cubic.create(unit.position)];
         // Los vecinos estarán compuestos por la posición cúbica y el número de movimientos para pasar la posición
         var neighbours : Cubic[] = new Array<Cubic>();
         for(var i = 0 ; i < unit.range ; i++) {
