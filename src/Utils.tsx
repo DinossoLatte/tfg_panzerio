@@ -278,7 +278,7 @@ export class Network {
         // Para cada uno, crearemos una unidad con esos datos.
         if(units) {
             result.units = units.map(unit => new Unit(unit.name, unit.type, unit.movement, new Pair(unit.position.row, unit.position.column),
-                unit.player, unit.used, unit.attackWeak, unit.attackStrong, unit.defenseWeak, unit.defenseStrong, unit.health, unit.range, unit.hasAttacked));
+                unit.player, unit.used, unit.attackWeak, unit.attackStrong, unit.defenseWeak, unit.defenseStrong, unit.health, unit.range, 0, unit.hasAttacked));
         }
         // Finalmente, nos quedan los terrenos, mismo proceso
         let terrains: Array<{ name: string, image: string, movement_penalty: number, position:{ row: number, column: number}}> = json.terrains;
