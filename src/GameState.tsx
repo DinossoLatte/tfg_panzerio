@@ -3,9 +3,53 @@ import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
 import { store, saveState } from './Store';
 import { Map } from './Map';
-import { Pair, Cubic, cubic_directions, myIndexOf, myIndexOfCubic, Pathfinding} from './Utils';
+import { Pair, Cubic, cubic_directions, myIndexOf, myIndexOfCubic, Pathfinding, Network } from './Utils';
 import { Unit, Infantry, Tank, General } from './Unit';
 import { Terrain, Plains, ImpassableMountain, Hills, Forest } from './Terrains';
+
+//Aquí declaramos las variables del estado
+export type State = {
+    readonly turn: number,
+    readonly actualState: number,
+    readonly units: Array<Unit>,
+    readonly visitables: Array<Pair>,
+    readonly terrains: Array<Terrain>,
+    readonly cursorPosition: Pair,
+    readonly map: Map,
+    readonly selectedUnit: number,
+    readonly type: string
+}
+
+//El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
+export var InitialState: State = undefined;
+
+// Esta función se encargará de devolver el estado inicial, es la única forma de ofrecer un objeto inmutable:
+export function getInitialState(callback: () => void) {
+    // Creamos la petición al servidor
+    var connection = new WebSocket("ws://localhost:8080/");
+    console.log("Connection established with server");
+    // Establecemos la conexión
+    connection.onmessage = function(event: MessageEvent) {
+        console.log("Receiving data ...");
+        console.log("Message: "+event.data);
+        if(event.data == "Command not understood") {
+            // Enviamos un error, algo ha pasado con el servidor
+            throw new Error;
+        }
+        // Obtenemos el estado
+        InitialState = Network.parseStateFromServer(event.data);
+        // Una vez tengamos el estado, llamamos al callback aportado, que permitirá saber con certeza que el estado está disponible
+        callback();
+    };
+    connection.onopen = function() {
+        console.log("Connection available for sending action");
+        // Enviamos la solicitud de estado inicial
+        connection.send(JSON.stringify({
+            type: "getInitialState"
+        }));    
+        console.log("Action sent.");
+    }
+}
 
 export class Actions {
     //Estos son los estados posibles
@@ -75,38 +119,6 @@ export class Actions {
         }
     }
 }
-
-//Aquí declaramos las variables del estado
-export type State = {
-    readonly turn: number,
-    readonly actualState: number,
-    readonly units: Array<Unit>,
-    readonly visitables: Array<Pair>,
-    readonly terrains: Array<Terrain>,
-    readonly cursorPosition: Pair,
-    readonly map: Map,
-    readonly selectedUnit: number,
-    readonly type: string
-}
-
-// Esta función se encargará de devolver el estado inicial, es la única forma de ofrecer un objeto inmutable:
-function getInitialState(): State {
-    return {
-        turn: 0,
-        actualState: 0,
-        units: [General.create(new Pair (0,0), true), Infantry.create(new Pair(1,2), true), Tank.create(new Pair (1,0), true), General.create(new Pair (0,4), false)
-        , Infantry.create(new Pair(1,4), false), Tank.create(new Pair (0,3), false)],
-        visitables: null,
-        terrains: [ImpassableMountain.create(new Pair(2, 2)), ImpassableMountain.create(new Pair(3,2)), Hills.create(new Pair(2,3)), Forest.create(new Pair(3,3))],
-        cursorPosition: new Pair(0,0),
-        map: null,
-        selectedUnit: null,
-        type: "SET_LISTENER"
-    };
-}
-
-//El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
-export const InitialState: State = getInitialState();
 
 //Y aquí se producirá el cambio
 export const Reducer : Redux.Reducer<State> =
@@ -293,19 +305,11 @@ export const Reducer : Redux.Reducer<State> =
                 }
             case "FINISH":
                 // Asignamos de nuevo el estado usando la función de estado inicial
-                var newState = getInitialState();
-                // Retornamos el estado, asignamos el mapa porque algunas funciones dependen de éste.
-                return {
-                    turn: newState.turn,
-                    actualState: newState.actualState,
-                    units: newState.units,
-                    visitables: newState.visitables,
-                    terrains: newState.terrains,
-                    map: newState.map,
-                    cursorPosition: newState.cursorPosition,
-                    selectedUnit: newState.selectedUnit,
-                    type: newState.type
-                }
+                getInitialState(() => {
+                    // El callback será el retornado del estado
+                    // Retornamos el estado, asignamos el mapa porque algunas funciones dependen de éste.
+                    return state;
+                });
             case "NEXT_TURN":
                 //Se actualizan los used
                 for(var i = 0 ; i < state.units.length ; i++) {

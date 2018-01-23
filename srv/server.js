@@ -1,29 +1,36 @@
-"use strict";
-exports.__esModule = true;
-var restify = require("restify");
-function response_test(request, response, next) {
-    response.send('test ' + request.params.name);
-    next();
-}
-var server = restify.createServer();
-server.get('/hello/:name', response_test);
-server.head('/hello/:name', response_test);
-server.listen(8080, function () {
-    console.log('%s listening at %s', server.name, server.url);
-});
-//Importamos pusher (en la consola se instaló con npm install pusher)
-var Pusher = require('pusher');
+var Units = require('./src/Unit.js');
+var Utils = require('./src/Utils.js');
+var Terrains = require('./src/Terrains.js');
+var webSocket = require('ws');
 
-//Asignamos las claves que hacen referencia a nuestra cuenta de pusher
-var pusher = new Pusher({
-  appId: '432429',
-  key: '2955e071f41e18e9805c',
-  secret: '91c4c81ae35a8b22070a',
-  cluster: 'eu',
-  encrypted: true
-});
+var server = new webSocket.Server({ port: 8080 });
 
-//Creamos un canal con un evento cuyo parámetro es message (por defecto es hello world), se podrían añadir más parámetros
-pusher.trigger('mychannel', 'myevent', {
-  "message": "hello world"
+server.on('connection', function connect(ws) {
+    // Este será el inicio del servidor, por ahora nos encargaremos de mostrarle el estado
+    console.log("Connected with someone");
+    ws.on("message", function getInitialState(data) {
+        // Dependiendo del estado, retornaremos una cosa u otra
+        console.log("Data: " + data);
+        let message = JSON.parse(data);
+        switch (message.type) {
+            case "getInitialState":
+                // Retornaremos el estado inicial
+                var state = {
+                    turn: 0,
+                    actualState: 0,
+                    units: [Units.General.create(new Utils.Pair(0, 0), true), Units.Infantry.create(new Utils.Pair(1, 2), true), Units.Tank.create(new Utils.Pair(1, 0), true), Units.General.create(new Utils.Pair(0, 4), false),
+                        Units.Infantry.create(new Utils.Pair(1, 4), false), Units.Tank.create(new Utils.Pair(0, 3), false)],
+                    visitables: null,
+                    terrains: [Terrains.ImpassableMountain.create(new Utils.Pair(2, 2)), Terrains.ImpassableMountain.create(new Utils.Pair(3, 2)), Terrains.Hills.create(new Utils.Pair(2, 3)), Terrains.Forest.create(new Utils.Pair(3, 3))],
+                    cursorPosition: new Utils.Pair(0, 0),
+                    map: null,
+                    selectedUnit: null,
+                    type: "SET_LISTENER"
+                };
+                ws.send(JSON.stringify(state));
+                break;
+            default:
+                ws.send("Command not understood");
+        }
+    });
 });

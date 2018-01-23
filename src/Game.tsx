@@ -1,8 +1,8 @@
 import * as React from 'react';
 import * as Redux from 'redux';
 import { Map } from './Map';
+import { Actions, getInitialState } from './GameState';
 import { EditMap } from './EditMap';
-import { Actions } from './GameState';
 import { store } from './Store';
 
 class EnterGameButton extends React.Component<any, any> {
@@ -15,14 +15,18 @@ class EnterGameButton extends React.Component<any, any> {
     }
 
     onClick() {
-        this.props.parentObject.changeGameState(2);
-        // Comprobamos si hay ganador o perdedor, en cuyo caso se reiniciará el estado al entrar en el juego
-        if (store.getState().map && store.getState().actualState > 0) {
-            // Si se ha producido esto, debemos reiniciar el estado
-            store.dispatch(Actions.finish());
-            // Ejecutamos también el reiniciado de estado del mapa
-            store.getState().map.restartState();
-        }
+        // Realizamos una llamada al servidor para obtener el estado inicial de las partidas
+        getInitialState(() => {
+            // Cuando acabe, se ejecutará el callback, que es esto.
+            this.props.parentObject.changeGameState(5);
+            // Comprobamos si hay ganador o perdedor, en cuyo caso se reiniciará el estado al entrar en el juego
+            if (store.getState().map && store.getState().actualState > 0) {
+                // Si se ha producido esto, debemos reiniciar el estado
+                store.dispatch(Actions.finish());
+                // Ejecutamos también el reiniciado de estado del mapa
+                store.getState().map.restartState();
+            }
+        });   
     }
 }
 
@@ -72,6 +76,48 @@ class OptionsMenu extends React.Component<any, any> {
     }
 }
 
+class PreGameMenu extends React.Component<any, any> {
+    constructor(props: any) {
+        super(props);
+    }
+
+    render() {
+        return (
+        <div className="preGameMenu">
+            <h2>Menu de pre juego</h2>
+            <div className="playerMenu">
+                <SideOptionMenu player={true} />
+            </div>
+            <div className="mapMenu">
+                <select>
+                    <option id="map1" selected={true} >Mapa 1</option>
+                </select>
+
+                <button onClick={this.startGame.bind(this)}>Empezar juego</button>
+            </div>
+        </div>);
+    }
+
+    startGame(event: MouseEvent) {
+        this.props.parentObject.setState({ gameState: 2 });
+    }
+}
+
+class SideOptionMenu extends React.Component<any, any> {
+    constructor(props: any) {
+        super(props);
+        this.state = { player: props.player };
+    }
+
+    render() {
+        return (
+            <div className={"sideOption"+this.state.player?"Player":"Enemy"}>
+                <p>Aqui vendrán las opciones del jugador {this.state.player?"Aliado":"Enemigo"}</p>
+            </div>
+        );
+    }
+}
+
 class CreateMenu extends React.Component<any, any> {
     constructor(props : any) {
         super(props);
@@ -115,16 +161,18 @@ class CreateMenu extends React.Component<any, any> {
 class Game extends React.Component<any, any> {
     constructor(props : any) {
         super(props);
-        this.state = { gameState: 0, editx: "5", edity: "5" }; // 0 es el menu del juego, 1 será el menú de opciones, 2 será el juego y 3 edición de map
+        this.state = { gameState: 0, editx: "5", edity: "5" }; // 0 es el menu del juego, 1 será el menú de opciones, 2 el juego, 3 edición de map y 5 el pre juego
     }
 
     render() {
         let result: any;
-        if(this.state.gameState == 4){
+        if(this.state.gameState == 5) {
+            result = <PreGameMenu parentObject={this} />
+        } else if(this.state.gameState == 4){
             result = <EditMap horizontal={this.state.editx} vertical={this.state.edity} parentObject={this} />
-        }else if(this.state.gameState == 3){
+        } else if(this.state.gameState == 3){
             result = <CreateMenu parentObject={this} />
-        }else if(this.state.gameState == 2) {
+        } else if(this.state.gameState == 2) {
             result = <Map horizontal="6" vertical="6" parentObject={this} />
         } else if(this.state.gameState == 1) {
             result = <OptionsMenu parentObject={this} />

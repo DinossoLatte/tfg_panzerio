@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
 import { store, saveState } from './Store';
-import { Actions, State, InitialState, Reducer } from './GameState';
+import { Actions, State, InitialState, Reducer, getInitialState } from './GameState';
 import { Cell } from './Cell';
 import { TerrainCell } from './TerrainCell';
 import { Pair, Cubic, myIndexOf, cubic_directions, myIndexOfCubic, Pathfinding } from './Utils';

@@ -1,109 +1,85 @@
-import { Unit } from './Unit';
-import { store } from './Store';
-import { Terrain } from './Terrains';
-import { Map } from './Map';
-import { State } from './GameState';
-
-export class Pair {
-    row : any;
-    column : any;
-
-    constructor(x: any, y: any) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const Unit_1 = require("./Unit");
+const Store_1 = require("./Store");
+const Terrains_1 = require("./Terrains");
+class Pair {
+    constructor(x, y) {
+        this.toString = () => {
+            return "(" + this.row + ", " + this.column + ")";
+        };
         this.row = x;
         this.column = y;
     }
-
     getColumn() {
         return this.column;
     }
-
     getRow() {
         return this.row;
     }
-
-    setColumn(x: any) {
+    setColumn(x) {
         this.column = x;
     }
-
-    setRow(y: any) {
+    setRow(y) {
         this.row = y;
     }
-
-    add(pair : Pair) : Pair {
-        var new_pair = new Pair(0,0);
+    add(pair) {
+        var new_pair = new Pair(0, 0);
         new_pair.row = this.row + pair.row;
         new_pair.column = this.column + pair.column;
         return new_pair;
     }
-
-    public equals(pair: Pair): boolean {
+    equals(pair) {
         return this.row == pair.row && this.column == pair.column;
     }
-
-    public toString = () : string => {
-        return "("+this.row+", "+this.column+")";
-    }
 }
-
+exports.Pair = Pair;
 /* Representación cúbica del hexágono */
-export class Cubic {
-    x : number;
-    y : number;
-    z : number;
-
+class Cubic {
     // TODO: Este constructor debe sólo admitir x,y y z. Se debe poner un método estático de conversión!!!
-    constructor(pair : Pair) {
+    constructor(pair) {
+        this.toString = () => {
+            return "(" + this.x + ", " + this.y + ", " + this.z + ")";
+        };
         this.x = pair.column;
-        this.z = pair.row - (pair.column - (pair.column&1))/2
-        this.y = -this.x-this.z;
+        this.z = pair.row - (pair.column - (pair.column & 1)) / 2;
+        this.y = -this.x - this.z;
     }
-
     /* Calcula la distancia Manhattan */
-    distanceTo(cubic : Cubic) {
+    distanceTo(cubic) {
         return Math.max(Math.abs(this.x - cubic.x), Math.abs(this.y - cubic.y), Math.abs(this.z - cubic.z));
     }
-
-    getPair(){
-        return new Pair(this.z+(this.x-(this.x&1))/2,this.x);
+    getPair() {
+        return new Pair(this.z + (this.x - (this.x & 1)) / 2, this.x);
     }
-
     getX() {
         return this.x;
     }
-
     getY() {
         return this.y;
     }
-
-    getZ(){
+    getZ() {
         return this.z;
     }
-
-    add(cubic : Cubic) : Cubic {
+    add(cubic) {
         var new_cubic = Object.create(this);
         new_cubic.sum(cubic);
         return new_cubic;
     }
-
-    sum(cubic: Cubic){
-        this.x = this.x+cubic.getX();
-        this.y = this.y+cubic.getY();
-        this.z = this.z+cubic.getZ();
-    }
-
-    public toString = () : string => {
-        return "("+this.x+", "+this.y+", "+this.z+")";
+    sum(cubic) {
+        this.x = this.x + cubic.getX();
+        this.y = this.y + cubic.getY();
+        this.z = this.z + cubic.getZ();
     }
 }
-
-export var cubic_directions = [
-   new Cubic(new Pair(0,1)), new Cubic(new Pair(-1,1)), new Cubic(new Pair(-1,0)),
-   new Cubic(new Pair(-1,-1)), new Cubic(new Pair(0,-1)), new Cubic(new Pair(1,0))
-]
-
+exports.Cubic = Cubic;
+exports.cubic_directions = [
+    new Cubic(new Pair(0, 1)), new Cubic(new Pair(-1, 1)), new Cubic(new Pair(-1, 0)),
+    new Cubic(new Pair(-1, -1)), new Cubic(new Pair(0, -1)), new Cubic(new Pair(1, 0))
+];
 //Debido a que indexOf de los array iguala con ===, no es posible saber si un objeto está dentro de un array sino es identicamente el mismo objeto
 //por eso se ha creado este método auxiliar para ayudar al cálculo
-export function myIndexOf(arr: Array<Pair>, o: Pair) {
+function myIndexOf(arr, o) {
     for (var i = 0; i < arr.length; i++) {
         if (arr[i].column == o.column && arr[i].row == o.row) {
             return i;
@@ -111,9 +87,9 @@ export function myIndexOf(arr: Array<Pair>, o: Pair) {
     }
     return -1;
 }
-
+exports.myIndexOf = myIndexOf;
 //Igual que el de arriba pero para cúbica
-export function myIndexOfCubic(arr: Array<Cubic>, o: Cubic) {
+function myIndexOfCubic(arr, o) {
     for (var i = 0; i < arr.length; i++) {
         if (arr[i].getX() == o.getX() && arr[i].getY() == o.getY() && arr[i].getZ() == o.getZ()) {
             return i;
@@ -121,32 +97,31 @@ export function myIndexOfCubic(arr: Array<Cubic>, o: Cubic) {
     }
     return -1;
 }
-
+exports.myIndexOfCubic = myIndexOfCubic;
 // Esta clase contendrá funciones relacionadas con el Pathfinding y encontrar si una unidad tiene acceso a cierta casilla o unidad
-export class Pathfinding {
-    public static getAttackableUnits(unit: Unit) {
+class Pathfinding {
+    static getAttackableUnits(unit) {
         // Primero, necesitamos encontrar las casillas de las unidades enemigas
-        let enemyUnitsPos: Pair[] = store.getState().units.filter(x => x.player != unit.player).map(x => x.position);
-        let enemyUnitsReachable: Pair[] = [];
+        let enemyUnitsPos = Store_1.store.getState().units.filter(x => x.player != unit.player).map(x => x.position);
+        let enemyUnitsReachable = [];
         // Ahora, realizaremos una iteración igual que el proceso de obtener las posiciones accesibles por la unidad.
-        var visitables_cubic : Array<Cubic> = [new Cubic(unit.position)];
+        var visitables_cubic = [new Cubic(unit.position)];
         // Los vecinos estarán compuestos por la posición cúbica y el número de movimientos para pasar la posición
-        var neighbours : Cubic[] = new Array<Cubic>();
-        for(var i = 0 ; i < unit.range ; i++) {
+        var neighbours = new Array();
+        for (var i = 0; i < unit.range; i++) {
             // Calculamos los próximos vecinos:
-            var new_neighbours: Cubic[] = [];
+            var new_neighbours = [];
             visitables_cubic = visitables_cubic.concat(neighbours);
-
-            for(var index_directions = 0; index_directions < cubic_directions.length; index_directions++) {
+            for (var index_directions = 0; index_directions < exports.cubic_directions.length; index_directions++) {
                 visitables_cubic.forEach(cubic => {
-                    var new_cubic = cubic.add(cubic_directions[index_directions]);
+                    var new_cubic = cubic.add(exports.cubic_directions[index_directions]);
                     // Mientras la casilla actual no sea ya visitada o esté contenida en los vecinos anteriores
-                    if(myIndexOfCubic(visitables_cubic, new_cubic) == -1 && myIndexOfCubic(neighbours, new_cubic) == -1) {
+                    if (myIndexOfCubic(visitables_cubic, new_cubic) == -1 && myIndexOfCubic(neighbours, new_cubic) == -1) {
                         // En el caso de que no sea ninguno de los anteriores, la añadiremos a los visitados
                         new_neighbours.push(new_cubic);
                         // Y comprobamos que exista una unidad enemiga en esa posición
-                        let index = myIndexOf(enemyUnitsPos, new_cubic.getPair())
-                        if(index > -1) {
+                        let index = myIndexOf(enemyUnitsPos, new_cubic.getPair());
+                        if (index > -1) {
                             // En el caso de exista, la añadimos a los alcanzables
                             enemyUnitsReachable.push(enemyUnitsPos[index]);
                         }
@@ -157,21 +132,16 @@ export class Pathfinding {
         }
         return enemyUnitsReachable;
     }
-
-    public static getPositionClicked(xCoor: number, yCoor: number) : Pair {
+    static getPositionClicked(xCoor, yCoor) {
         // Para obtener las posiciones relativas al mapa, obtenemos las posiciones absolutas del primer objeto, que es el hexágono primero.
         var dimensions = document.getElementById("hex0_0").getBoundingClientRect();
-
         // Para soportar mejor los cambios de pantalla, obtenemos las dimensiones del hex primero, para los demás será igual.
         var height = dimensions.bottom - dimensions.top; // Hardcoded, se deberían realizar más pruebas
         var width = Math.round(height * 1.153846154); // El valor que se multiplica es la proporción entre el height y width
-
         var x = xCoor - dimensions.left; // A las coordenadas absolutas les restamos las dimensiones en el extremo superior izquierdo del primer hex.
         var y = yCoor - dimensions.top;
-
-        var column: number = Math.floor(x / (3 / 4 * width)); // Primero, encontramos la columna aproximada, dividiendo la posición por 3/4 la anchura (debido a los siguientes cálculos)
-        var row: number; // Definimos el número de fila.
-
+        var column = Math.floor(x / (3 / 4 * width)); // Primero, encontramos la columna aproximada, dividiendo la posición por 3/4 la anchura (debido a los siguientes cálculos)
+        var row; // Definimos el número de fila.
         var isOdd = column % 2 == 1; // Comprobamos si la columna de hexes es impar, ya que estará bajada por la mitad de la altura
         switch (isOdd) {
             case true:
@@ -182,7 +152,6 @@ export class Pathfinding {
                 // En otro caso, se obtendrá de forma parecida a la columna. Dividiendo la altura del hex (como se verá, no es multiplicado por 3/4 al no existir un extremo en esa posición).
                 row = Math.floor(y / height);
         }
-
         // En este momento, tendrémos la casilla correcta aproximada.
         var centerX = Math.round(column * (3 / 4 * width) + width / 2); // Para encontrar el punto central del hex más cercano. 3/4 ya que los hexes están solapados.
         var centerY;
@@ -196,7 +165,6 @@ export class Pathfinding {
                 centerY = Math.round(row * height + (height / 2));
         }
         var radius = Math.round(height / 4); // Tomamos el radio más pequeño, siendo este la mitad de la altura del hex.
-
         // Comprobación de si está el punto en el círculo
         if (!Pathfinding.getInCircle(centerX, centerY, radius, x, y)) {
             // Debemos calcular la distancia entre los otros hexágonos:
@@ -218,7 +186,8 @@ export class Pathfinding {
                     if (!isUpper) {
                         row++;
                     }
-                } else {
+                }
+                else {
                     column--;
                     if (isUpper) {
                         row--;
@@ -226,34 +195,31 @@ export class Pathfinding {
                 }
             }
         }
-
         return new Pair(row, column);
     }
-
     // Calcula si dado los datos del circulo y  un punto cualquiuera, el punto cualquiera está dentro del círculo
-    static getInCircle(centerX: number, centerY: number, radius: number, x: number, y: number) {
+    static getInCircle(centerX, centerY, radius, x, y) {
         // Raiz cuadrada de la distancia vectorial entre el centro y el punto debe ser menor al radio
         return this.calculateDistance(centerX, centerY, x, y) < radius;
     }
-
     // Calcula la distancia vectorial entre dos puntos
-    public static calculateDistance(x0: number, y0: number, x1: number, y1: number) {
-        return Math.sqrt(Math.pow((x0-x1),2) + Math.pow((y0-y1),2));
+    static calculateDistance(x0, y0, x1, y1) {
+        return Math.sqrt(Math.pow((x0 - x1), 2) + Math.pow((y0 - y1), 2));
     }
 }
-
+exports.Pathfinding = Pathfinding;
 // Esta clase contendrán métodos auxiliares con respecto a la conexión entre cliente y servidor
-export class Network {
-    public static parseStateFromServer(data: string): State {
+class Network {
+    static parseStateFromServer(data) {
         // Definimos la salida, un mapa, y lo populamos con datos por defecto
         let result = {
             turn: 0,
             actualState: 0,
-            units: [] as Array<Unit>,
-            visitables: [] as Array<Pair>,
-            terrains: [] as Array<Terrain>,
+            units: [],
+            visitables: [],
+            terrains: [],
             cursorPosition: new Pair(0, 0),
-            map: undefined as Map,
+            map: undefined,
             selectedUnit: 0,
             type: ""
         };
@@ -269,24 +235,23 @@ export class Network {
         result.cursorPosition = new Pair(json.cursorPosition.row, json.cursorPosition.column);
         // Ahora nos encargamos de visitables
         // Inicializamos una lista con los datos de las casillas visitables
-        let visitables: Array<{row: number, column:number}> = json.visitables;
+        let visitables = json.visitables;
         // Y asignamos al estado las casillas
-        if(visitables) 
+        if (visitables)
             result.visitables = visitables.map(pair => new Pair(pair.row, pair.column));
         // Ahora vamos con las unidades:
-        let units: Array<{name: string, type: string, movement: number, position:{row: number,column: number}, player: boolean, used: boolean, attackWeak: number, attackStrong: number, defenseWeak: number, defenseStrong: number, health: number, range: number, hasAttacked: boolean}> = json.units
+        let units = json.units;
         // Para cada uno, crearemos una unidad con esos datos.
-        if(units) {
-            result.units = units.map(unit => new Unit(unit.name, unit.type, unit.movement, new Pair(unit.position.row, unit.position.column),
-                unit.player, unit.used, unit.attackWeak, unit.attackStrong, unit.defenseWeak, unit.defenseStrong, unit.health, unit.range, 0, unit.hasAttacked));
+        if (units) {
+            result.units = units.map(unit => new Unit_1.Unit(unit.name, unit.type, unit.movement, new Pair(unit.position.row, unit.position.column), unit.player, unit.used, unit.attackWeak, unit.attackStrong, unit.defenseWeak, unit.defenseStrong, unit.health, unit.range, 0, unit.hasAttacked));
         }
         // Finalmente, nos quedan los terrenos, mismo proceso
-        let terrains: Array<{ name: string, image: string, movement_penalty: number, position:{ row: number, column: number}}> = json.terrains;
-        if(terrains) {
-            result.terrains = terrains.map(terrain => new Terrain(terrain.name, terrain.image, terrain.movement_penalty,
-                new Pair(terrain.position.row, terrain.position.column)));
+        let terrains = json.terrains;
+        if (terrains) {
+            result.terrains = terrains.map(terrain => new Terrains_1.Terrain(terrain.name, terrain.image, terrain.movement_penalty, new Pair(terrain.position.row, terrain.position.column)));
         }
         // Retornamos el estado final
         return result;
     }
 }
+exports.Network = Network;
