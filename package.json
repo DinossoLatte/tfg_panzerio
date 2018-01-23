@@ -6,7 +6,7 @@
   "scripts": {
     "build": "webpack --config config.webpack.js",
     "purge": "rm ./dist/bundle.js && rm ./dist/bundle.js.map",
-    "start": "node srv/server.js",
+    "start": "tsc --jsx react --target ES6 --p tsconfig-server.json && node srv/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm src/*.js"
   },
