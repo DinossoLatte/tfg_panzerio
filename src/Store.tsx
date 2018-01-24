@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
+
 import { Map } from './Map';
 import { Reducer, State } from './GameState';
 import { Pair, Cubic } from './Utils';

@@ -242,12 +242,8 @@ export const Reducer : Redux.Reducer<State> =
                     type: "SET_LISTENER"
                 }
             case "FINISH":
-                // Asignamos de nuevo el estado usando la función de estado inicial
-                getInitialState(() => {
-                    // El callback será el retornado del estado
-                    // Retornamos el estado, asignamos el mapa porque algunas funciones dependen de éste.
-                    return state;
-                });
+                // En este caso retornamos el objeto inicial InitialState.
+                return InitialState;
             case "NEXT_TURN":
                 //Se actualizan los used
                 for(var i = 0 ; i < state.units.length ; i++) {
