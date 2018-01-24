@@ -151,79 +151,17 @@ export const Reducer : Redux.Reducer<State> =
                     type: "SET_LISTENER"
                 };
             case "MOVE":
-                // Para reducir los cálculos del movimiento, vamos a realizar en este punto el cálculo de las celdas visitables
-                var visitables_cubic : Array<Cubic> = [Cubic.create(state.units[action.unit_id].position)];
-                var movements : number = state.units[action.unit_id].movement;
-                // Los vecinos estarán compuestos por la posición cúbica y el número de movimientos para pasar la posición
-                var neighbours : [Cubic, number][] = new Array<[Cubic, number]>();
-                // En esta variable se guardarán las posiciones de las unidades atacables, que deben separarse porque no se pueden considerar como atravesables.
-                var enemyUnits : Cubic[] = new Array<Cubic>();
-                // Primero, iteraremos desde 0 hasta el número de movimientos
-                for(var i = 0 ; i <= movements ; i++) {
-                    // Calculamos los próximos vecinos:
-                    var new_neighbours: [Cubic, number][] = [];
-                    visitables_cubic = visitables_cubic.concat(neighbours.filter(possible_tuple => possible_tuple[1] == 0).map(x => x[0]));
-
-                    for(var index_directions = 0; index_directions < CUBIC_DIRECTIONS.length; index_directions++) {
-                        visitables_cubic.forEach(cubic => {
-                            var new_cubic = cubic.add(CUBIC_DIRECTIONS[index_directions]);
-                            // Siempre que la nueva casilla no esté en la lista de visitables ni sea una posición no alcanzable.
-                            if(myIndexOfCubic(visitables_cubic, new_cubic) == -1) {
-                                var indexOfNeighbours = myIndexOfCubic(neighbours.map(x => x[0]), new_cubic);
-                                // Para añadir la posición, comprobamos primero que no esté la posición:
-                                if(indexOfNeighbours == -1) {
-                                    // Si es el caso, debemos comprobar que la posición no esté ocupada por una de las unidades del jugador
-                                    var positionIndex = state.units
-                                        .filter(x => x.player==action.player) // Si debe estar ocupada por una unidad, que sea únicamente la enemigas
-                                        .map(y => y.position);
-                                    if(myIndexOf(positionIndex, new_cubic.getPair()) == -1) {
-                                        // Primero, comprobamos que se trate de una unidad enemiga, simplemente comprobando si está en la lista es suficiente
-                                        let indexUnit = myIndexOf(state.units.map(x => x.position), new_cubic.getPair());
-                                        // En el caso en el que esté, la añadimos a la lista de atacables y acabamos
-                                        if(indexUnit != -1) {
-                                            // Añadimos a lista de atacables, sólo si no está en la lista y ésta iteración es el alcance del ataque más uno.
-                                            myIndexOfCubic(enemyUnits, new_cubic) == -1 && i < state.units[action.unit_id].range?enemyUnits.push(new_cubic):false;
-                                        } else { // En caso contrario, es una posición sin unidades
-                                            // Obtenemos el índice del obstáculo, si es que está.
-                                            let indexOfObstacle = myIndexOf(state.terrains.map(x => x.position), new_cubic.getPair());
-                                            // Si se admite, añadimos la posición y la cantidad de movimientos para pasar por la casilla
-                                            // Por ahora se comprueba si está en la lista de obstáculos, en cuyo caso coge la cantidad. En caso contrario, asumimos Plains
-                                            new_neighbours.push([new_cubic, indexOfObstacle > -1?state.terrains[indexOfObstacle].movement_penalty-1:0]);
-                                        }
-                                    }
-                                } else { // Si no, esta casilla ya la tenemos en vecinos, pero tiene un movimiento != 0, por lo que reducimos el movimiento de la casilla
-                                    // Actualizamos el movimiento de la unidad, si es el caso.
-                                    var cell = neighbours[indexOfNeighbours];
-                                    // Siempre que sea reducible
-                                    if (cell[1] > 0) {
-                                        // Obtenemos el índice de la iteración actual
-                                        var index = myIndexOfCubic(new_neighbours.map(x => x[0]), cell[0]);
-                                        // Si no está en nuestra lista de vecinos
-                                        if (index == -1) {
-                                            // Lo añadimos y le reducimos el peso
-                                            new_neighbours.push([new_cubic, cell[1] - 1]);
-                                        } else {
-                                            // Si ya está en nuestra lista de vecinos, accedemos y lo reemplazamos reducciendo en uno
-                                            new_neighbours[index] = [new_cubic, cell[1] - 1];
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                        neighbours = new_neighbours;
-                    }
+                // Casillas disponibles
+                let visitables_pair: Array<Pair> = []; 
+                // Si la unidad actual está en fase de ataque.
+                if(state.units[action.unit_id].action == 1) {
+                    // Ejecutamos el método para encontrar unidades enemigas atacables
+                    visitables_pair = Pathfinding.getAttackableUnits(state.units[action.unit_id]);
+                } else { // En caso contrario
+                    // Ejecutamos el método para encontrar casillas movibles
+                    visitables_pair = Pathfinding.getMovableCells(state, action.unit_id, action.player);
                 }
-                var visitables_pair : Array<Pair>;
-                if(state.units[action.unit_id].action==0){
-                    visitables_pair = visitables_cubic.map(cubic => cubic.getPair());
-                }else{
-                    visitables_pair = enemyUnits.map(x => x.getPair());
-                }
-                // Finalmente convertimos el resultado a Pair:
-                //var visitables_pair : Array<Pair> = visitables_cubic.map(cubic => cubic.getPair());
-                // Sin olvidar las unidades atacables!
-                //visitables_pair = visitables_pair.concat(enemyUnits.map(x => x.getPair()));
-
+                
                 return {
                     turn: state.turn,
                     actualState: state.actualState,
