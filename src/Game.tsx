@@ -166,24 +166,31 @@ class Game extends React.Component<any, any> {
 
     render() {
         let result: any;
-        if(this.state.gameState == 5) {
-            result = <PreGameMenu parentObject={this} />
-        } else if(this.state.gameState == 4){
-            result = <EditMap horizontal={this.state.editx} vertical={this.state.edity} parentObject={this} />
-        } else if(this.state.gameState == 3){
-            result = <CreateMenu parentObject={this} />
-        } else if(this.state.gameState == 2) {
-            result = <Map horizontal="6" vertical="6" parentObject={this} />
-        } else if(this.state.gameState == 1) {
-            result = <OptionsMenu parentObject={this} />
-        } else {
-            result = (
-            <div className="menu">
-                <EnterGameButton parentObject={this} /><br/>
-                <EditGameButton parentObject={this} /><br/>
-                <OptionsMenuButton parentObject={this} /><br/>
-            </div>
-            );
+        switch(this.state.gameState) {
+            case 1:
+                result = <OptionsMenu parentObject={this} />;
+                break;
+            case 2:
+                result = <Map horizontal="6" vertical="6" parentObject={this} />;
+                break;
+            case 3:
+                result = <CreateMenu parentObject={this} />;
+                break;
+            case 4:
+                result = <EditMap horizontal={this.state.editx} vertical={this.state.edity} parentObject={this} />;
+                break;
+            case 5: 
+                result = <PreGameMenu parentObject={this} />;
+                break;
+            default:
+                result = (
+                    <div className="menu">
+                        <EnterGameButton parentObject={this} /><br />
+                        <EditGameButton parentObject={this} /><br />
+                        <OptionsMenuButton parentObject={this} /><br />
+                    </div>
+                );
+                break;
         }
 
         return result;
