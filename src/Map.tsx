@@ -247,40 +247,9 @@ export class Map extends React.Component<any, any> {
         for(var j = num_row%2==0?0:1; j <= this.props.horizontal; j = j+2) { // Incrementamos en 2 porque el elemento entre cada hex tendrá el valor j + 1.
             let column = j;
             let row = num_row%2==0?num_row/2:Math.floor(num_row/2);
-            let pos = new Pair(row, column);
-            //Se generan las unidades
-            let indexUnit = myIndexOf(store.getState().units.map(x=>x.position), pos);
-            if (indexUnit!=-1){
-                // Si la unidad ha sido usada y ha realizado un ataque entonces se mostrará como usada
-                let used = store.getState().units[indexUnit].used && store.getState().units[indexUnit].hasAttacked;
-                //Si hay una unidad seleccionada y dicha posición esta dentro de las posiciones visitables entonces es accesible
-                let visitable = store.getState().selectedUnit!=null && myIndexOf(store.getState().visitables, pos)!=-1;
-                //Si además de ser accesible es una unidad enemiga (dependiendo del turno) entonces es atacable
-                let attack = visitable && ((store.getState().units[indexUnit].player && store.getState().turn%2!=0) || (!store.getState().units[indexUnit].player && store.getState().turn%2==0));
-                //Si además de ser accesible es la misma posicion que la unidad actual entonces es la unidad elegida
-                let actual = store.getState().selectedUnit!=null && store.getState().units[store.getState().selectedUnit].position.equals(pos);
-                var cell = <Cell row={row} column={column} unit={indexUnit} attack={attack} actual={actual} used={used}/>;
-                this.state.cells[row][column] = cell;
-                accum2.push(cell);
-            }else if(store.getState().selectedUnit!=null){
-                //Si la distancia es menor o igual a la distancia máxima entonces son posiciones validas y se seleccionaran, además se comprueba que no sea un obstáculo
-                if(myIndexOf(store.getState().visitables, pos) != -1 && !store.getState().units[store.getState().selectedUnit].hasAttacked){
-                    var cell = <Cell row={row} column={column} selected={true} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
-                    this.state.cells[row][column] = cell;
-                    //Para no añadir una nueva clase de celda seleccionada simplemente hacemos esto
-                    accum2.push(cell);
-                //Es necesario hacer este else porque al entrar en este else if no podrá ejecutar el else exterior
-                }else{
-                    var cell = <Cell row={row} column={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
-                    this.state.cells[row][column] = cell;
-                    accum2.push(cell);
-                }
-            }else{
-                // Se introducirá el elemento en una lista
-                var cell = <Cell row={row} column={column} />; // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
-                this.state.cells[row][column] = cell;
-                accum2.push(cell);
-            }
+            var cell = <Cell row={row} column={column} />;
+            this.state.cells[row][column] = cell;
+            accum2.push(cell);
         }
 
         // Se retorna en un div que dependiendo de que se trate de la fila par o impar, contendrá también la clase celRowOdd.
