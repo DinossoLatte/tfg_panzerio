@@ -88,7 +88,7 @@ export class Actions {
         };
     }
 
-    static attack( defendingUnitId: number, player: boolean, selectedUnit: number) : Redux.AnyAction {
+    static generateAttack( defendingUnitId: number, player: boolean, selectedUnit: number) : Redux.AnyAction {
         //Este estado se envía la unidad a atacar (se eliminará del array) y si es del jugador o no
         return {
             type: "ATTACK",
@@ -99,20 +99,20 @@ export class Actions {
     }
 
     // Se le pasa el mapa porque es necesario, en caso contrario no se podría reiniciar correctamente.
-    static finish() : Redux.AnyAction {
+    static generateFinish() : Redux.AnyAction {
         //Este estado por ahora simplemente hace que no se pueda jugar hasta que se reinicie la partida
         return {
             type: "FINISH"
         }
     }
 
-    static nextTurn() : Redux.AnyAction{
+    static generateNextTurn() : Redux.AnyAction{
         return {
             type: "NEXT_TURN"
         }
     }
 
-    static nextAction(selectedUnit: number) : Redux.AnyAction{
+    static generateNextAction(selectedUnit: number) : Redux.AnyAction{
         return {
             selectedUnit: selectedUnit,
             type: "NEXT_ACTION"

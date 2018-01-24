@@ -57,12 +57,12 @@ export class Map extends React.Component<any, any> {
         //Si se pulsa al botón se pasa de turno esto se hace para asegurar que el jugador no quiere hacer nada o no puede en su turno
         //Evitando pasar turno automaticamente ya que el jugador quiera ver alguna cosa de sus unidades o algo aunque no tenga movimientos posibles
         //Esto pasa en muchos otros juegos
-        saveState(Actions.nextTurn()); //Se usa para obligar a actualizar el estado (tambien actualiza los used)
+        saveState(Actions.generateNextTurn()); //Se usa para obligar a actualizar el estado (tambien actualiza los used)
     }
 
     onClickUnitAction(event : React.MouseEvent<HTMLElement>) {
         //Dependiendo de la accion de la unidad pasará a la siguiente acción y será usada o no
-        saveState(Actions.nextAction(store.getState().selectedUnit));
+        saveState(Actions.generateNextAction(store.getState().selectedUnit));
     }
 
     onClickCancelAction(event : React.MouseEvent<HTMLElement>) {
@@ -121,7 +121,7 @@ export class Map extends React.Component<any, any> {
             case '6':
                 if(store.getState().selectedUnit!=null && store.getState().units[store.getState().selectedUnit].action<2){
                     //Dependiendo de la accion de la unidad pasará a la siguiente acción y será usada o no
-                    saveState(Actions.nextAction(store.getState().selectedUnit));
+                    saveState(Actions.generateNextAction(store.getState().selectedUnit));
                 }
                 break;
             case '5':
@@ -214,7 +214,7 @@ export class Map extends React.Component<any, any> {
                 if(unitIndex != -1 && unitEnemy && store.getState().units[selectedUnit].action == 1 && !store.getState().units[selectedUnit].hasAttacked){ // Si se ha escogido una unidad y ésta es enemiga
                     saveState(Actions.generateMove(store.getState().selectedUnit, side));
                     // Se atacará, esto incluye el movimiento si es aplicable
-                    saveState(Actions.attack(unitIndex, side, null));
+                    saveState(Actions.generateAttack(unitIndex, side, null));
                 } else {
                     // En caso contrario, se ejecutará el movimiento como siempre
                     // El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
@@ -223,7 +223,7 @@ export class Map extends React.Component<any, any> {
             }
         } else if(!hasAttacked) { // En el caso de que tenga posiblidad de atacar y ha hecho click a la unidad enemiga
             // Realizamos el ataque:
-            saveState(Actions.attack(unitIndex, side, null));
+            saveState(Actions.generateAttack(unitIndex, side, null));
         }
     }
 

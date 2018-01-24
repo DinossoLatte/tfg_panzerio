@@ -22,7 +22,7 @@ class EnterGameButton extends React.Component<any, any> {
             // Comprobamos si hay ganador o perdedor, en cuyo caso se reiniciará el estado al entrar en el juego
             if (store.getState().map && store.getState().actualState > 0) {
                 // Si se ha producido esto, debemos reiniciar el estado
-                store.dispatch(Actions.finish());
+                store.dispatch(Actions.generateFinish());
                 // Ejecutamos también el reiniciado de estado del mapa
                 store.getState().map.restartState();
             }
