@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
+
 import { storeEdit, saveState } from './StoreEdit';
 import { ReducerEdit, StateEdit, EditActions, InitialStateEdit} from './GameEditState';
 import { Cell } from './Cell';
@@ -12,7 +13,6 @@ import { UnitStats } from './UnitStats';
 import { EditStats } from './EditStats';
 import { Unit, Infantry, Tank, General } from './Unit';
 import { Terrain, Plains, ImpassableMountain, Hills, Forest } from './Terrains';
-
 
 export class EditMap extends React.Component<any, any> {
     editStats: EditStats = null;
