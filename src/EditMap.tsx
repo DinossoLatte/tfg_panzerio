@@ -6,7 +6,7 @@ import { ReducerEdit, StateEdit, EditActions, InitialStateEdit} from './GameEdit
 import { Cell } from './Cell';
 import { EditCell } from './EditCell';
 import { TerrainCell } from './TerrainCell';
-import { Pair, Cubic, myIndexOf, cubic_directions, myIndexOfCubic, Pathfinding } from './Utils';
+import { Pair, Cubic, myIndexOf, CUBIC_DIRECTIONS, myIndexOfCubic, Pathfinding } from './Utils';
 import { UnitCell } from './UnitCell';
 import { UnitStats } from './UnitStats';
 import { EditStats } from './EditStats';

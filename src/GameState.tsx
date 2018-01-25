@@ -3,7 +3,7 @@ import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
 import { store, saveState } from './Store';
 import { Map } from './Map';
-import { Pair, Cubic, cubic_directions, myIndexOf, myIndexOfCubic, Pathfinding, Network } from './Utils';
+import { Pair, Cubic, CUBIC_DIRECTIONS, myIndexOf, myIndexOfCubic, Pathfinding, Network } from './Utils';
 import { Unit, Infantry, Tank, General } from './Unit';
 import { Terrain, Plains, ImpassableMountain, Hills, Forest } from './Terrains';
 
@@ -152,7 +152,7 @@ export const Reducer : Redux.Reducer<State> =
                 };
             case "MOVE":
                 // Para reducir los cálculos del movimiento, vamos a realizar en este punto el cálculo de las celdas visitables
-                var visitables_cubic : Array<Cubic> = [new Cubic(state.units[action.unit_id].position)];
+                var visitables_cubic : Array<Cubic> = [Cubic.create(state.units[action.unit_id].position)];
                 var movements : number = state.units[action.unit_id].movement;
                 // Los vecinos estarán compuestos por la posición cúbica y el número de movimientos para pasar la posición
                 var neighbours : [Cubic, number][] = new Array<[Cubic, number]>();
@@ -164,9 +164,9 @@ export const Reducer : Redux.Reducer<State> =
                     var new_neighbours: [Cubic, number][] = [];
                     visitables_cubic = visitables_cubic.concat(neighbours.filter(possible_tuple => possible_tuple[1] == 0).map(x => x[0]));
 
-                    for(var index_directions = 0; index_directions < cubic_directions.length; index_directions++) {
+                    for(var index_directions = 0; index_directions < CUBIC_DIRECTIONS.length; index_directions++) {
                         visitables_cubic.forEach(cubic => {
-                            var new_cubic = cubic.add(cubic_directions[index_directions]);
+                            var new_cubic = cubic.add(CUBIC_DIRECTIONS[index_directions]);
                             // Siempre que la nueva casilla no esté en la lista de visitables ni sea una posición no alcanzable.
                             if(myIndexOfCubic(visitables_cubic, new_cubic) == -1) {
                                 var indexOfNeighbours = myIndexOfCubic(neighbours.map(x => x[0]), new_cubic);
