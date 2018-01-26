@@ -46,7 +46,7 @@ export function getInitialState(callback: () => void) {
         // Enviamos la solicitud de estado inicial
         connection.send(JSON.stringify({
             type: "getInitialState"
-        }));    
+        }));
         console.log("Action sent.");
     }
 }
@@ -152,7 +152,7 @@ export const Reducer : Redux.Reducer<State> =
                 };
             case "MOVE":
                 // Casillas disponibles
-                let visitables_pair: Array<Pair> = []; 
+                let visitables_pair: Array<Pair> = [];
                 // Si la unidad actual está en fase de ataque.
                 if(state.units[action.unit_id].action == 1) {
                     // Ejecutamos el método para encontrar unidades enemigas atacables
@@ -161,7 +161,7 @@ export const Reducer : Redux.Reducer<State> =
                     // Ejecutamos el método para encontrar casillas movibles
                     visitables_pair = Pathfinding.getMovableCells(state, action.unit_id, action.player);
                 }
-                
+
                 return {
                     turn: state.turn,
                     actualState: state.actualState,
@@ -211,7 +211,7 @@ export const Reducer : Redux.Reducer<State> =
                     // Si es el caso, le cambiamos la cantidad de vida
                     defendingUnit.health -= healthRemoved;
                 } else {
-                    // Esta unidad ha dejado de existir
+                    // Esta unidad ha dejado de existir (no se puede de la otra forma porque no se borra correctamente)
                     state.units.splice(action.defendingUnitId, 1);
                     // Y por lo tanto no podemos estar apuntandole como seleccionada
                     if (action.selectedUnit > action.defendingUnitId) {
