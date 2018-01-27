@@ -49,7 +49,7 @@ export class Unit {
 
 export class Infantry extends Unit {
     static create(position: Pair, player: boolean) : Unit {
-        return new Unit("Infantry", "unit", 2, position, player, false,
+        return new Unit("Infantry", "infantry", 2, position, player, false,
         // Características de ataque débil y fuerte
          2, 2,
         // Características de defensa débil y fuerte

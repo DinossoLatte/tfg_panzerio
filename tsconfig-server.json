@@ -1,11 +1,15 @@
 {
     "compilerOptions": {
-        "outDir": "srv/src",
+        "outDir": "srv/",
         "module": "commonjs",
-        "target": "es5",
+        "target": "es6",
         "jsx": "react"
     },
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "srv/server.ts"
+    ],
+    "exclude": [
+        "srv_compiled"
     ]
 }

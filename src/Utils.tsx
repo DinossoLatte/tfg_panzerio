@@ -281,12 +281,18 @@ export class Network {
                 unit.player, unit.used, unit.attackWeak, unit.attackStrong, unit.defenseWeak, unit.defenseStrong, unit.health, unit.range, 0, unit.hasAttacked));
         }
         // Finalmente, nos quedan los terrenos, mismo proceso
-        let terrains: Array<{ name: string, image: string, movement_penalty: number, position:{ row: number, column: number}}> = json.terrains;
+        result.terrains = this.parseMap(json.terrains);
+        // Retornamos el estado final
+        return result;
+    }
+
+    public static parseMap(terrains: Array<{ name: string, image: string, movement_penalty: number, position:{ row: number, column: number}}>): Terrain[] {
+        let result: Terrain[] = [];
         if(terrains) {
-            result.terrains = terrains.map(terrain => new Terrain(terrain.name, terrain.image, terrain.movement_penalty,
+            result = terrains.map(terrain => new Terrain(terrain.name, terrain.image, terrain.movement_penalty,
                 new Pair(terrain.position.row, terrain.position.column)));
         }
-        // Retornamos el estado final
+
         return result;
     }
 }

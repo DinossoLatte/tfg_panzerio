@@ -118,6 +118,13 @@ export class Actions {
             type: "NEXT_ACTION"
         }
     }
+
+    static generateCustomMap(terrains: Terrain[]) : Redux.AnyAction {
+        return {
+            terrains: terrains,
+            type: "CUSTOM_MAP_INIT"
+        };
+    }
 }
 
 //Y aquí se producirá el cambio
@@ -127,12 +134,14 @@ export const Reducer : Redux.Reducer<State> =
         switch(action.type) {
             case "CHANGE_UNIT_POS":
                 let visitables = state.visitables;
-                //Si es una unidad del jugador actual y no es la misma posición, actualiza su uso y su posición, sino el movimiento se considera cancelado
-                //if(action.player==state.units[action.unit_id].player && !state.units[action.unit_id].position.equals(action.new_position)){
+                // Si la unidad la tiene el jugador
                 if(action.player==state.units[action.unit_id].player){
+                    // Actualiza la posición
                     state.units[action.unit_id].position = action.new_position;
-                    //state.units[action.unit_id].used = true;
-                    state.units[action.unit_id].action = 1;
+                    // En el caso de estar fuera de la fase de pre juego, donde posicionamos las unidades sin causar turnos
+                    if(state.turn >= 2) {
+                        state.units[action.unit_id].action = 1;
+                    }
                 }
                 // Si la unidad tiene posiblidad de atacar
                 if(!state.units[action.unit_id].hasAttacked && state.units[action.unit_id].action==1) {
@@ -345,6 +354,19 @@ export const Reducer : Redux.Reducer<State> =
                     cursorPosition: state.cursorPosition,
                     selectedUnit: null,
                     type: "SET_LISTENER"
+                }
+            case "CUSTOM_MAP_INIT":
+                // Si se quiere importar un mapa, se cambiará los terrenos
+                return {
+                    turn: state.turn,
+                    actualState: state.actualState,
+                    units: state.units,
+                    visitables: state.visitables,
+                    terrains: action.terrains,
+                    map: state.map,
+                    cursorPosition: state.cursorPosition,
+                    selectedUnit: state.selectedUnit,
+                    type: state.type
                 }
             default:
                 return state;
