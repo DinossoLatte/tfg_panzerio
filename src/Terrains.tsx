@@ -16,7 +16,7 @@ export class Terrain {
 
 export class Plains extends Terrain {
     static create(position: Pair) : Terrain {
-        return new Terrain("Plains", "imgs/terrain_plains.png", 0, position);
+        return new Terrain("Plains", "imgs/terrain_plains.png", 1, position);
     }
 }
 

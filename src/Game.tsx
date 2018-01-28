@@ -4,6 +4,7 @@ import { Map } from './Map';
 import { Actions, getInitialState } from './GameState';
 import { EditMap } from './EditMap';
 import { store } from './Store';
+import { Network } from './Utils';
 import { Profile } from './Profile'
 
 class EnterGameButton extends React.Component<any, any> {
@@ -97,9 +98,15 @@ class OptionsMenu extends React.Component<any, any> {
 class PreGameMenu extends React.Component<any, any> {
     constructor(props: any) {
         super(props);
+        this.state = {
+            custom: false
+        };
     }
 
     render() {
+        // En el caso de querer usar un mapa, mostramos una zona para ponerlo
+        let customMap = this.state.custom?<textarea id="customMap">Introduzca el JSON aqui</textarea>:"";
+        
         return (
         <div className="preGameMenu">
             <h2>Menu de pre juego</h2>
@@ -107,17 +114,47 @@ class PreGameMenu extends React.Component<any, any> {
                 <SideOptionMenu player={true} />
             </div>
             <div className="mapMenu">
-                <select>
-                    <option id="map1" selected={true} >Mapa 1</option>
+                <select id="map" onClick={this.updateMap.bind(this)}>
+                    <option id="map1" selected={true}>Mapa 1</option>
+                    <option id="custom">Personalizado</option>
                 </select>
 
+                {customMap}
+
                 <button onClick={this.startGame.bind(this)}>Empezar juego</button>
+                <button onClick={this.exitPreGame.bind(this)}>Volver</button>
             </div>
         </div>);
     }
 
     startGame(event: MouseEvent) {
+        // Antes de ejecutar, comprobamos que exista un mapa personalizado
+        if(this.state.custom) {
+            console.log((document.getElementById("customMap") as HTMLTextAreaElement).value);
+            // Si es el caso, debemos modificar el estado a tener el nuevo mapa en cuenta
+            let newMap = Network.parseMap(
+                JSON.parse((document.getElementById("customMap") as HTMLTextAreaElement).value));
+            // Y cambiamos el estado para tener esto en cuenta
+            store.dispatch(Actions.generateCustomMap(newMap));
+        }
         this.props.parentObject.setState({ gameState: 2 });
+    }
+
+    // Actualiza el componente de poder introducir el mapa, en el caso de seleccionar
+    // la opción de 'Personalizado'.
+    updateMap(mouseEvent: MouseEvent) {
+        // Comprobamos que el select tenga seleccionado el 'custom'
+        let select: HTMLSelectElement = document.getElementById("map") as HTMLSelectElement;
+        if(select.options[select.selectedIndex].id == "custom") {
+            this.setState({ custom: true });
+        } else {
+            this.setState({ custom: false });
+        }
+    }
+
+    exitPreGame(mouseEvent: MouseEvent) {
+        // Para salir, cambiamos el estado del menu del juego.
+        this.props.parentObject.setState({ gameState: 0 });
     }
 }
 

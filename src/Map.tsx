@@ -16,7 +16,7 @@ export class Map extends React.Component<any, any> {
     unitStats: UnitStats = null;
 
     restartState() {
-        this.state = { cells: new Array<Array<Cell>>(this.props.horizontal), rows: this.props.vertical, columns: this.props.horizontal };
+        this.state = { cells: new Array<Array<Cell>>(this.props.horizontal), rows: this.props.vertical, columns: this.props.horizontal, alertUnitsNotPlaced: false };
         store.dispatch(Actions.generateSetListener(this));
     }
 
@@ -31,11 +31,13 @@ export class Map extends React.Component<any, any> {
         // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
         return (
             <div>
-                <p>Turno del {store.getState().turn%2==0?"Jugador":"Enemigo"}. Día {store.getState().turn}{store.getState().actualState==1?". Victoria":store.getState().actualState==2?". Derrota":""}</p>
+                <p>Turno del {store.getState().turn%2==0?"Jugador":"Enemigo"}. Día {Math.floor(store.getState().turn/2)}{store.getState().actualState==1?". Victoria":store.getState().actualState==2?". Derrota":""} {store.getState().turn < 2?"(Pre juego)":""}</p>
                 <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
                 {store.getState().actualState==0?<button id="nextTurn" name="nextTurn" onClick={this.onClickTurn.bind(this)}>Pasar turno</button>:""}
-                {store.getState().selectedUnit!=null?<button id="cancelAction" name="cancelAction" onClick={this.onClickCancelAction.bind(this)}>Cancelar acción</button>:""}
-                {store.getState().selectedUnit!=null && store.getState().units[store.getState().selectedUnit].action<2?<button id="nextAction" name="nextAction" onClick={this.onClickUnitAction.bind(this)}>Pasar acción</button>:""}
+                {store.getState().selectedUnit!=null && store.getState().turn >= 2?<button id="cancelAction" name="cancelAction" onClick={this.onClickCancelAction.bind(this)}>Cancelar acción</button>:""}
+                {store.getState().selectedUnit!=null && store.getState().turn >= 2 && store.getState().units[store.getState().selectedUnit].action<2?<button id="nextAction" name="nextAction" onClick={this.onClickUnitAction.bind(this)}>Pasar acción</button>:""}
+                {store.getState().turn < 2?<button onClick={this.onClickNextUnit.bind(this)}>Siguiente unidad (Pre juego)</button>:""}
+                {this.state.alertUnitsNotPlaced?<p className="alert">ATENCIÓN: Algunas de las unidades no han sido posicionadas en el juego, por favor, posicione las unidades en el juego</p>:""}
                 <div>
                     <UnitStats />
                     <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)} onContextMenu={this.onRightClick.bind(this)}>
@@ -56,8 +58,33 @@ export class Map extends React.Component<any, any> {
     onClickTurn(event : React.MouseEvent<HTMLElement>) {
         //Si se pulsa al botón se pasa de turno esto se hace para asegurar que el jugador no quiere hacer nada o no puede en su turno
         //Evitando pasar turno automaticamente ya que el jugador quiera ver alguna cosa de sus unidades o algo aunque no tenga movimientos posibles
-        //Esto pasa en muchos otros juegos
-        saveState(Actions.generateNextTurn()); //Se usa para obligar a actualizar el estado (tambien actualiza los used)
+        // Pero antes de poder pasar el turno, comprobamos si ha posicionado todas sus unidades
+        if(
+            // Primero, comprobamos si estamos en la fase de pre juego
+            store.getState().turn < 2
+            // Después vemos si de las unidades ...
+            && store.getState().units.some((unit) => {
+                // Son del jugador y éstas están fuera de la zona de juego (por defecto (-1, -1))
+                return unit.player == (store.getState().turn%2 == 0) && (unit.position.row < 0 || unit.position.column < 0);
+        })) {
+            // Esto quiere decir que debemos informar al jugador, cambiando el siguiente atributo
+            this.setState({
+                cells: this.state.cells,
+                rows: this.state.rows,
+                columns: this.state.columns,
+                alertUnitsNotPlaced: true
+            });
+        } else {
+            // En caso contrario, pasamos el turno
+            // Y eliminamos la restricción
+            this.setState({
+                cells: this.state.cells,
+                rows: this.state.rows,
+                columns: this.state.columns,
+                alertUnitsNotPlaced: false
+            });
+            saveState(Actions.generateNextTurn()); //Se usa para obligar a actualizar el estado (tambien actualiza los used)
+        }
     }
 
     onClickUnitAction(event : React.MouseEvent<HTMLElement>) {
@@ -68,6 +95,34 @@ export class Map extends React.Component<any, any> {
     onClickCancelAction(event : React.MouseEvent<HTMLElement>) {
         //Con esto se cancela la acción actual para que se pueda seleccionar otra unidad
         saveState(Actions.generateSetListener(this));
+    }
+
+    onClickNextUnit(mouseEvent: MouseEvent) {
+        // Obtenemos el índice
+        let selectedIndex = store.getState().selectedUnit;
+        console.log("Index: "+selectedIndex);
+        // Si no está definido
+        if(selectedIndex == null
+            || (// O en el caso de estarlo, es posible incrementar el índice
+                // Si la próxima unidad no es del jugador
+                !store.getState().units[selectedIndex + 1].player == (store.getState().turn%2 == 0)
+                || store.getState().units.length <= selectedIndex + 1 // O sobrepasa el límite de la lista
+        )) {
+            console.log("Entra en no definido");
+            // Entonces debemos encontrar el índice de una unidad del jugador
+            selectedIndex = store.getState().units.indexOf(store.getState().units.find((unit) => unit.player == (store.getState().turn%2 == 0)));
+        } else {
+            console.log("Entra en ya definido");
+            // En otro caso ya está definido y es válido el incremento
+            selectedIndex = selectedIndex + 1;
+        }
+        console.log("Resutado "+selectedIndex);
+
+        // Ejecutamos la selección de unidad
+        store.dispatch(Actions.generateMove(selectedIndex, store.getState().turn%2 == 0));
+        // Y, para indicar al jugador de la unidad seleccionada, cambiamos el
+        // indicador de la izquierda
+        this.unitStats.setState({ unit: store.getState().units[selectedIndex], terrain: null });
     }
 
     onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
@@ -206,8 +261,9 @@ export class Map extends React.Component<any, any> {
             }else if(
                 // unitIndex!=-1 // La unidad existe
                 store.getState().selectedUnit != null // Se tiene seleccionada una unidad
-                && myIndexOf(store.getState().visitables, newPosition) != -1 // Y la posición de la unidad es alcanzable
-                ){
+                && (myIndexOf(store.getState().visitables, newPosition) != -1 // Y la posición de la unidad es alcanzable
+                    || store.getState().turn < 2 // O estamos en la fase de pre juego
+                )){
                 let selectedUnit = store.getState().selectedUnit; // Índice de la unidad seleccionada
                 let actualPosition = store.getState().units[selectedUnit].position; //Obtenemos la posición actual
                 //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
@@ -221,7 +277,9 @@ export class Map extends React.Component<any, any> {
                     saveState(Actions.generateChangeUnitPos(selectedUnit, newPosition, null, side));
                 }
             }
-        } else if(!hasAttacked) { // En el caso de que tenga posiblidad de atacar y ha hecho click a la unidad enemiga
+        } else if(!hasAttacked // En el caso de que tenga posiblidad de atacar y ha hecho click a la unidad enemiga
+            || store.getState().turn >= 2 // O no estamos en la fase de pre juego
+        ) { 
             // Realizamos el ataque:
             saveState(Actions.generateAttack(unitIndex, side, null));
         }

@@ -62,7 +62,7 @@ body {
     padding: 25px;
 }
 
-#error {
+#error .alert {
     color: red;
 }
 

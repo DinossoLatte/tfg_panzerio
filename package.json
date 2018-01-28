@@ -6,15 +6,15 @@
   "scripts": {
     "build": "webpack --config config.webpack.js",
     "purge": "rm ./dist/bundle.js && rm ./dist/bundle.js.map",
-    "start": "tsc --jsx react --target ES6 --p tsconfig-server.json && node srv/server.js",
+    "start": "tsc --p tsconfig-server.json && babel srv/ -d srv_compiled && node srv_compiled/srv/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "clean": "rm src/*.js"
+    "clean": "rm srv/*.js && rm -r srv_compiled"
   },
   "author": "ignalelop@alum.us.es",
   "license": "GNU GPL2",
   "devDependencies": {
     "awesome-typescript-loader": "3.2.3",
-    "babel-cli": "6.26.0",
+    "babel-cli": "^6.26.0",
     "babel-preset-env": "1.6.0",
     "babel-preset-react": "6.24.1",
     "eslint": "4.8.0",
@@ -27,7 +27,7 @@
     "@types/restify": "5.0.5",
     "@types/ws": "4.0.0",
     "@types/websocket": "0.0.35",
-    "ws": "3.3.2",
+    "ws": "4.0.0",
     "eslint": "4.8.0",
     "eslint-plugin-react": "7.4.0",
     "react": "16.0.0",
