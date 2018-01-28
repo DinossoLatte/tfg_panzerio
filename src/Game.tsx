@@ -4,6 +4,7 @@ import { Map } from './Map';
 import { Actions, getInitialState } from './GameState';
 import { EditMap } from './EditMap';
 import { store } from './Store';
+import { Profile } from './Profile'
 
 class EnterGameButton extends React.Component<any, any> {
     constructor(props: any) {
@@ -26,7 +27,7 @@ class EnterGameButton extends React.Component<any, any> {
                 // Ejecutamos también el reiniciado de estado del mapa
                 store.getState().map.restartState();
             }
-        });   
+        });
     }
 }
 
@@ -43,6 +44,21 @@ class EditGameButton extends React.Component<any, any> {
         this.props.parentObject.changeGameState(3);
     }
 }
+
+class ProfileButton extends React.Component<any, any> {
+    constructor(props : any) {
+        super(props);
+    }
+
+    render() {
+        return <button id="profileButton" name="profileButton" className="profileButton" onClick={this.onClick.bind(this)}>Acceder al perfil personal</button>
+    }
+
+    onClick() {
+        this.props.parentObject.changeGameState(6);
+    }
+}
+
 
 class OptionsMenuButton extends React.Component<any, any> {
     constructor(props : any) {
@@ -166,7 +182,9 @@ class Game extends React.Component<any, any> {
 
     render() {
         let result: any;
-        if(this.state.gameState == 5) {
+        if(this.state.gameState == 6){
+            result = <Profile parentObject={this} />
+        }else if(this.state.gameState == 5) {
             result = <PreGameMenu parentObject={this} />
         } else if(this.state.gameState == 4){
             result = <EditMap horizontal={this.state.editx} vertical={this.state.edity} parentObject={this} />
@@ -181,6 +199,7 @@ class Game extends React.Component<any, any> {
             <div className="menu">
                 <EnterGameButton parentObject={this} /><br/>
                 <EditGameButton parentObject={this} /><br/>
+                <ProfileButton parentObject={this} /><br/>
                 <OptionsMenuButton parentObject={this} /><br/>
             </div>
             );
