@@ -199,7 +199,6 @@ export class EditMap extends React.Component<any, any> {
         //Si es borrado y hay una unidad entonces se procede a borrar
         if(unitIndex!=-1 && storeEdit.getState().type=="DELETE"){
             let arr = storeEdit.getState().units;
-            //Esta es la manera óptima de borrado, javascript no tiene una mejor manera para borrar elementos de un array
             arr = arr.filter(x => !x.position.equals(newPosition));
             //Se guarda el estado
             saveState(EditActions.saveState(this,
