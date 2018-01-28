@@ -1,18 +1,18 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
+
 import { storeEdit, saveState } from './StoreEdit';
 import { ReducerEdit, StateEdit, EditActions, InitialStateEdit} from './GameEditState';
 import { Cell } from './Cell';
 import { EditCell } from './EditCell';
 import { TerrainCell } from './TerrainCell';
-import { Pair, Cubic, myIndexOf, cubic_directions, myIndexOfCubic, Pathfinding } from './Utils';
+import { Pair, Cubic, myIndexOf, CUBIC_DIRECTIONS, myIndexOfCubic, Pathfinding } from './Utils';
 import { UnitCell } from './UnitCell';
 import { UnitStats } from './UnitStats';
 import { EditStats } from './EditStats';
 import { Unit, Infantry, Tank, General } from './Unit';
 import { Terrain, Plains, ImpassableMountain, Hills, Forest } from './Terrains';
-
 
 export class EditMap extends React.Component<any, any> {
     editStats: EditStats = null;
@@ -199,7 +199,6 @@ export class EditMap extends React.Component<any, any> {
         //Si es borrado y hay una unidad entonces se procede a borrar
         if(unitIndex!=-1 && storeEdit.getState().type=="DELETE"){
             let arr = storeEdit.getState().units;
-            //Esta es la manera óptima de borrado, javascript no tiene una mejor manera para borrar elementos de un array
             arr = arr.filter(x => !x.position.equals(newPosition));
             //Se guarda el estado
             saveState(EditActions.saveState(this,

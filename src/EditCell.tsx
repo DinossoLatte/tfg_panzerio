@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
 
+import { Cell } from './Cell';
 import { storeEdit } from './StoreEdit';
 import { TerrainCell } from './TerrainCell';
 import { UnitCell } from './UnitCell';
@@ -9,16 +10,10 @@ import { Pair, myIndexOf } from './Utils';
 import * as Terrain from './Terrains';
 
 //ESta clase es similar a Cell pero obteniendo los datos de storeEdit (quizas se pudiera generalizar y de esa forma juntar con Cell)
-class EditCell extends React.Component<any, any> {
-    /** Debe introducirse los atributos horizontal y vertical
-        @param props debe contener horizontal y vertical**/
+export class EditCell extends Cell {
+
     constructor(props : any) {
         super(props);
-        let pair = new Pair(props.row, props.column);
-        let indexTerrain = myIndexOf(storeEdit.getState().terrains.map(x => x.position), pair);
-        this.state = {
-            terrain: indexTerrain > -1?storeEdit.getState().terrains[indexTerrain]:Terrain.Plains.create(new Pair(props.row, props.column)),
-        }
     }
 
     /** Renderiza el objeto **/
@@ -53,5 +48,3 @@ class EditCell extends React.Component<any, any> {
         );
     }
 }
-
-export { EditCell };
