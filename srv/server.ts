@@ -7,10 +7,10 @@ var server = new webSocket.Server({ port: 8080 });
 
 server.on('connection', function connect(ws) {
     // Este será el inicio del servidor, por ahora nos encargaremos de mostrarle el estado
-    console.log("Connected with someone");
+    console.log("Conected with client");
     ws.on("message", function getInitialState(data) {
+        console.log("Got following action: "+data);
         // Dependiendo del estado, retornaremos una cosa u otra
-        console.log("Data: "+data);
         let message = JSON.parse(data as string);
         switch (message.type) {
             case "getInitialState":
@@ -30,6 +30,7 @@ server.on('connection', function connect(ws) {
                 ws.send(JSON.stringify(state));
                 break;
             default:
+                console.warn("Action sent not understood! Type is "+message.type);
                 ws.send("Command not understood");
         }
     });

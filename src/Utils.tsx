@@ -51,11 +51,18 @@ export class Cubic {
     y : number;
     z : number;
 
-    // TODO: Este constructor debe sólo admitir x,y y z. Se debe poner un método estático de conversión!!!
-    constructor(pair : Pair) {
-        this.x = pair.column;
-        this.z = pair.row - (pair.column - (pair.column&1))/2
-        this.y = -this.x-this.z;
+    constructor(x: number, y: number, z: number) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+    static create(pair : Pair): Cubic{
+        let cubic = new Cubic(0, 0, 0);
+        cubic.x = pair.column;
+        cubic.z = pair.row - (pair.column - (pair.column&1))/2
+        cubic.y = -cubic.x-cubic.z;
+        return cubic;
     }
 
     /* Calcula la distancia Manhattan */
@@ -96,10 +103,10 @@ export class Cubic {
     }
 }
 
-export var cubic_directions = [
-   new Cubic(new Pair(0,1)), new Cubic(new Pair(-1,1)), new Cubic(new Pair(-1,0)),
-   new Cubic(new Pair(-1,-1)), new Cubic(new Pair(0,-1)), new Cubic(new Pair(1,0))
-]
+export const CUBIC_DIRECTIONS = [
+    new Cubic(0,1,-1), new Cubic(1,0,-1), new Cubic(1,-1,0),
+    new Cubic(0,-1,1), new Cubic(-1,0,1), new Cubic(-1,1,0)
+];
 
 //Debido a que indexOf de los array iguala con ===, no es posible saber si un objeto está dentro de un array sino es identicamente el mismo objeto
 //por eso se ha creado este método auxiliar para ayudar al cálculo
@@ -129,7 +136,7 @@ export class Pathfinding {
         let enemyUnitsPos: Pair[] = store.getState().units.filter(x => x.player != unit.player).map(x => x.position);
         let enemyUnitsReachable: Pair[] = [];
         // Ahora, realizaremos una iteración igual que el proceso de obtener las posiciones accesibles por la unidad.
-        var visitables_cubic : Array<Cubic> = [new Cubic(unit.position)];
+        var visitables_cubic : Array<Cubic> = [Cubic.create(unit.position)];
         // Los vecinos estarán compuestos por la posición cúbica y el número de movimientos para pasar la posición
         var neighbours : Cubic[] = new Array<Cubic>();
         for(var i = 0 ; i < unit.range ; i++) {
@@ -137,9 +144,9 @@ export class Pathfinding {
             var new_neighbours: Cubic[] = [];
             visitables_cubic = visitables_cubic.concat(neighbours);
 
-            for(var index_directions = 0; index_directions < cubic_directions.length; index_directions++) {
+            for(var index_directions = 0; index_directions < CUBIC_DIRECTIONS.length; index_directions++) {
                 visitables_cubic.forEach(cubic => {
-                    var new_cubic = cubic.add(cubic_directions[index_directions]);
+                    var new_cubic = cubic.add(CUBIC_DIRECTIONS[index_directions]);
                     // Mientras la casilla actual no sea ya visitada o esté contenida en los vecinos anteriores
                     if(myIndexOfCubic(visitables_cubic, new_cubic) == -1 && myIndexOfCubic(neighbours, new_cubic) == -1) {
                         // En el caso de que no sea ninguno de los anteriores, la añadiremos a los visitados
@@ -156,6 +163,81 @@ export class Pathfinding {
             }
         }
         return enemyUnitsReachable;
+    }
+
+    // Este método calcula las posiciones movibles de la unidad introducida. Alto coste computacional
+    public static getMovableCells(state: State, unit_id: number, unit_player: boolean): Array<Pair> {
+        // Iniciamos las casillas visitables por la posición actual de la unidad
+        var visitables_cubic : Array<Cubic> = [Cubic.create(state.units[unit_id].position)];
+        // Obtenemos también el movimiento de la unidad, que delimita el número de iteraciones.
+        var movements : number = state.units[unit_id].movement;
+        // Los vecinos estarán compuestos por la posición cúbica y el número de movimientos para pasar la posición
+        var neighbours : [Cubic, number][] = new Array<[Cubic, number]>();
+        // En esta variable se guardarán las posiciones de las unidades atacables, que deben separarse porque no se pueden considerar como atravesables.
+        var enemyUnits : Cubic[] = new Array<Cubic>();
+        // Primero, iteraremos desde 0 hasta el número de movimientos
+        for(var i = 0 ; i <= movements ; i++) {
+            // Calculamos los próximos vecinos:
+            var new_neighbours: [Cubic, number][] = [];
+            // Añadimos los vecinos anteriores que sean alcanzables a la lista de casillas visitables.
+            visitables_cubic = visitables_cubic.concat(neighbours.filter(possible_tuple => possible_tuple[1] == 0).map(x => x[0]));
+            // Para cada una de las direcciones posibles
+            for(var index_directions = 0; index_directions < CUBIC_DIRECTIONS.length; index_directions++) {
+                // Por cada casilla visitable
+                visitables_cubic.forEach(cubic => {
+                    // Obtenemos la nueva casilla a visitar
+                    var new_cubic = cubic.add(CUBIC_DIRECTIONS[index_directions]);
+                    // Siempre que la nueva casilla no esté en la lista de visitables ni sea una posición no alcanzable.
+                    if(myIndexOfCubic(visitables_cubic, new_cubic) == -1) {
+                        var indexOfNeighbours = myIndexOfCubic(neighbours.map(x => x[0]), new_cubic);
+                        // Para añadir la posición, comprobamos primero que no esté la posición:
+                        if(indexOfNeighbours == -1) {
+                            // Si es el caso, debemos comprobar que la posición no esté ocupada por una de las unidades del jugador
+                            var positionIndex = state.units
+                                .filter(x => x.player==unit_player) // Si debe estar ocupada por una unidad, que sea únicamente la enemigas
+                                .map(y => y.position);
+                            if(myIndexOf(positionIndex, new_cubic.getPair()) == -1) {
+                                // Primero, comprobamos que se trate de una unidad enemiga, simplemente comprobando si está en la lista es suficiente
+                                let indexUnit = myIndexOf(state.units.map(x => x.position), new_cubic.getPair());
+                                // En el caso en el que esté, la añadimos a la lista de atacables y acabamos
+                                if(indexUnit != -1) {
+                                    // Añadimos a lista de atacables, sólo si no está en la lista y ésta iteración es el alcance del ataque más uno.
+                                    myIndexOfCubic(enemyUnits, new_cubic) == -1 && i < state.units[unit_id].range?enemyUnits.push(new_cubic):false;
+                                } else { // En caso contrario, es una posición sin unidades
+                                    // Obtenemos el índice del obstáculo, si es que está.
+                                    let indexOfObstacle = myIndexOf(state.terrains.map(x => x.position), new_cubic.getPair());
+                                    // Si se admite, añadimos la posición y la cantidad de movimientos para pasar por la casilla
+                                    // Por ahora se comprueba si está en la lista de obstáculos, en cuyo caso coge la cantidad. En caso contrario, asumimos Plains
+                                    new_neighbours.push([new_cubic, indexOfObstacle > -1?state.terrains[indexOfObstacle].movement_penalty-1:0]);
+                                }
+                            }
+                        } else { // Si no, esta casilla ya la tenemos en vecinos, pero tiene un movimiento != 0, por lo que reducimos el movimiento de la casilla
+                            // Actualizamos el movimiento de la unidad, si es el caso.
+                            var cell = neighbours[indexOfNeighbours];
+                            // Siempre que sea reducible
+                            if (cell[1] > 0) {
+                                // Obtenemos el índice de la iteración actual
+                                var index = myIndexOfCubic(new_neighbours.map(x => x[0]), cell[0]);
+                                // Si no está en nuestra lista de vecinos
+                                if (index == -1) {
+                                    // Lo añadimos y le reducimos el peso
+                                    new_neighbours.push([new_cubic, cell[1] - 1]);
+                                } else {
+                                    // Si ya está en nuestra lista de vecinos, accedemos y lo reemplazamos reducciendo en uno
+                                    new_neighbours[index] = [new_cubic, cell[1] - 1];
+                                }
+                            }
+                        }
+                    }
+                });
+                // Finalmente, se actualizan los vecinos.
+                neighbours = new_neighbours;
+            }
+        }
+        let visitables_pair = visitables_cubic.map(cubic => cubic.getPair());
+
+        // Finalmente convertimos el resultado a un sistema de coordenadas (row, column)
+        return visitables_pair;
     }
 
     public static getPositionClicked(xCoor: number, yCoor: number) : Pair {

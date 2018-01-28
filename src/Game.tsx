@@ -18,15 +18,10 @@ class EnterGameButton extends React.Component<any, any> {
     onClick() {
         // Realizamos una llamada al servidor para obtener el estado inicial de las partidas
         getInitialState(() => {
-            // Cuando acabe, se ejecutará el callback, que es esto.
+            // Reiniciamos el estado
+            store.dispatch(Actions.generateFinish());
+            // Y también cambiamos el estado del juego
             this.props.parentObject.changeGameState(5);
-            // Comprobamos si hay ganador o perdedor, en cuyo caso se reiniciará el estado al entrar en el juego
-            if (store.getState().map && store.getState().actualState > 0) {
-                // Si se ha producido esto, debemos reiniciar el estado
-                store.dispatch(Actions.finish());
-                // Ejecutamos también el reiniciado de estado del mapa
-                store.getState().map.restartState();
-            }
         });   
     }
 }
@@ -203,24 +198,31 @@ class Game extends React.Component<any, any> {
 
     render() {
         let result: any;
-        if(this.state.gameState == 5) {
-            result = <PreGameMenu parentObject={this} />
-        } else if(this.state.gameState == 4){
-            result = <EditMap horizontal={this.state.editx} vertical={this.state.edity} parentObject={this} />
-        } else if(this.state.gameState == 3){
-            result = <CreateMenu parentObject={this} />
-        } else if(this.state.gameState == 2) {
-            result = <Map horizontal="6" vertical="6" parentObject={this} />
-        } else if(this.state.gameState == 1) {
-            result = <OptionsMenu parentObject={this} />
-        } else {
-            result = (
-            <div className="menu">
-                <EnterGameButton parentObject={this} /><br/>
-                <EditGameButton parentObject={this} /><br/>
-                <OptionsMenuButton parentObject={this} /><br/>
-            </div>
-            );
+        switch(this.state.gameState) {
+            case 1:
+                result = <OptionsMenu parentObject={this} />;
+                break;
+            case 2:
+                result = <Map horizontal="6" vertical="6" parentObject={this} />;
+                break;
+            case 3:
+                result = <CreateMenu parentObject={this} />;
+                break;
+            case 4:
+                result = <EditMap horizontal={this.state.editx} vertical={this.state.edity} parentObject={this} />;
+                break;
+            case 5: 
+                result = <PreGameMenu parentObject={this} />;
+                break;
+            default:
+                result = (
+                    <div className="menu">
+                        <EnterGameButton parentObject={this} /><br />
+                        <EditGameButton parentObject={this} /><br />
+                        <OptionsMenuButton parentObject={this} /><br />
+                    </div>
+                );
+                break;
         }
 
         return result;
