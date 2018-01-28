@@ -83,7 +83,7 @@ export class Map extends React.Component<any, any> {
                 columns: this.state.columns,
                 alertUnitsNotPlaced: false
             });
-            saveState(Actions.nextTurn()); //Se usa para obligar a actualizar el estado (tambien actualiza los used)
+            saveState(Actions.generateNextTurn()); //Se usa para obligar a actualizar el estado (tambien actualiza los used)
         }
     }
 
