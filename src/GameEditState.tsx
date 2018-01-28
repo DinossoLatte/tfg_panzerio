@@ -69,7 +69,7 @@ export class EditActions {
 
 //Este es el estado de la edición
 export type StateEdit = {
-    readonly map: EditMap;
+    readonly map: EditMap,
     readonly side: boolean,
     readonly units: Array<Unit>,
     readonly terrains: Array<Terrain>,

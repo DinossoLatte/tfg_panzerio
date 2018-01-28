@@ -65,3 +65,12 @@ body {
 #error {
     color: red;
 }
+
+.avatar {
+    width: 200px;
+    height: 200px;
+}
+
+#arm {
+    font-weight: bold;
+}
