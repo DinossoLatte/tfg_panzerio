@@ -5,6 +5,7 @@ import { Actions, getInitialState } from './GameState';
 import { EditMap } from './EditMap';
 import { store } from './Store';
 import { Network } from './Utils';
+import { Profile } from './Profile'
 
 class EnterGameButton extends React.Component<any, any> {
     constructor(props: any) {
@@ -22,7 +23,14 @@ class EnterGameButton extends React.Component<any, any> {
             store.dispatch(Actions.generateFinish());
             // Y también cambiamos el estado del juego
             this.props.parentObject.changeGameState(5);
-        });   
+            // Comprobamos si hay ganador o perdedor, en cuyo caso se reiniciará el estado al entrar en el juego
+            if (store.getState().map && store.getState().actualState > 0) {
+                // Si se ha producido esto, debemos reiniciar el estado
+                store.dispatch(Actions.generateFinish());
+                // Ejecutamos también el reiniciado de estado del mapa
+                store.getState().map.restartState();
+            }
+        });
     }
 }
 
@@ -39,6 +47,21 @@ class EditGameButton extends React.Component<any, any> {
         this.props.parentObject.changeGameState(3);
     }
 }
+
+class ProfileButton extends React.Component<any, any> {
+    constructor(props : any) {
+        super(props);
+    }
+
+    render() {
+        return <button id="profileButton" name="profileButton" className="profileButton" onClick={this.onClick.bind(this)}>Acceder al perfil personal</button>
+    }
+
+    onClick() {
+        this.props.parentObject.changeGameState(6);
+    }
+}
+
 
 class OptionsMenuButton extends React.Component<any, any> {
     constructor(props : any) {
@@ -213,6 +236,9 @@ class Game extends React.Component<any, any> {
                 break;
             case 5: 
                 result = <PreGameMenu parentObject={this} />;
+                break;
+            case 6:
+                result = <Profile parentObject={this} />;
                 break;
             default:
                 result = (
