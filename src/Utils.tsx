@@ -368,11 +368,11 @@ export class Network {
         return result;
     }
 
-    public static parseMap(terrains: Array<{ name: string, image: string, movement_penalty: number, position:{ row: number, column: number}}>): Terrain[] {
+    public static parseMap(terrains: Array<{ name: string, image: string, movement_penalty: number, position:{ row: number, column: number}, defenseWeak: number, defenseStrong: number}>): Terrain[] {
         let result: Terrain[] = [];
         if(terrains) {
             result = terrains.map(terrain => new Terrain(terrain.name, terrain.image, terrain.movement_penalty,
-                new Pair(terrain.position.row, terrain.position.column)));
+                new Pair(terrain.position.row, terrain.position.column), terrain.defenseWeak ,terrain.defenseStrong));
         }
 
         return result;

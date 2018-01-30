@@ -1,18 +1,9 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
-import { storeProfile, saveState } from './StoreProfile';
-import { ReducerProfile, StateProfile, ProfileActions, InitialStateProfile} from './GameProfileState';
-import { Cell } from './Cell';
+import { storeProfile, saveState,  } from './StoreProfile';
+import { ProfileActions } from './GameProfileState';
 import { Army } from './Army';
-import { EditCell } from './EditCell';
-import { TerrainCell } from './TerrainCell';
-import { Pair, Cubic, myIndexOf, cubic_directions, myIndexOfCubic, Pathfinding } from './Utils';
-import { UnitCell } from './UnitCell';
-import { UnitStats } from './UnitStats';
-import { EditStats } from './EditStats';
-import { Unit, Infantry, Tank, General } from './Unit';
-import { Terrain, Plains, ImpassableMountain, Hills, Forest } from './Terrains';
 
 export class Profile extends React.Component<any, any> {
 
