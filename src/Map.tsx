@@ -302,7 +302,7 @@ export class Map extends React.Component<any, any> {
         var accum2 = [];
         this.state.cells[num_row] = new Array<Cell>(this.props.horizontal);
         // Este bucle iterará hasta el número de celdas horizontales especificado en el props.
-        for(var j = num_row%2==0?0:1; j <= this.props.horizontal; j = j+2) { // Incrementamos en 2 porque el elemento entre cada hex tendrá el valor j + 1.
+        for(var j = num_row%2==0?0:1; j < this.props.horizontal; j = j+2) { // Incrementamos en 2 porque el elemento entre cada hex tendrá el valor j + 1.
             let column = j;
             let row = num_row%2==0?num_row/2:Math.floor(num_row/2);
             var cell = <Cell row={row} column={column} />;
