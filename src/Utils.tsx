@@ -111,9 +111,11 @@ export const CUBIC_DIRECTIONS = [
 //Debido a que indexOf de los array iguala con ===, no es posible saber si un objeto está dentro de un array sino es identicamente el mismo objeto
 //por eso se ha creado este método auxiliar para ayudar al cálculo
 export function myIndexOf(arr: Array<Pair>, o: Pair) {
-    for (var i = 0; i < arr.length; i++) {
-        if (arr[i].column == o.column && arr[i].row == o.row) {
-            return i;
+    if(arr != null && arr != undefined) {
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i].column == o.column && arr[i].row == o.row) {
+                return i;
+            }
         }
     }
     return -1;

@@ -10,8 +10,7 @@ import { Pair, myIndexOf } from './Utils';
 import * as Terrain from './Terrains';
 
 //ESta clase es similar a Cell pero obteniendo los datos de storeEdit (quizas se pudiera generalizar y de esa forma juntar con Cell)
-export class EditCell extends Cell {
-
+export class EditCell extends React.Component<any, any> {
     constructor(props : any) {
         super(props);
     }
@@ -19,8 +18,6 @@ export class EditCell extends Cell {
     /** Renderiza el objeto **/
     render() {
         // Comprobamos si una unidad está en esta posición
-        let indexUnit = myIndexOf(storeEdit.getState().units.map(x => x.position), this.state.terrain.position);
-        let unit = indexUnit == -1?null:storeEdit.getState().units[indexUnit];
         // Comprobamos si la casilla actual contiene el cursor, primero obteniendo su posición
         let positionCursor = storeEdit.getState().cursorPosition;
         // Despues comprobando que esta casilla esté en esa posición
@@ -43,7 +40,6 @@ export class EditCell extends Cell {
                             :this.props.actual?"imgs/hex_base_actual.png"
                             :"imgs/hex_base.png"} />
                     <TerrainCell terrain={terrain} />
-                    {unit!=null?<UnitCell unit={unit} />:""}
                 </div>
         );
     }

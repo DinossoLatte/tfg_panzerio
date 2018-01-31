@@ -128,16 +128,26 @@ class PreGameMenu extends React.Component<any, any> {
     }
 
     startGame(event: MouseEvent) {
+        // Definimos las dimensiones básicas del mapa
+        let rows = 6;
+        let columns = 6;
         // Antes de ejecutar, comprobamos que exista un mapa personalizado
         if(this.state.custom) {
-            console.log((document.getElementById("customMap") as HTMLTextAreaElement).value);
-            // Si es el caso, debemos modificar el estado a tener el nuevo mapa en cuenta
-            let newMap = Network.parseMap(
-                JSON.parse((document.getElementById("customMap") as HTMLTextAreaElement).value));
+            // Primero, obtenemos el JSON resultante
+            let custom = JSON.parse((document.getElementById("customMap") as HTMLTextAreaElement).value);
+            // Obtenemos por un lado el mapa
+            let newMap = Network.parseMap(custom.map);
             // Y cambiamos el estado para tener esto en cuenta
             store.dispatch(Actions.generateCustomMap(newMap));
+            // Modificamos las dimensiones del mapa
+            rows = custom.rows;
+            columns = custom.columns;
         }
-        this.props.parentObject.setState({ gameState: 2 });
+        this.props.parentObject.setState({ 
+            gameState: 2,
+            rows: rows,
+            columns: columns
+        });
     }
 
     // Actualiza el componente de poder introducir el mapa, en el caso de seleccionar
@@ -226,7 +236,7 @@ class Game extends React.Component<any, any> {
                 result = <OptionsMenu parentObject={this} />;
                 break;
             case 2:
-                result = <Map horizontal="6" vertical="6" parentObject={this} />;
+                result = <Map horizontal={this.state.rows} vertical={this.state.columns} parentObject={this} />;
                 break;
             case 3:
                 result = <CreateMenu parentObject={this} />;
