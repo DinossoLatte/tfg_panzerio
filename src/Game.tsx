@@ -255,6 +255,7 @@ class Game extends React.Component<any, any> {
                     <div className="menu">
                         <EnterGameButton parentObject={this} /><br />
                         <EditGameButton parentObject={this} /><br />
+                        <ProfileButton parentObject={this} /><br />
                         <OptionsMenuButton parentObject={this} /><br />
                     </div>
                 );
