@@ -19,31 +19,10 @@ export class EditActions {
         };
     }
 
-    static onClickCreateUnit(map: EditMap) :Redux.AnyAction {
-        return {
-            map: map,
-            type: "CREATE_UNIT"
-        };
-    }
-
-    static onClickSide(map: EditMap) : Redux.AnyAction{
-        return {
-            map: map,
-            type: "SIDE"
-        };
-    }
-
     static onClickCreateTerrain(map: EditMap) : Redux.AnyAction {
         return {
             map: map,
             type: "CREATE_TERRAIN"
-        };
-    }
-
-    static onClickDelete(map: EditMap) : Redux.AnyAction {
-        return {
-            map: map,
-            type: "DELETE"
         };
     }
 
@@ -54,11 +33,10 @@ export class EditActions {
         }
     }
 
-    static saveState(map: EditMap, side: boolean, units: Array<Unit>, terrains: Array<Terrain>, cursorPosition: Pair, selected: string, type: string) : Redux.AnyAction{
+    static saveState(map: EditMap, side: boolean, terrains: Array<Terrain>, cursorPosition: Pair, selected: string, type: string) : Redux.AnyAction{
         return {
             map: map,
             side: side,
-            units: units,
             terrains: terrains,
             cursorPosition: cursorPosition,
             selected: selected,
@@ -71,7 +49,6 @@ export class EditActions {
 export type StateEdit = {
     readonly map: EditMap,
     readonly side: boolean,
-    readonly units: Array<Unit>,
     readonly terrains: Array<Terrain>,
     readonly cursorPosition: Pair,
     readonly selected: string,
@@ -82,7 +59,6 @@ function getInitialStateEdit(): StateEdit {
     return {
         map: null,
         side: true,
-        units: new Array<Unit>(),
         terrains: new Array<Terrain>(),
         cursorPosition: new Pair(0,0),
         selected: null,
@@ -101,32 +77,9 @@ export const ReducerEdit : Redux.Reducer<StateEdit> =
                 return{
                     map: action.map,
                     side: state.side,
-                    units: state.units,
                     terrains: state.terrains,
                     cursorPosition: state.cursorPosition,
                     selected: action.selected,
-                    type: state.type
-                };
-            case "CREATE_UNIT":
-                action.map.forceUpdate();
-                return{
-                    map: action.map,
-                    side: state.side,
-                    units: state.units,
-                    terrains: state.terrains,
-                    cursorPosition: state.cursorPosition,
-                    selected: state.selected,
-                    type: action.type
-                };
-            case "SIDE":
-                action.map.forceUpdate();
-                return{
-                    map: action.map,
-                    side: !state.side,
-                    units: state.units,
-                    terrains: state.terrains,
-                    cursorPosition: state.cursorPosition,
-                    selected: state.selected,
                     type: state.type
                 };
             case "CREATE_TERRAIN":
@@ -134,18 +87,6 @@ export const ReducerEdit : Redux.Reducer<StateEdit> =
                 return{
                     map: action.map,
                     side: state.side,
-                    units: state.units,
-                    terrains: state.terrains,
-                    cursorPosition: state.cursorPosition,
-                    selected: state.selected,
-                    type: action.type
-                };
-            case "DELETE":
-                action.map.forceUpdate();
-                return{
-                    map: action.map,
-                    side: state.side,
-                    units: state.units,
                     terrains: state.terrains,
                     cursorPosition: state.cursorPosition,
                     selected: state.selected,
@@ -156,7 +97,6 @@ export const ReducerEdit : Redux.Reducer<StateEdit> =
                 return{
                     map: action.map,
                     side: action.side,
-                    units: action.units,
                     terrains: action.terrains,
                     cursorPosition: action.cursorPosition,
                     selected: action.selected,
@@ -167,7 +107,6 @@ export const ReducerEdit : Redux.Reducer<StateEdit> =
                 return{
                     map: action.map,
                     side: state.side,
-                    units: state.units,
                     terrains: state.terrains,
                     cursorPosition: state.cursorPosition,
                     selected: state.selected,

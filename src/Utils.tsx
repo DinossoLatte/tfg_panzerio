@@ -153,7 +153,8 @@ export class Pathfinding {
                         new_neighbours.push(new_cubic);
                         // Y comprobamos que exista una unidad enemiga en esa posición
                         let index = myIndexOf(enemyUnitsPos, new_cubic.getPair())
-                        if(index > -1) {
+                        //Si es artilleria y es cuerpo a cuerpo (i==0) entonces no se usa
+                        if(index > -1 && !(unit.name=="Artillery" && i==0)) {
                             // En el caso de exista, la añadimos a los alcanzables
                             enemyUnitsReachable.push(enemyUnitsPos[index]);
                         }
@@ -353,7 +354,7 @@ export class Network {
         // Inicializamos una lista con los datos de las casillas visitables
         let visitables: Array<{row: number, column:number}> = json.visitables;
         // Y asignamos al estado las casillas
-        if(visitables) 
+        if(visitables)
             result.visitables = visitables.map(pair => new Pair(pair.row, pair.column));
         // Ahora vamos con las unidades:
         let units: Array<{name: string, type: string, movement: number, position:{row: number,column: number}, player: boolean, used: boolean, attackWeak: number, attackStrong: number, defenseWeak: number, defenseStrong: number, health: number, range: number, hasAttacked: boolean}> = json.units
