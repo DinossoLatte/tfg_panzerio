@@ -7,12 +7,12 @@ import { Cell } from './Cell';
 import { Army } from './Army';
 import { EditCell } from './EditCell';
 import { TerrainCell } from './TerrainCell';
-import { Pair, Cubic, myIndexOf, cubic_directions, myIndexOfCubic, Pathfinding } from './Utils';
+import { Pair, Cubic, myIndexOf, CUBIC_DIRECTIONS, myIndexOfCubic, Pathfinding } from './Utils';
 import { UnitCell } from './UnitCell';
 import { UnitStats } from './UnitStats';
 import { EditStats } from './EditStats';
-import { Unit, Infantry, Tank, General } from './Unit';
-import { Terrain, Plains, ImpassableMountain, Hills, Forest } from './Terrains';
+import { Unit, Infantry, Tank, General, UNITS, UNITS_ESP } from './Unit';
+import { Terrain, Plains, ImpassableMountain, Hills, Forest, TERRAINS, TERRAINS_ESP } from './Terrains';
 
 export class Profile extends React.Component<any, any> {
 
@@ -47,25 +47,44 @@ export class Profile extends React.Component<any, any> {
         return army;
     }
 
-    armyContent(i: number){
-        let army = [];
-        let GeneralNum = 0;
-        let InfantryNum = 0;
-        let TankNum = 0;
-        let ind;
-        i==null?ind=storeProfile.getState().selectedArmy:ind=i;
-        for(var i = 0; i < storeProfile.getState().armies[ind].getArmy().length; i++){
-            if(storeProfile.getState().armies[ind].getArmy()[i]=="General"){
-                GeneralNum++;
-            }else if(storeProfile.getState().armies[ind].getArmy()[i]=="Infantry"){
-                InfantryNum++;
-            }else if(storeProfile.getState().armies[ind].getArmy()[i]=="Tank"){
-                TankNum++;
+    //Se crean los options segun la lista de unidades disponibles (empieza en 1 para no contar general)
+    selectOptionsUnits(){
+        let army = [<option selected value={null}>--Selecciona--</option>];
+        for(var i = 1; i < UNITS.length; i++){
+            army.push(<option value={UNITS[i]}>{UNITS_ESP[i]}</option>);
+        }
+        return army;
+    }
+
+    selectOptionsUnitsDelete(){
+        let army = [<option selected value={null}>--Selecciona--</option>];
+        for(var i = 1; i < UNITS.length; i++){
+            if(storeProfile.getState().armies[storeProfile.getState().selectedArmy].getArmy().filter(x =>  x==UNITS[i]).length!=0){
+                army.push(<option value={UNITS[i]}>{UNITS_ESP[i]}</option>);
             }
         }
-        army.push(<p>Generales: {GeneralNum}</p>);
-        army.push(<p>Infanterías: {InfantryNum}</p>);
-        army.push(<p>Tanques: {TankNum}</p>)
+        return army;
+    }
+
+    armyContent(i: number){
+        let army = [];
+        //Es necesario hacer este bucle porque sino no se puede incializar a 0 el array
+        let armyNum = [];
+        for(var j = 0; j < UNITS.length; j++){
+            armyNum.push(0);
+        }
+        let ind;
+        i==null?ind=storeProfile.getState().selectedArmy:ind=i;
+        for(var y = 0; y < storeProfile.getState().armies[ind].getArmy().length; y++){
+            for(var p = 0; p < UNITS.length; p++){
+                if(storeProfile.getState().armies[ind].getArmy()[y]==UNITS[p]){
+                    armyNum[p]++;
+                }
+            }
+        }
+        for(var z = 0; z < armyNum.length; z++){
+            army.push(<p>{UNITS_ESP[z]}: {armyNum[z]}</p>);
+        }
         return army;
     }
 
@@ -74,7 +93,7 @@ export class Profile extends React.Component<any, any> {
         for(var i = 0; i < storeProfile.getState().armies.length; i++){
             armies.push(<div id="arm">{storeProfile.getState().armies[i].getName()}</div>);
             var army = this.armyContent(i)
-            for(var j=0; j < army.length; j++){
+            for(var j = 0; j < army.length; j++){
                 armies.push(army[j]);
             }
         }
@@ -183,9 +202,7 @@ export class Profile extends React.Component<any, any> {
                 {storeProfile.getState().type=="1"||storeProfile.getState().type=="4"?<div>
                     <label> Selecciona el tipo de unidad:
                         <select defaultValue={null} value={storeProfile.getState().selected} onChange={evt => this.selectedUnit(evt.target.value)}>
-                            <option selected value={null}>--Selecciona--</option>
-                            <option value="Infantry">Infantería</option>
-                            <option value="Tank">Tanque</option>
+                            {this.selectOptionsUnits()}
                         </select>
                     </label>
                     {storeProfile.getState().selected!=null?<button id="addUnit" name="addUnit" className="addUnitButton" onClick={this.onClickAdd.bind(this)}>Añadir unidad</button>:""}
@@ -197,9 +214,7 @@ export class Profile extends React.Component<any, any> {
                 {storeProfile.getState().type=="5"&&storeProfile.getState().armies[storeProfile.getState().selectedArmy].getArmy().length>1?<div>
                     <label> Selecciona el tipo de unidad:
                         <select defaultValue={null} value={storeProfile.getState().selected} onChange={evt => this.selectedUnit(evt.target.value)}>
-                            <option selected value={null}>--Selecciona--</option>
-                            {storeProfile.getState().armies[storeProfile.getState().selectedArmy].getArmy().filter(x =>  x=="Infantry").length!=0?<option value="Infantry">Infantería</option>:""}
-                            {storeProfile.getState().armies[storeProfile.getState().selectedArmy].getArmy().filter(x =>  x=="Tank").length!=0?<option value="Tank">Tanque</option>:""}
+                            {this.selectOptionsUnitsDelete()}
                         </select>
                     </label>
                     {storeProfile.getState().selected!=null?<button id="deleteUnit" name="deleteUnit" className="deleteUnitButton" onClick={this.onClickDelete.bind(this)}>Eliminar unidad</button>:""}

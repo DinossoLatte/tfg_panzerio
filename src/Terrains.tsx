@@ -37,3 +37,13 @@ export class Forest extends Terrain {
         return new Terrain("Forest", "imgs/terrain_forest.png", 1, position);
     }
 }
+
+export const TERRAINS = [
+    "Plains", "Mountains", "Hills",
+    "Forest"
+];
+
+export const TERRAINS_ESP = [
+    "Llanura", "Montaña", "Colina",
+    "Bosque"
+];

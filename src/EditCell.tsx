@@ -18,9 +18,6 @@ export class EditCell extends Cell {
 
     /** Renderiza el objeto **/
     render() {
-        // Comprobamos si una unidad está en esta posición
-        let indexUnit = myIndexOf(storeEdit.getState().units.map(x => x.position), this.state.terrain.position);
-        let unit = indexUnit == -1?null:storeEdit.getState().units[indexUnit];
         // Comprobamos si la casilla actual contiene el cursor, primero obteniendo su posición
         let positionCursor = storeEdit.getState().cursorPosition;
         // Despues comprobando que esta casilla esté en esa posición
@@ -32,18 +29,9 @@ export class EditCell extends Cell {
                 <div className="div_cell">
                     <img className="cell" id={"hex"+this.props.row+"_"+this.props.column}
                         src={
-                            cursor?this.props.used?"imgs/hex_base_numpad_used.png"
-                                :this.props.selected?"imgs/hex_base_numpad_selected.png"
-                                :this.props.attack?"imgs/hex_base_numpad_attack.png"
-                                :this.props.actual?"imgs/hex_base_numpad_actual.png"
-                                :"imgs/hex_base_numpad.png"
-                            :this.props.used?"imgs/hex_base_used.png"
-                            :this.props.selected?"imgs/hex_base_selected.png"
-                            :this.props.attack?"imgs/hex_base_attack.png"
-                            :this.props.actual?"imgs/hex_base_actual.png"
+                            cursor?"imgs/hex_base_numpad.png"
                             :"imgs/hex_base.png"} />
                     <TerrainCell terrain={terrain} />
-                    {unit!=null?<UnitCell unit={unit} />:""}
                 </div>
         );
     }
