@@ -11,8 +11,8 @@ import { Pair, Cubic, myIndexOf, CUBIC_DIRECTIONS, myIndexOfCubic, Pathfinding }
 import { UnitCell } from './UnitCell';
 import { UnitStats } from './UnitStats';
 import { EditStats } from './EditStats';
-import { Unit, Infantry, Tank, General } from './Unit';
-import { Terrain, Plains, ImpassableMountain, Hills, Forest } from './Terrains';
+import { Unit, Infantry, Tank, General, UNITS, UNITS_ESP } from './Unit';
+import { Terrain, Plains, ImpassableMountain, Hills, Forest, TERRAINS, TERRAINS_ESP } from './Terrains';
 
 export class EditMap extends React.Component<any, any> {
     editStats: EditStats = null;
@@ -43,11 +43,7 @@ export class EditMap extends React.Component<any, any> {
                     {storeEdit.getState().type==1?<div>
                         <label> Selecciona el tipo de unidad:
                             <select defaultValue={null} value={storeEdit.getState().selected} onChange={evt => this.selected(evt.target.value)}>
-                                <option selected value={null}>--Selecciona--</option>
-                                <option value="Plains">Llanura</option>
-                                <option value="Mountains">Montaña</option>
-                                <option value="Hills">Colina</option>
-                                <option value="Forest">Bosque</option>
+                                {this.selectOptionsTerrains()}
                             </select>
                         </label>
                     </div>:""}
@@ -64,6 +60,14 @@ export class EditMap extends React.Component<any, any> {
                 </div>
             </div>
         );
+    }
+
+    selectOptionsTerrains(){
+        let army = [<option selected value={null}>--Selecciona--</option>];
+        for(var i = 0; i < TERRAINS.length; i++){
+            army.push(<option value={TERRAINS[i]}>{TERRAINS_ESP[i]}</option>);
+        }
+        return army;
     }
 
     //Todos estos son métodos de actualización de los botones y los estados correspondientes de borrar, crear unidad, crear terreno, seleccionar y cambiar bando

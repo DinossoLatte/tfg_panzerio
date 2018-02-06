@@ -115,6 +115,7 @@ export class Profile extends React.Component<any, any> {
         result.push(<p>Infanterías: {infantryNumber}</p>);
         result.push(<p>Tanques: {tankNumber}</p>)
         return result;
+
     }
 
     /// Esta función se encargará de renderizar una lista de los ejércitos del usuario
@@ -355,6 +356,7 @@ export class Profile extends React.Component<any, any> {
                 </div> : storeProfile.getState().type >= "2" && storeProfile.getState().armies.length == 0 ? <div id="error">No hay batallones para seleccionar</div> : ""}
                 {storeProfile.getState().type == "1" || storeProfile.getState().type == "4" ? <div>
                     <label> Selecciona el tipo de unidad:
+
                         <select defaultValue={null} value={storeProfile.getState().selected} onChange={evt => this.selectUnit(evt.target.value)}>
                             <option selected value={null}>--Selecciona--</option>
                             <option value="Infantry">Infantería</option>
