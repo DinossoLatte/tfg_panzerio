@@ -8,7 +8,7 @@
     "purge": "rm ./dist/bundle.js && rm ./dist/bundle.js.map",
     "start": "tsc --p tsconfig-server.json && babel srv/ -d srv_compiled && node srv_compiled/srv/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "clean": "rm srv/*.js && rm -r srv_compiled"
+    "clean": "rm -r srv/src/ && rm -r srv/srv/ && rm -r srv_compiled"
   },
   "author": "ignalelop@alum.us.es",
   "license": "GNU GPL2",
