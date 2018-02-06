@@ -119,10 +119,11 @@ export class Actions {
         }
     }
 
-    static generateCustomMap(terrains: Terrain[]) : Redux.AnyAction {
+    static generatePreGameConfiguration(terrains: Terrain[], units: Unit[]) : Redux.AnyAction {
         return {
             terrains: terrains,
-            type: "CUSTOM_MAP_INIT"
+            units: units,
+            type: "PRE_GAME_CONFIGURATION"
         };
     }
 }
@@ -295,12 +296,13 @@ export const Reducer : Redux.Reducer<State> =
                     selectedUnit: null,
                     type: "SET_LISTENER"
                 }
-            case "CUSTOM_MAP_INIT":
+            case "PRE_GAME_CONFIGURATION":
                 // Si se quiere importar un mapa, se cambiará los terrenos
+                console.log("Unidades: "+action.units);
                 return {
                     turn: state.turn,
                     actualState: state.actualState,
-                    units: state.units,
+                    units: action.units,
                     visitables: state.visitables,
                     terrains: action.terrains,
                     map: state.map,

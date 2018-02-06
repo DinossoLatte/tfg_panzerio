@@ -319,6 +319,16 @@ export class Profile extends React.Component<any, any> {
         this.props.parentObject.changeGameState(0);
     }
 
+    /// Este listener se encargará de exportar el ejército seleccionado para que pueda ser usado en el juego
+    onClickExportArmy() {
+        // Primero, obtendremos el ejército seleccionado
+        let selectedArmy = storeProfile.getState().armies[storeProfile.getState().selectedArmy].unitList;
+        // Lo convertimos a una cadena de texto de JSON
+        let exportedArmy = JSON.stringify(selectedArmy);
+        // Y lo mostraremos en pantalla
+        window.alert("El siguiente texto le permitirá usar este ejército en el juego: \n"+exportedArmy);
+    }
+
     render() {
         return (
             <div>
@@ -330,6 +340,7 @@ export class Profile extends React.Component<any, any> {
                 {storeProfile.getState().type != "0" ? <button id="listArmy" name="listArmy" className="listArmyButton" onClick={this.onClickList.bind(this)}>Mostrar batallones</button> : ""}
                 {storeProfile.getState().type != "1" ? <button id="createArmy" name="createArmy" className="createArmyButton" onClick={this.onClickCreateArmy.bind(this)}>Crear un nuevo ejército</button> : ""}
                 {storeProfile.getState().type != "2" ? <button id="editArmy" name="editArmy" className="editArmyButton" onClick={this.onClickEditArmy.bind(this)}>Editar un ejército</button> : ""}
+                {storeProfile.getState().type > "2" ? <button id="exportArmy" name="exportArmy" className="exportArmyButton" onClick={this.onClickExportArmy.bind(this)}>Exportar ejército</button> : ""}
                 <button id="exitButton" name="exitButton" onClick={this.onClickExitMenu.bind(this)}>Volver al menú</button>
                 {storeProfile.getState().type >= "2" && storeProfile.getState().armies.length > 0 ? <div>
                     <label> Selecciona el batallón:

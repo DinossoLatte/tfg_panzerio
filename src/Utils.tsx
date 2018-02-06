@@ -3,6 +3,7 @@ import { store } from './Store';
 import { Terrain } from './Terrains';
 import { Map } from './Map';
 import { State } from './GameState';
+import * as Units from './Unit';
 
 export class Pair {
     row : any;
@@ -378,5 +379,41 @@ export class Network {
         }
 
         return result;
+    }
+
+    /// Esta función se encargará de obtener el conjunto de unidades dado el par indicado
+    /// Aunque no es usado por ningún archivo relacionado con el servidor, será usado
+    /// cuando se disponga del guardado de ejércitos en servidor
+    /// 
+    /// El argumento side permitirá indicar el bando del ejército, sea del jugador o enemigo
+    public static parseArmy(unitsPair: Array<{ type: string, number: number }>, side: boolean): Array<Unit> {
+        // Primero, creamos el array que contendrá el resultado
+        let units: Array<Unit> = new Array<Unit>();
+        // Iteramos por los elementos del array
+        for(let index = 0; index < unitsPair.length; index++) {
+            let pair = unitsPair[index];
+            // Este contador indicará el número de unidades restantes del tipo
+            let unitsLeft = pair.number;
+            // Mientras queden unidades por crear
+            while(unitsLeft > 0) {
+                // Dependiendo del tipo, se creará una unidad u otra
+                // Todas las unidades se crearán en la posición (-1, -1)
+                switch(pair.type) {
+                    case "General":
+                        units.push(Units.General.create(new Pair(-1, -1), side));
+                        break;
+                    case "Infantry":
+                        units.push(Units.Infantry.create(new Pair(-1, -1), side));
+                        break;
+                    case "Tank":
+                        units.push(Units.Tank.create(new Pair(-1, -1), side));
+                        break;
+                }
+                // Finalmente, indicamos que hemos creado la unidad de este tipo
+                --unitsLeft;
+            }
+        }
+        // Retornamos el conjunto de unidades del bando
+        return units;
     }
 }
