@@ -71,7 +71,7 @@ export class Tank extends Unit {
         // Características de defensa débil y fuerte
          2, 1,
         // Vida
-        3,
+        4,
         // Alcance
         1,
         0);
@@ -92,3 +92,43 @@ export class General extends Unit {
         0);
     }
 }
+
+export class Paratrooper extends Unit {
+    static create(position: Pair, player: boolean) : Unit {
+        return new Unit("Paratrooper", "paratrooper", 5, position, player, false,
+        // Características de ataque débil y fuerte
+         3, 4,
+        // Características de defensa débil y fuerte
+         1, 2,
+        // Vida
+        3,
+        // Alcance
+        1,
+        0);
+    }
+}
+
+export class Artillery extends Unit {
+    static create(position: Pair, player: boolean) : Unit {
+        return new Unit("Artillery", "artillery", 2, position, player, false,
+        // Características de ataque débil y fuerte
+         2, 3,
+        // Características de defensa débil y fuerte
+         2, 2,
+        // Vida
+        3,
+        // Alcance
+        3,
+        0);
+    }
+}
+
+export const UNITS = [
+    "General", "Infantry", "Tank",
+    "Artillery", "Paratrooper"
+];
+
+export const UNITS_ESP = [
+    "General", "Infantería", "Tanque",
+    "Artillería", "Paracaidista"
+];

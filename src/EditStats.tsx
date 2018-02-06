@@ -9,7 +9,6 @@ export class EditStats extends React.Component<any, any> {
         // Actualizamos el atributo de Mapa para que el mapa pueda actualizar el estado de este componente.
         storeEdit.getState().map.editStats = this;
         this.state = {
-            unit: null,
             terrain: null
         }
     }

@@ -136,12 +136,21 @@ export const Reducer : Redux.Reducer<State> =
                 let visitables = state.visitables;
                 // Si la unidad la tiene el jugador
                 if(action.player==state.units[action.unit_id].player){
+                    let lastPosition = state.units[action.unit_id].position;
                     // Actualiza la posición
                     state.units[action.unit_id].position = action.new_position;
                     // En el caso de estar fuera de la fase de pre juego, donde posicionamos las unidades sin causar turnos
                     if(state.turn >= 2) {
-                        state.units[action.unit_id].action = 1;
+                        //Si es paracaidista pasa directamente a estado usado
+                        if(state.units[action.unit_id].name=="Paratrooper" && !lastPosition.equals(action.new_position)){
+                            state.units[action.unit_id].used = true;
+                            state.units[action.unit_id].hasAttacked = true;
+                            state.units[action.unit_id].action = 2;
+                        }else{
+                            state.units[action.unit_id].action = 1;
+                        }
                     }
+
                 }
                 // Si la unidad tiene posiblidad de atacar
                 if(!state.units[action.unit_id].hasAttacked && state.units[action.unit_id].action==1) {
