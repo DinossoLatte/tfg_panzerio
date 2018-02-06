@@ -10,14 +10,14 @@ import { Pair, myIndexOf } from './Utils';
 import * as Terrain from './Terrains';
 
 //ESta clase es similar a Cell pero obteniendo los datos de storeEdit (quizas se pudiera generalizar y de esa forma juntar con Cell)
-export class EditCell extends Cell {
-
+export class EditCell extends React.Component<any, any> {
     constructor(props : any) {
         super(props);
     }
 
     /** Renderiza el objeto **/
     render() {
+        // Comprobamos si una unidad está en esta posición
         // Comprobamos si la casilla actual contiene el cursor, primero obteniendo su posición
         let positionCursor = storeEdit.getState().cursorPosition;
         // Despues comprobando que esta casilla esté en esa posición

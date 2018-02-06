@@ -1,4 +1,5 @@
 import { Pair } from './Utils';
+import { Terrain } from './Terrains';
 
 export class Unit {
     name: string;
@@ -35,13 +36,13 @@ export class Unit {
     }
 
     // Esta función calculará la cantidad de vida eliminada de la unidad defendiendo.
-    calculateAttack(defendingUnit: Unit): number {
+    calculateAttack(defendingUnit: Unit, defenseWeakBonus: number, defenseStrongBonus: number): number {
         let healthRemoved: number = 0;
-        if (this.attackWeak > defendingUnit.defenseWeak) {
-            healthRemoved += this.attackWeak - defendingUnit.defenseWeak;
+        if (this.attackWeak > defendingUnit.defenseWeak + defenseWeakBonus) {
+            healthRemoved += this.attackWeak - defendingUnit.defenseWeak + defenseWeakBonus;
         }
-        if (this.attackStrong > defendingUnit.defenseStrong) {
-            healthRemoved += this.attackStrong - defendingUnit.defenseStrong;
+        if (this.attackStrong > defendingUnit.defenseStrong + defenseStrongBonus) {
+            healthRemoved += this.attackStrong - defendingUnit.defenseStrong + defenseStrongBonus;
         }
         return healthRemoved;
     }

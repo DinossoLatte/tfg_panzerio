@@ -30,7 +30,7 @@ export class EditStats extends React.Component<any, any> {
         <div className="leftPanel">
             <div className="unitStats">
                 {terrainStats}
-                {!terrainStats?"Haga click derecho para poder obtener información de la unidad y terreno.":null /* Hotfix porque CSS no quiere ponerlo con el tamaño fijo nunca */}
+                {!terrainStats?<p>"Haga click derecho para poder obtener información de la unidad y terreno."</p>:null}
             </div>
         </div>
         );

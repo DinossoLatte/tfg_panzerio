@@ -1,32 +1,12 @@
-import { Unit } from './Unit';
-import { store } from './Store';
-import { Terrain } from './Terrains';
-import { Map } from './Map';
-import { State } from './GameState';
+import { Unit } from './Unit'
 
 export class Army {
-    army : Array<string>;
+    // La lista de unidades será el tipo y el número de unidades de ese tipo
+    unitList : Array<{ type: string, number: number }>; // TODO Mejorar, convertir a Unit
     name : string;
 
-    constructor(army: Array<string>, name: string) {
-        this.army = army;
+    constructor(army: Array<{ type: string, number: number }>, name: string) {
+        this.unitList = army;
         this.name = name;
     }
-
-    getArmy() {
-        return this.army;
-    }
-
-    getName() {
-        return this.name;
-    }
-
-    setArmy(army: Array<string>) {
-        this.army = army;
-    }
-
-    setName(name: string) {
-        this.name = name;
-    }
-
 }

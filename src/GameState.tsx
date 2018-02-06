@@ -222,8 +222,14 @@ export const Reducer : Redux.Reducer<State> =
                 let attackingUnit = state.units[state.selectedUnit];
                 // Necesitamos externalizar también el índice de la unidad actual, porque será útil al eliminar la unidad
                 let selectedUnit = action.selectedUnit;
+                // Obtenemos también el terreno de la unidad a atacar, para obtener la defensa
+                // Obtenemos el índice de la casilla
+                let terrainIndex = myIndexOf(
+                    // Convertimos el array de terrenos a sus posiciones
+                    state.terrains.map(terrain => terrain.position), defendingUnit.position)
+                let terrain = terrainIndex > -1?state.terrains[terrainIndex]:null;
                 // Después, calculamos la cantidad de vida a eliminar
-                let healthRemoved = attackingUnit.calculateAttack(defendingUnit);
+                let healthRemoved = attackingUnit.calculateAttack(defendingUnit, terrain?terrain.defenseWeak:0, terrain?terrain.defenseStrong:0);
                 // Comprobamos que la unidad defendiendo le queden todavía vida
                 if (defendingUnit.health - healthRemoved > 0) {
                     // Si es el caso, le cambiamos la cantidad de vida
