@@ -44,6 +44,8 @@ export class UnitStats extends React.Component<any, any> {
                     <p>    Coste (movimiento): {this.state.terrain.movement_penalty}</p>
                     <p>    Bonificación defensa débil: {this.state.terrain.defenseWeak}</p>
                     <p>    Bonificación defensa fuerte: {this.state.terrain.defenseStrong}</p>
+                    <p>    Bonificación ataque débil: {this.state.terrain.attackWeak}</p>
+                    <p>    Bonificación ataque fuerte: {this.state.terrain.attackStrong}</p>
                 </div>
             );
         }

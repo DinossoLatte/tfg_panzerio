@@ -281,7 +281,7 @@ class Game extends React.Component<any, any> {
                 result = <OptionsMenu parentObject={this} />;
                 break;
             case 2:
-                result = <Map horizontal={this.state.rows} vertical={this.state.columns} parentObject={this} />;
+                result = <Map horizontal={this.state.columns} vertical={this.state.rows} parentObject={this} />;
                 break;
             case 3:
                 result = <CreateMenu parentObject={this} />;

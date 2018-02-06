@@ -224,13 +224,21 @@ export const Reducer : Redux.Reducer<State> =
                 // Necesitamos externalizar también el índice de la unidad actual, porque será útil al eliminar la unidad
                 let selectedUnit = action.selectedUnit;
                 // Obtenemos también el terreno de la unidad a atacar, para obtener la defensa
-                // Obtenemos el índice de la casilla
-                let terrainIndex = myIndexOf(
+                // Obtenemos el índice de la casilla del defensor
+                let defendingTerrainIndex = myIndexOf(
                     // Convertimos el array de terrenos a sus posiciones
                     state.terrains.map(terrain => terrain.position), defendingUnit.position)
-                let terrain = terrainIndex > -1?state.terrains[terrainIndex]:null;
+                // Obtenemos el terreno del defensor, teniendo en cuenta que cuando no exista, será Plains
+                let defendingTerrain = defendingTerrainIndex > -1?state.terrains[defendingTerrainIndex]:null;
+                // Con el mismo procedimiento, encontraremos la posición del atacante
+                let attackingTerrainIndex = myIndexOf(
+                    // Convertimos el array de terrenos a sus posiciones
+                    state.terrains.map(terrain => terrain.position), attackingUnit.position);
+                let attackingTerrain = attackingTerrainIndex > -1?state.terrains[attackingTerrainIndex]:null;
                 // Después, calculamos la cantidad de vida a eliminar
-                let healthRemoved = attackingUnit.calculateAttack(defendingUnit, terrain?terrain.defenseWeak:0, terrain?terrain.defenseStrong:0);
+                let healthRemoved = attackingUnit.calculateAttack(defendingUnit,
+                     defendingTerrain?defendingTerrain.defenseWeak:0, defendingTerrain?defendingTerrain.defenseStrong:0,
+                     attackingTerrain?attackingTerrain.attackWeak:0, attackingTerrain?attackingTerrain.attackStrong:0);
                 // Comprobamos que la unidad defendiendo le queden todavía vida
                 if (defendingUnit.health - healthRemoved > 0) {
                     // Si es el caso, le cambiamos la cantidad de vida

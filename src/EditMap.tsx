@@ -12,7 +12,7 @@ import { UnitCell } from './UnitCell';
 import { UnitStats } from './UnitStats';
 import { EditStats } from './EditStats';
 import { Unit, Infantry, Tank, General, UNITS, UNITS_ESP } from './Unit';
-import { Terrain, Plains, ImpassableMountain, Hills, Forest, TERRAINS, TERRAINS_ESP } from './Terrains';
+import { Terrain, Plains, ImpassableMountain, Hills, Forest, River, TERRAINS, TERRAINS_ESP } from './Terrains';
 
 export class EditMap extends React.Component<any, any> {
     editStats: EditStats = null;
@@ -206,6 +206,8 @@ export class EditMap extends React.Component<any, any> {
             case "Forest":
                 terrain = Forest.create(newPosition);
                 break;
+            case "River":
+                terrain = River.create(newPosition);
             default:
         };
 
