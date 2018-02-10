@@ -425,4 +425,34 @@ export class Network {
         // Retornamos el conjunto de unidades del bando
         return units;
     }
+
+    /// Este método se encargará de enviar los datos del mapa al servidor, para que se guarden en BD
+    public static sendMapToServer(map: { rows: number, columns: number, map: Array<Terrain> }
+        , callback?: (error: { status: boolean, errorCode: string }) => void) {
+        // Primero, establecemos la conexión con el servidor
+        let connection = new WebSocket("ws://localhost:8080/");
+        connection.onmessage = function(event: MessageEvent) {
+            // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
+            // el comando se haya entendido
+            if(event.data == "Command not understood") {
+                // Lanzamos un error
+                console.log("Error when attempting to save, server didn't understood request");
+                if(callback) {
+                    callback({ status: false, errorCode: event.data });
+                }
+            } else {
+                // En caso contrario, ejecutamos el callback sin errores
+                if(callback) {
+                    callback({ status: true, errorCode: "Success" });
+                }
+            }
+        };
+        connection.onopen = () => {
+            // Al abrirse la conexión, informamos al servidor del mapa
+            connection.send(JSON.stringify({
+                type: "saveMap",
+                map: map
+            }));
+        }
+    }
 }

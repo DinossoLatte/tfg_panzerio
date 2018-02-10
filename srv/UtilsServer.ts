@@ -20,7 +20,7 @@ export class MapsDatabase {
     /// al terminar ejecutará el callback introducido con el código.
     /// code.status indicará si ha habido un error
     /// code.error indicará el error o en su defecto, "Success"
-    public static saveMap(mapData: { rows: number, cols: number, map: any[] }, callback: (code: { status: boolean, error: string }) => void) {
+    public static saveMap(mapData: { rows: number, columns: number, map: any[] }, callback: (code: { status: boolean, error: string }) => void) {
         // Inicializamos o no la BD
         MapsDatabase.initOrCallDatabase((err: Error) => {
             // Comprobamos el mensaje de error
@@ -35,7 +35,7 @@ export class MapsDatabase {
                 // Y lo ejecutamos con los valores obtenidos del mapa
                 statement.run({
                     $rows: mapData.rows, 
-                    $cols: mapData.cols
+                    $cols: mapData.columns
                 }, (runResult: sqlite.RunResult, error: Error) => {
                     // Comprobamos si hay error:
                     if(err) {

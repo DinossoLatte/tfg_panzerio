@@ -16,6 +16,7 @@ server.on('connection', function connect(ws) {
         console.log("Got following action: "+data);
         // Dependiendo del estado, retornaremos una cosa u otra
         let message = JSON.parse(data as string);
+        console.log(message);
         switch (message.type) {
             // - Enviado del estado inicial
             case "getInitialState":
