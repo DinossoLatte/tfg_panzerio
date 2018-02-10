@@ -36,7 +36,7 @@ var EditStats = function (_React$Component) {
             if (this.state.terrain != null) {
                 terrainStats = React.createElement("div", null, React.createElement("p", null, "Terreno: "), React.createElement("p", null, "    Posici\xF3n: ", this.state.terrain.position.toString()), React.createElement("p", null, "    Tipo: ", this.state.terrain.name), React.createElement("p", null, "    Coste (movimiento): ", this.state.terrain.movement_penalty));
             }
-            return React.createElement("div", { className: "leftPanel" }, React.createElement("div", { className: "unitStats" }, terrainStats, !terrainStats ? "Haga click derecho para poder obtener información de la unidad y terreno." : null /* Hotfix porque CSS no quiere ponerlo con el tamaño fijo nunca */));
+            return React.createElement("div", { className: "leftPanel" }, React.createElement("div", { className: "unitStats" }, terrainStats, !terrainStats ? React.createElement("p", null, "\"Haga click derecho para poder obtener informaci\xF3n de la unidad y terreno.\"") : null));
         }
     }]);
 

@@ -8,6 +8,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var Unit_1 = require("./Unit");
 var Store_1 = require("./Store");
 var Terrains_1 = require("./Terrains");
+var Army_1 = require("./Army");
 
 var Pair = function () {
     function Pair(x, y) {
@@ -137,9 +138,11 @@ exports.CUBIC_DIRECTIONS = [new Cubic(0, 1, -1), new Cubic(1, 0, -1), new Cubic(
 //Debido a que indexOf de los array iguala con ===, no es posible saber si un objeto está dentro de un array sino es identicamente el mismo objeto
 //por eso se ha creado este método auxiliar para ayudar al cálculo
 function myIndexOf(arr, o) {
-    for (var i = 0; i < arr.length; i++) {
-        if (arr[i].column == o.column && arr[i].row == o.row) {
-            return i;
+    if (arr != null && arr != undefined) {
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i].column == o.column && arr[i].row == o.row) {
+                return i;
+            }
         }
     }
     return -1;
@@ -260,7 +263,8 @@ var Pathfinding = function () {
                                         }), new_cubic.getPair());
                                         // Si se admite, añadimos la posición y la cantidad de movimientos para pasar por la casilla
                                         // Por ahora se comprueba si está en la lista de obstáculos, en cuyo caso coge la cantidad. En caso contrario, asumimos Plains
-                                        new_neighbours.push([new_cubic, indexOfObstacle > -1 ? state.terrains[indexOfObstacle].movement_penalty - 1 : 0]);
+                                        // No tiene sentido las restricciones de movimiento para unidades aéreas
+                                        new_neighbours.push([new_cubic, indexOfObstacle > -1 && state.units[unit_id].property != 1 ? state.terrains[indexOfObstacle].movement_penalty - 1 : 0]);
                                     }
                                 }
                             } else {
@@ -425,11 +429,66 @@ var Network = function () {
             // Para cada uno, crearemos una unidad con esos datos.
             if (units) {
                 result.units = units.map(function (unit) {
-                    return new Unit_1.Unit(unit.name, unit.type, unit.movement, new Pair(unit.position.row, unit.position.column), unit.player, unit.used, unit.attackWeak, unit.attackStrong, unit.defenseWeak, unit.defenseStrong, unit.health, unit.range, 0, unit.hasAttacked);
+                    return new Unit_1.Unit(unit.name, unit.type, unit.movement, new Pair(unit.position.row, unit.position.column), unit.player, unit.used, unit.attackWeak, unit.attackStrong, unit.defenseWeak, unit.defenseStrong, unit.health, unit.range, 0, unit.property, unit.hasAttacked);
                 });
             }
             // Finalmente, nos quedan los terrenos, mismo proceso
             result.terrains = this.parseMap(json.terrains);
+            // Retornamos el estado final
+            return result;
+        }
+    }, {
+        key: "parseStateEditFromServer",
+        value: function parseStateEditFromServer(data) {
+            // Definimos la salida, un mapa, y lo populamos con datos por defecto
+            var result = {
+                map: undefined,
+                terrains: [],
+                cursorPosition: new Pair(0, 0),
+                selected: "",
+                type: 0
+            };
+            // Primero, convertimos el objeto en un mapa
+            var json = JSON.parse(data);
+            // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
+            // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
+            result.selected = json.selected;
+            result.type = json.type;
+            // Después, creamos un Pair con los datos introducidos
+            result.cursorPosition = new Pair(json.cursorPosition.row, json.cursorPosition.column);
+            // Finalmente, nos quedan los terrenos, mismo proceso
+            result.terrains = this.parseMap(json.terrains);
+            // Retornamos el estado final
+            return result;
+        }
+    }, {
+        key: "parseStateProfileFromServer",
+        value: function parseStateProfileFromServer(data) {
+            // Definimos la salida, un mapa, y lo populamos con datos por defecto
+            var result = {
+                profile: undefined,
+                armies: [],
+                selectedArmy: 0,
+                selected: "",
+                type: "0"
+            };
+            // Primero, convertimos el objeto en un mapa
+            var json = JSON.parse(data);
+            // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
+            // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
+            result.selected = json.selected;
+            result.selectedArmy = json.selectedArmy;
+            result.type = json.type;
+            // Ahora vamos con los batallones:
+            var armies = json.armies;
+            // Para cada uno, crearemos una unidad con esos datos.
+            for (var i = 0; i < armies.length; i++) {
+                var army = new Array();
+                for (var j = 0; i < armies[i].army.length; j++) {
+                    army.push({ type: armies[i].army[j].type, number: armies[i].army[j].number });
+                }
+                result.armies.push(new Army_1.Army(army, armies[i].name));
+            }
             // Retornamos el estado final
             return result;
         }
@@ -439,7 +498,7 @@ var Network = function () {
             var result = [];
             if (terrains) {
                 result = terrains.map(function (terrain) {
-                    return new Terrains_1.Terrain(terrain.name, terrain.image, terrain.movement_penalty, new Pair(terrain.position.row, terrain.position.column));
+                    return new Terrains_1.Terrain(terrain.name, terrain.image, terrain.movement_penalty, new Pair(terrain.position.row, terrain.position.column), terrain.defenseWeak, terrain.defenseStrong);
                 });
             }
             return result;

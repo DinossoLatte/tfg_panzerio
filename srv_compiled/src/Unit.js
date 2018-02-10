@@ -11,7 +11,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 Object.defineProperty(exports, "__esModule", { value: true });
 
 var Unit = function () {
-    function Unit(name, type, movement, position, player, used, attackWeak, attackStrong, defenseWeak, defenseStrong, health, range, action, hasAttacked) {
+    function Unit(name, type, movement, position, player, used, attackWeak, attackStrong, defenseWeak, defenseStrong, health, range, action, property, hasAttacked) {
         _classCallCheck(this, Unit);
 
         this.name = name;
@@ -28,19 +28,20 @@ var Unit = function () {
         this.range = range;
         this.hasAttacked = hasAttacked ? hasAttacked : false;
         this.action = action;
+        this.property = property;
     }
     // Esta función calculará la cantidad de vida eliminada de la unidad defendiendo.
 
 
     _createClass(Unit, [{
         key: "calculateAttack",
-        value: function calculateAttack(defendingUnit) {
+        value: function calculateAttack(defendingUnit, defenseWeakBonus, defenseStrongBonus) {
             var healthRemoved = 0;
-            if (this.attackWeak > defendingUnit.defenseWeak) {
-                healthRemoved += this.attackWeak - defendingUnit.defenseWeak;
+            if (this.attackWeak > defendingUnit.defenseWeak + defenseWeakBonus) {
+                healthRemoved += this.attackWeak - defendingUnit.defenseWeak + defenseWeakBonus;
             }
-            if (this.attackStrong > defendingUnit.defenseStrong) {
-                healthRemoved += this.attackStrong - defendingUnit.defenseStrong;
+            if (this.attackStrong > defendingUnit.defenseStrong + defenseStrongBonus) {
+                healthRemoved += this.attackStrong - defendingUnit.defenseStrong + defenseStrongBonus;
             }
             return healthRemoved;
         }
@@ -71,7 +72,9 @@ var Infantry = function (_Unit) {
             // Vida
             2,
             // Alcance
-            1, 0);
+            1, 0,
+            //Tipo (property)
+            0);
         }
     }]);
 
@@ -100,7 +103,9 @@ var Tank = function (_Unit2) {
             // Vida
             4,
             // Alcance
-            1, 0);
+            1, 0,
+            //Tipo (property)
+            0);
         }
     }]);
 
@@ -129,7 +134,9 @@ var General = function (_Unit3) {
             // Vida
             2,
             // Alcance
-            0, 0);
+            0, 0,
+            //Tipo (property)
+            0);
         }
     }]);
 
@@ -158,7 +165,9 @@ var Paratrooper = function (_Unit4) {
             // Vida
             3,
             // Alcance
-            1, 0);
+            1, 0,
+            //Tipo (property)
+            1);
         }
     }]);
 
@@ -187,7 +196,9 @@ var Artillery = function (_Unit5) {
             // Vida
             3,
             // Alcance
-            3, 0);
+            3, 0,
+            //Tipo (property)
+            0);
         }
     }]);
 

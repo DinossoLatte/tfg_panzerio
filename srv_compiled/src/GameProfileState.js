@@ -15,6 +15,7 @@ var ProfileActions = function () {
         key: "save",
         value: function save(profile, armies, selectedArmy, selected, type) {
             return {
+                tipo: "SAVE_PROFILE",
                 profile: profile,
                 armies: armies,
                 selectedArmy: selectedArmy,

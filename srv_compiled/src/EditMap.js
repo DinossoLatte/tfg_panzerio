@@ -34,7 +34,12 @@ var EditMap = function (_React$Component) {
     _createClass(EditMap, [{
         key: "restartState",
         value: function restartState() {
-            this.state = { cells: new Array(this.props.horizontal), rows: this.props.vertical, columns: this.props.horizontal };
+            this.state = {
+                cells: new Array(this.props.horizontal),
+                rows: this.props.vertical,
+                columns: this.props.horizontal,
+                json: null
+            };
             StoreEdit_1.storeEdit.dispatch(GameEditState_1.EditActions.generateSetListener(this));
         }
         /** Renderiza el mapa **/
@@ -45,9 +50,9 @@ var EditMap = function (_React$Component) {
             var _this2 = this;
 
             // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
-            return React.createElement("div", null, StoreEdit_1.storeEdit.getState().type != "CREATE_TERRAIN" ? React.createElement("button", { id: "terrainButton", name: "terrainButton", onClick: this.onClickCreateTerrain.bind(this) }, "Crear terreno") : "", StoreEdit_1.storeEdit.getState().type == "CREATE_TERRAIN" ? React.createElement("p", null, "Acci\xF3n: Creaci\xF3n de terreno. Terreno seleccionado: ", StoreEdit_1.storeEdit.getState().selected == "Plains" ? "Llanura" : StoreEdit_1.storeEdit.getState().selected == "Mountains" ? "Montaña" : StoreEdit_1.storeEdit.getState().selected == "Colina" ? "Colina" : StoreEdit_1.storeEdit.getState().selected == "Bosque" ? "Bosque" : "Ninguna") : "", StoreEdit_1.storeEdit.getState().type == "CREATE_TERRAIN" ? React.createElement("div", null, React.createElement("label", null, " Selecciona el tipo de unidad:", React.createElement("select", { defaultValue: null, value: StoreEdit_1.storeEdit.getState().selected, onChange: function onChange(evt) {
+            return React.createElement("div", null, StoreEdit_1.storeEdit.getState().type != 1 ? React.createElement("button", { id: "terrainButton", name: "terrainButton", onClick: this.onClickCreateTerrain.bind(this) }, "Crear terreno") : "", StoreEdit_1.storeEdit.getState().type == 1 ? React.createElement("p", null, "Acci\xF3n: Creaci\xF3n de terreno. Terreno seleccionado: ", StoreEdit_1.storeEdit.getState().selected) : "", StoreEdit_1.storeEdit.getState().type == 1 ? React.createElement("div", null, React.createElement("label", null, " Selecciona el tipo de terreno:", React.createElement("select", { defaultValue: null, value: StoreEdit_1.storeEdit.getState().selected, onChange: function onChange(evt) {
                     return _this2.selected(evt.target.value);
-                } }, this.selectOptionsTerrains()))) : "", React.createElement("button", { id: "exitButton", name: "exitButton", onClick: this.onClickExit.bind(this) }, "Salir del juego"), React.createElement("div", null, React.createElement(EditStats_1.EditStats, { map: this }), React.createElement("div", { id: "map", className: "map", onClick: this.onClick.bind(this), tabIndex: 0, onKeyDown: this.onKey.bind(this), onContextMenu: this.onRightClick.bind(this) }, this.generateMap.bind(this)().map(function (a) {
+                } }, this.selectOptionsTerrains()))) : "", React.createElement("button", { id: "exitButton", name: "exitButton", onClick: this.onClickExit.bind(this) }, "Salir del juego"), React.createElement("button", { id: "generateButton", name: "generateButton", onClick: this.onClickGenerateMap.bind(this) }, "Guardar mapa"), this.state.json ? React.createElement("textarea", null, this.state.json) : "", React.createElement("div", null, React.createElement(EditStats_1.EditStats, { map: this }), React.createElement("div", { id: "map", className: "map", onClick: this.onClick.bind(this), tabIndex: 0, onKeyDown: this.onKey.bind(this), onContextMenu: this.onRightClick.bind(this) }, this.generateMap.bind(this)().map(function (a) {
                 return a;
             }))));
         }
@@ -76,6 +81,27 @@ var EditMap = function (_React$Component) {
         key: "onClickExit",
         value: function onClickExit(event) {
             this.props.parentObject.changeGameState(0); // Salir de la partida.
+        }
+    }, {
+        key: "onClickGenerateMap",
+        value: function onClickGenerateMap(event) {
+            // Para generar el mapa, convertiremos el conjunto de terrenos en un JSON
+            var terrains = StoreEdit_1.storeEdit.getState().terrains;
+            // Generamos el JSON que contendrán los datos del mapa,
+            var result = JSON.stringify({
+                // Este elemento contiene los terrenos
+                map: terrains,
+                // También debemos definir las filas y columnas
+                rows: this.state.rows,
+                columns: this.state.columns
+            });
+            // Finalmente, mostramos en el textarea el resultado
+            this.setState({
+                cells: this.state.cells,
+                rows: this.state.rows,
+                columns: this.state.columns,
+                json: result
+            });
         }
         //Igual que en Map solo que se actualiza el cursor del estado de edición
 
@@ -133,7 +159,7 @@ var EditMap = function (_React$Component) {
             }
             // Si puede hacerse el movimiento, realiza la acción
             if (newCursorPosition && newCursorPosition.row >= 0 && newCursorPosition.column >= 0 && newCursorPosition.column <= this.props.vertical && newCursorPosition.row <= this.props.horizontal) {
-                StoreEdit_1.saveState(GameEditState_1.EditActions.saveState(this, StoreEdit_1.storeEdit.getState().side, StoreEdit_1.storeEdit.getState().terrains, newCursorPosition, StoreEdit_1.storeEdit.getState().selected, StoreEdit_1.storeEdit.getState().type));
+                StoreEdit_1.saveState(GameEditState_1.EditActions.generateChangeCursor(newCursorPosition));
             }
         }
     }, {
@@ -163,43 +189,45 @@ var EditMap = function (_React$Component) {
                 terrain = terrainIndex > -1 ? StoreEdit_1.storeEdit.getState().terrains[terrainIndex] : Terrains_1.Plains.create(position);
             }
             // Actualizamos el estado de la barra de estadísticas
-            this.editStats.setState({ terrain: terrain });
+            // El estado será siempre null, ya que no habrá unidades en el editor
+            this.editStats.setState({ unit: null, terrain: terrain });
         }
     }, {
         key: "clickAction",
         value: function clickAction(row, column) {
             var newPosition = new Utils_1.Pair(row, column);
-            var side = StoreEdit_1.storeEdit.getState().side; // Representa el bando del jugador actual
             var terrainIndex = Utils_1.myIndexOf(StoreEdit_1.storeEdit.getState().terrains.map(function (x) {
                 return x.position;
             }), newPosition);
-            if (terrainIndex == -1 && StoreEdit_1.storeEdit.getState().type == "CREATE_TERRAIN") {
-                var terrain = void 0;
-                var arr = StoreEdit_1.storeEdit.getState().terrains;
-                switch (StoreEdit_1.storeEdit.getState().selected) {
-                    case "Mountains":
-                        terrain = Terrains_1.ImpassableMountain.create(newPosition);
-                        arr.push(terrain);
-                        break;
-                    case "Hills":
-                        terrain = Terrains_1.Hills.create(newPosition);
-                        arr.push(terrain);
-                        break;
-                    case "Forest":
-                        terrain = Terrains_1.Forest.create(newPosition);
-                        arr.push(terrain);
-                        break;
-                    default:
-                }
-                StoreEdit_1.saveState(GameEditState_1.EditActions.saveState(this, StoreEdit_1.storeEdit.getState().side, arr, StoreEdit_1.storeEdit.getState().cursorPosition, StoreEdit_1.storeEdit.getState().selected, StoreEdit_1.storeEdit.getState().type));
-                //Si hay terreno, es creación de terreno y está seleccionado Plains, se usará como goma para borrar los terrenos
-            } else if (terrainIndex != -1 && StoreEdit_1.storeEdit.getState().type == "CREATE_TERRAIN" && StoreEdit_1.storeEdit.getState().selected == "Plains") {
-                var _arr = StoreEdit_1.storeEdit.getState().terrains;
-                _arr = _arr.filter(function (x) {
-                    return !x.position.equals(newPosition);
-                });
-                StoreEdit_1.saveState(GameEditState_1.EditActions.saveState(this, StoreEdit_1.storeEdit.getState().side, _arr, StoreEdit_1.storeEdit.getState().cursorPosition, StoreEdit_1.storeEdit.getState().selected, StoreEdit_1.storeEdit.getState().type));
+            var terrain = void 0;
+            var array = StoreEdit_1.storeEdit.getState().terrains;
+            // Obtenemos el nuevo terreno a reemplazar/crear
+            switch (StoreEdit_1.storeEdit.getState().selected) {
+                case "Plains":
+                    terrain = Terrains_1.Plains.create(newPosition);
+                    break;
+                case "Mountains":
+                    terrain = Terrains_1.ImpassableMountain.create(newPosition);
+                    break;
+                case "Hills":
+                    terrain = Terrains_1.Hills.create(newPosition);
+                    break;
+                case "Forest":
+                    terrain = Terrains_1.Forest.create(newPosition);
+                    break;
+                default:
             }
+            ;
+            // Comprobamos si la posición está ocupada
+            if (terrainIndex > -1) {
+                // En este caso, reemplazamos el terreno en el índice en el que esté
+                array[terrainIndex] = terrain;
+            } else {
+                // En este otro caso, añadiremos el terreno al índice
+                array.push(terrain);
+            }
+            // Finalmente, actualizamos el estado
+            StoreEdit_1.storeEdit.dispatch(GameEditState_1.EditActions.generateChangeTerrain(array));
         }
         /** Función auxiliar usada para renderizar el mapa. Consiste en recorrer todas las columnas acumulando las casillas. **/
 
@@ -222,11 +250,9 @@ var EditMap = function (_React$Component) {
             var accum2 = [];
             this.state.cells[num_row] = new Array(this.props.horizontal);
             // Este bucle iterará hasta el número de celdas horizontales especificado en el props.
-            for (var j = num_row % 2 == 0 ? 0 : 1; j <= this.props.horizontal; j = j + 2) {
+            for (var j = num_row % 2 == 0 ? 0 : 1; j < this.props.horizontal; j = j + 2) {
                 var column = j;
                 var row = num_row % 2 == 0 ? num_row / 2 : Math.floor(num_row / 2);
-                var pos = new Utils_1.Pair(row, column);
-                // Se introducirá el elemento en una lista
                 var cell = React.createElement(EditCell_1.EditCell, { row: row, column: column }); // Si es num_row % 2, es una columna sin offset y indica nueva fila, ecc necesitamos el anterior.
                 this.state.cells[row][column] = cell;
                 accum2.push(cell);

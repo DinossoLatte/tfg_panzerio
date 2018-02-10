@@ -12,6 +12,7 @@ export class ProfileActions {
 
     static save(profile: Profile, armies: Array<Army>, selectedArmy: number, selected: string, type: string) : Redux.AnyAction{
         return {
+            tipo: "SAVE_PROFILE",
             profile: profile,
             armies: armies,
             selectedArmy: selectedArmy,

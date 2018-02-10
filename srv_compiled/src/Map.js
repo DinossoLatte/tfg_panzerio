@@ -14,6 +14,7 @@ var Store_1 = require("./Store");
 var GameState_1 = require("./GameState");
 var Cell_1 = require("./Cell");
 var Utils_1 = require("./Utils");
+var Unit_1 = require("./Unit");
 var Terrains_1 = require("./Terrains");
 var UnitStats_1 = require("./UnitStats");
 /** Representa el mapa que contendrá las unidades y las casillas **/
@@ -43,10 +44,39 @@ var Map = function (_React$Component) {
     }, {
         key: "render",
         value: function render() {
+            var _this2 = this;
+
             // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
-            return React.createElement("div", null, React.createElement("p", null, "Turno del ", Store_1.store.getState().turn % 2 == 0 ? "Jugador" : "Enemigo", ". D\xEDa ", Math.floor(Store_1.store.getState().turn / 2), Store_1.store.getState().actualState == 1 ? ". Victoria" : Store_1.store.getState().actualState == 2 ? ". Derrota" : "", " ", Store_1.store.getState().turn < 2 ? "(Pre juego)" : ""), React.createElement("button", { id: "exitButton", name: "exitButton", onClick: this.onClickExit.bind(this) }, "Salir del juego"), Store_1.store.getState().actualState == 0 ? React.createElement("button", { id: "nextTurn", name: "nextTurn", onClick: this.onClickTurn.bind(this) }, "Pasar turno") : "", Store_1.store.getState().selectedUnit != null && Store_1.store.getState().turn >= 2 ? React.createElement("button", { id: "cancelAction", name: "cancelAction", onClick: this.onClickCancelAction.bind(this) }, "Cancelar acci\xF3n") : "", Store_1.store.getState().selectedUnit != null && Store_1.store.getState().turn >= 2 && Store_1.store.getState().units[Store_1.store.getState().selectedUnit].action < 2 ? React.createElement("button", { id: "nextAction", name: "nextAction", onClick: this.onClickUnitAction.bind(this) }, "Pasar acci\xF3n") : "", Store_1.store.getState().turn < 2 ? React.createElement("button", { onClick: this.onClickNextUnit.bind(this) }, "Siguiente unidad (Pre juego)") : "", this.state.alertUnitsNotPlaced ? React.createElement("p", { className: "alert" }, "ATENCI\xD3N: Algunas de las unidades no han sido posicionadas en el juego, por favor, posicione las unidades en el juego") : "", React.createElement("div", null, React.createElement(UnitStats_1.UnitStats, null), React.createElement("div", { id: "map", className: "map", onClick: this.onClick.bind(this), tabIndex: 0, onKeyDown: this.onKey.bind(this), onContextMenu: this.onRightClick.bind(this) }, this.generateMap.bind(this)().map(function (a) {
+            return React.createElement("div", null, React.createElement("p", null, "Turno del ", Store_1.store.getState().turn % 2 == 0 ? "Jugador" : "Enemigo", ". D\xEDa ", Math.floor(Store_1.store.getState().turn / 2), Store_1.store.getState().actualState == 1 ? ". Victoria" : Store_1.store.getState().actualState == 2 ? ". Derrota" : "", " ", Store_1.store.getState().turn < 2 ? "(Pre juego)" : ""), React.createElement("button", { id: "exitButton", name: "exitButton", onClick: this.onClickExit.bind(this) }, "Salir del juego"), Store_1.store.getState().actualState == 0 ? React.createElement("button", { id: "nextTurn", name: "nextTurn", onClick: this.onClickTurn.bind(this) }, "Pasar turno") : "", Store_1.store.getState().selectedUnit != null && Store_1.store.getState().turn >= 2 ? React.createElement("button", { id: "cancelAction", name: "cancelAction", onClick: this.onClickCancelAction.bind(this) }, "Cancelar acci\xF3n") : "", Store_1.store.getState().selectedUnit != null && Store_1.store.getState().turn >= 2 && Store_1.store.getState().units[Store_1.store.getState().selectedUnit].action < 2 ? React.createElement("button", { id: "nextAction", name: "nextAction", onClick: this.onClickUnitAction.bind(this) }, "Pasar acci\xF3n") : "", Store_1.store.getState().turn < 2 ? React.createElement("div", null, React.createElement("label", null, " Selecciona la unidad:", React.createElement("select", { defaultValue: null, value: Store_1.store.getState().selectedUnit, onChange: function onChange(evt) {
+                    return _this2.selectUnit(evt.target.value);
+                } }, this.selectOptions())), React.createElement("button", { onClick: this.onClickPlaceUnit.bind(this) }, "Seleccionar unidad")) : "", this.state.alertUnitsNotPlaced ? React.createElement("p", { className: "alert" }, "ATENCI\xD3N: Algunas de las unidades no han sido posicionadas en el juego, por favor, posicione las unidades en el juego") : "", React.createElement("div", null, React.createElement(UnitStats_1.UnitStats, null), React.createElement("div", { id: "map", className: "map", onClick: this.onClick.bind(this), tabIndex: 0, onKeyDown: this.onKey.bind(this), onContextMenu: this.onRightClick.bind(this) }, this.generateMap.bind(this)().map(function (a) {
                 return a;
             }))));
+        }
+        //Se guarda dicha unidad como seleccionada
+
+    }, {
+        key: "selectUnit",
+        value: function selectUnit(evt) {
+            Store_1.saveState(GameState_1.Actions.selectUnit(Number(evt)));
+        }
+    }, {
+        key: "selectOptions",
+        value: function selectOptions() {
+            //Creamos todos los options a partir de todas las unidades de la lista de unidades
+            var army = [React.createElement("option", { selected: true, value: null }, "--Selecciona--")];
+            for (var i = 0; i < Store_1.store.getState().units.length; i++) {
+                //Se usa for para generalizar si se añadieran más unidades
+                if (Store_1.store.getState().units[i].player == (Store_1.store.getState().turn % 2 == 0)) {
+                    for (var j = 0; j < Unit_1.UNITS.length; j++) {
+                        if (Store_1.store.getState().units[i].name == Unit_1.UNITS[j]) {
+                            // La unidad será nombrada de esa manera para poder distinguirla y saber además su tipo
+                            army.push(React.createElement("option", { value: i }, "Unidad " + i + " - " + Unit_1.UNITS_ESP[j]));
+                        }
+                    }
+                }
+            }
+            return army;
         }
     }, {
         key: "onClickExit",
@@ -101,8 +131,8 @@ var Map = function (_React$Component) {
             Store_1.saveState(GameState_1.Actions.generateSetListener(this));
         }
     }, {
-        key: "onClickNextUnit",
-        value: function onClickNextUnit(mouseEvent) {
+        key: "onClickPlaceUnit",
+        value: function onClickPlaceUnit(mouseEvent) {
             // Obtenemos el índice
             var selectedIndex = Store_1.store.getState().selectedUnit;
             console.log("Index: " + selectedIndex);
@@ -116,10 +146,6 @@ var Map = function (_React$Component) {
                 selectedIndex = Store_1.store.getState().units.indexOf(Store_1.store.getState().units.find(function (unit) {
                     return unit.player == (Store_1.store.getState().turn % 2 == 0);
                 }));
-            } else {
-                console.log("Entra en ya definido");
-                // En otro caso ya está definido y es válido el incremento
-                selectedIndex = selectedIndex + 1;
             }
             console.log("Resutado " + selectedIndex);
             // Ejecutamos la selección de unidad
@@ -128,6 +154,36 @@ var Map = function (_React$Component) {
             // indicador de la izquierda
             this.unitStats.setState({ unit: Store_1.store.getState().units[selectedIndex], terrain: null });
         }
+        /*
+            onClickNextUnit(mouseEvent: MouseEvent) {
+                // Obtenemos el índice
+                let selectedIndex = store.getState().selectedUnit;
+                console.log("Index: "+selectedIndex);
+                // Si no está definido
+                if(selectedIndex == null
+                    || (// O en el caso de estarlo, es posible incrementar el índice
+                        // Si la próxima unidad no es del jugador
+                        !store.getState().units[selectedIndex + 1].player == (store.getState().turn%2 == 0)
+                        || store.getState().units.length <= selectedIndex + 1 // O sobrepasa el límite de la lista
+                )) {
+                    console.log("Entra en no definido");
+                    // Entonces debemos encontrar el índice de una unidad del jugador
+                    selectedIndex = store.getState().units.indexOf(store.getState().units.find((unit) => unit.player == (store.getState().turn%2 == 0)));
+                } else {
+                    console.log("Entra en ya definido");
+                    // En otro caso ya está definido y es válido el incremento
+                    selectedIndex = selectedIndex + 1;
+                }
+                console.log("Resutado "+selectedIndex);
+        
+                // Ejecutamos la selección de unidad
+                store.dispatch(Actions.generateMove(selectedIndex, store.getState().turn%2 == 0));
+                // Y, para indicar al jugador de la unidad seleccionada, cambiamos el
+                // indicador de la izquierda
+                this.unitStats.setState({ unit: store.getState().units[selectedIndex], terrain: null });
+            }
+        */
+
     }, {
         key: "onKey",
         value: function onKey(keyEvent) {

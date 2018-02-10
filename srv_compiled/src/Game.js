@@ -176,15 +176,26 @@ var PreGameMenu = function (_React$Component6) {
     }, {
         key: "startGame",
         value: function startGame(event) {
+            // Definimos las dimensiones básicas del mapa
+            var rows = 6;
+            var columns = 6;
             // Antes de ejecutar, comprobamos que exista un mapa personalizado
             if (this.state.custom) {
-                console.log(document.getElementById("customMap").value);
-                // Si es el caso, debemos modificar el estado a tener el nuevo mapa en cuenta
-                var newMap = Utils_1.Network.parseMap(JSON.parse(document.getElementById("customMap").value));
+                // Primero, obtenemos el JSON resultante
+                var custom = JSON.parse(document.getElementById("customMap").value);
+                // Obtenemos por un lado el mapa
+                var newMap = Utils_1.Network.parseMap(custom.map);
                 // Y cambiamos el estado para tener esto en cuenta
                 Store_1.store.dispatch(GameState_1.Actions.generateCustomMap(newMap));
+                // Modificamos las dimensiones del mapa
+                rows = custom.rows;
+                columns = custom.columns;
             }
-            this.props.parentObject.setState({ gameState: 2 });
+            this.props.parentObject.setState({
+                gameState: 2,
+                rows: rows,
+                columns: columns
+            });
         }
         // Actualiza el componente de poder introducir el mapa, en el caso de seleccionar
         // la opción de 'Personalizado'.
@@ -304,7 +315,7 @@ var Game = function (_React$Component9) {
                     result = React.createElement(OptionsMenu, { parentObject: this });
                     break;
                 case 2:
-                    result = React.createElement(Map_1.Map, { horizontal: "6", vertical: "6", parentObject: this });
+                    result = React.createElement(Map_1.Map, { horizontal: this.state.rows, vertical: this.state.columns, parentObject: this });
                     break;
                 case 3:
                     result = React.createElement(CreateMenu, { parentObject: this });

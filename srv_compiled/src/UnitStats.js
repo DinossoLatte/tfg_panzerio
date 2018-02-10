@@ -38,7 +38,7 @@ var UnitStats = function (_React$Component) {
             }
             var terrainStats = null;
             if (this.state.terrain != null) {
-                terrainStats = React.createElement("div", null, React.createElement("p", null, "Terreno: "), React.createElement("p", null, "    Posici\xF3n: ", this.state.terrain.position.toString()), React.createElement("p", null, "    Tipo: ", this.state.terrain.name), React.createElement("p", null, "    Coste (movimiento): ", this.state.terrain.movement_penalty));
+                terrainStats = React.createElement("div", null, React.createElement("p", null, "Terreno: "), React.createElement("p", null, "    Posici\xF3n: ", this.state.terrain.position.toString()), React.createElement("p", null, "    Tipo: ", this.state.terrain.name), React.createElement("p", null, "    Coste (movimiento): ", this.state.terrain.movement_penalty), React.createElement("p", null, "    Bonificaci\xF3n defensa d\xE9bil: ", this.state.terrain.defenseWeak), React.createElement("p", null, "    Bonificaci\xF3n defensa fuerte: ", this.state.terrain.defenseStrong));
             }
             return React.createElement("div", { className: "leftPanel" }, React.createElement("div", { className: "unitStats" }, unitStats, terrainStats, !unitStats && !terrainStats ? "Haga click derecho para poder obtener información de la unidad y terreno." : null /* Hotfix porque CSS no quiere ponerlo con el tamaño fijo nunca */));
         }

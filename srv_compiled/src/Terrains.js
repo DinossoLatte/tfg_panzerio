@@ -10,13 +10,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 Object.defineProperty(exports, "__esModule", { value: true });
 
-var Terrain = function Terrain(name, image, movement_penalty, position) {
+var Terrain = function Terrain(name, image, movement_penalty, position, defenseWeak, defenseStrong) {
     _classCallCheck(this, Terrain);
 
     this.name = name;
     this.image = image;
     this.movement_penalty = movement_penalty;
     this.position = position;
+    this.defenseWeak = defenseWeak;
+    this.defenseStrong = defenseStrong;
 };
 
 exports.Terrain = Terrain;
@@ -33,7 +35,7 @@ var Plains = function (_Terrain) {
     _createClass(Plains, null, [{
         key: "create",
         value: function create(position) {
-            return new Terrain("Plains", "imgs/terrain_plains.png", 1, position);
+            return new Terrain("Plains", "imgs/terrain_plains.png", 1, position, 0, 0);
         }
     }]);
 
@@ -54,7 +56,8 @@ var ImpassableMountain = function (_Terrain2) {
     _createClass(ImpassableMountain, null, [{
         key: "create",
         value: function create(position) {
-            return new Terrain("Mountains", "imgs/terrain_mountain.png", -1, position);
+            // Al no ser accesible, la defensa es innecesaria
+            return new Terrain("Mountains", "imgs/terrain_mountain.png", -1, position, 0, 0);
         }
     }]);
 
@@ -75,7 +78,7 @@ var Hills = function (_Terrain3) {
     _createClass(Hills, null, [{
         key: "create",
         value: function create(position) {
-            return new Terrain("Hills", "imgs/terrain_hills.png", 2, position);
+            return new Terrain("Hills", "imgs/terrain_hills.png", 2, position, 1, 1);
         }
     }]);
 
@@ -96,7 +99,7 @@ var Forest = function (_Terrain4) {
     _createClass(Forest, null, [{
         key: "create",
         value: function create(position) {
-            return new Terrain("Forest", "imgs/terrain_forest.png", 1, position);
+            return new Terrain("Forest", "imgs/terrain_forest.png", 1, position, 2, 0);
         }
     }]);
 

@@ -10,15 +10,14 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = require("react");
-var Cell_1 = require("./Cell");
 var StoreEdit_1 = require("./StoreEdit");
 var TerrainCell_1 = require("./TerrainCell");
 var Utils_1 = require("./Utils");
 var Terrain = require("./Terrains");
 //ESta clase es similar a Cell pero obteniendo los datos de storeEdit (quizas se pudiera generalizar y de esa forma juntar con Cell)
 
-var EditCell = function (_Cell_1$Cell) {
-    _inherits(EditCell, _Cell_1$Cell);
+var EditCell = function (_React$Component) {
+    _inherits(EditCell, _React$Component);
 
     function EditCell(props) {
         _classCallCheck(this, EditCell);
@@ -31,6 +30,7 @@ var EditCell = function (_Cell_1$Cell) {
     _createClass(EditCell, [{
         key: "render",
         value: function render() {
+            // Comprobamos si una unidad está en esta posición
             // Comprobamos si la casilla actual contiene el cursor, primero obteniendo su posición
             var positionCursor = StoreEdit_1.storeEdit.getState().cursorPosition;
             // Despues comprobando que esta casilla esté en esa posición
@@ -45,6 +45,6 @@ var EditCell = function (_Cell_1$Cell) {
     }]);
 
     return EditCell;
-}(Cell_1.Cell);
+}(React.Component);
 
 exports.EditCell = EditCell;

@@ -17,6 +17,7 @@ var EditActions = function () {
         key: "selected",
         value: function selected(map, evt) {
             return {
+                tipo: "SAVE_EDIT",
                 map: map,
                 selected: evt,
                 type: "SELECTED"
@@ -26,6 +27,7 @@ var EditActions = function () {
         key: "onClickCreateTerrain",
         value: function onClickCreateTerrain(map) {
             return {
+                tipo: "SAVE_EDIT",
                 map: map,
                 type: "CREATE_TERRAIN"
             };
@@ -34,20 +36,39 @@ var EditActions = function () {
         key: "generateSetListener",
         value: function generateSetListener(map) {
             return {
+                tipo: "SAVE_EDIT",
                 map: map,
                 type: "SET_LISTENER"
             };
         }
     }, {
         key: "saveState",
-        value: function saveState(map, side, terrains, cursorPosition, selected, type) {
+        value: function saveState(map, terrains, cursorPosition, selected, type) {
             return {
+                tipo: "SAVE_EDIT",
                 map: map,
-                side: side,
                 terrains: terrains,
                 cursorPosition: cursorPosition,
                 selected: selected,
                 type: "SAVE"
+            };
+        }
+    }, {
+        key: "generateChangeCursor",
+        value: function generateChangeCursor(newCursorPosition) {
+            return {
+                tipo: "SAVE_EDIT",
+                cursorPosition: newCursorPosition,
+                type: "CHANGE_CURSOR"
+            };
+        }
+    }, {
+        key: "generateChangeTerrain",
+        value: function generateChangeTerrain(newTerrains) {
+            return {
+                tipo: "SAVE_EDIT",
+                terrains: newTerrains,
+                type: "CHANGE_TERRAIN"
             };
         }
     }]);
@@ -59,11 +80,10 @@ exports.EditActions = EditActions;
 function getInitialStateEdit() {
     return {
         map: null,
-        side: true,
-        terrains: new Array(),
+        terrains: [],
         cursorPosition: new Utils_1.Pair(0, 0),
         selected: null,
-        type: "SET_LISTENER"
+        type: 0
     };
 }
 exports.InitialStateEdit = getInitialStateEdit();
@@ -77,41 +97,55 @@ exports.ReducerEdit = function () {
             action.map.forceUpdate();
             return {
                 map: action.map,
-                side: state.side,
                 terrains: state.terrains,
                 cursorPosition: state.cursorPosition,
                 selected: action.selected,
-                type: state.type
+                type: 1
             };
         case "CREATE_TERRAIN":
             action.map.forceUpdate();
             return {
                 map: action.map,
-                side: state.side,
                 terrains: state.terrains,
                 cursorPosition: state.cursorPosition,
                 selected: state.selected,
-                type: action.type
+                type: 1
             };
         case "SAVE":
             action.map.forceUpdate();
             return {
                 map: action.map,
-                side: action.side,
                 terrains: action.terrains,
                 cursorPosition: action.cursorPosition,
                 selected: action.selected,
-                type: state.type
+                type: 0
             };
         case "SET_LISTENER":
             action.map.forceUpdate();
             return {
                 map: action.map,
-                side: state.side,
                 terrains: state.terrains,
                 cursorPosition: state.cursorPosition,
                 selected: state.selected,
-                type: action.type
+                type: 0
+            };
+        case "CHANGE_CURSOR":
+            state.map.forceUpdate();
+            return {
+                map: state.map,
+                terrains: state.terrains,
+                cursorPosition: action.cursorPosition,
+                selected: state.selected,
+                type: state.type
+            };
+        case "CHANGE_TERRAIN":
+            state.map.forceUpdate();
+            return {
+                map: state.map,
+                terrains: action.terrains,
+                cursorPosition: state.cursorPosition,
+                selected: state.selected,
+                type: 1
             };
         default:
             return state;

@@ -28,9 +28,10 @@ function getInitialState(callback) {
     };
     connection.onopen = function () {
         console.log("Connection available for sending action");
-        // Enviamos la solicitud de estado inicial
+        // Enviamos la solicitud de estado inicial (se ha modificado a tipo para hacer el menor número de cambios posibles al código)
+        // La variable tipo indica el tipo de la acción
         connection.send(JSON.stringify({
-            type: "getInitialState"
+            tipo: "getInitialState"
         }));
         console.log("Action sent.");
     };
@@ -43,12 +44,23 @@ var Actions = function () {
     }
 
     _createClass(Actions, null, [{
-        key: "generateChangeUnitPos",
+        key: "selectUnit",
 
         //Estos son los estados posibles
+        value: function selectUnit(selectedUnit) {
+            //Este estado es el de cambiar la posición (justo cuando hace clic de a donde quiere ir)
+            return {
+                tipo: "SAVE_MAP",
+                type: "SELECT",
+                selectedUnit: selectedUnit
+            };
+        }
+    }, {
+        key: "generateChangeUnitPos",
         value: function generateChangeUnitPos(unit_id, new_position, selectedUnit, player) {
             //Este estado es el de cambiar la posición (justo cuando hace clic de a donde quiere ir)
             return {
+                tipo: "SAVE_MAP",
                 type: "CHANGE_UNIT_POS",
                 unit_id: unit_id,
                 new_position: new_position,
@@ -61,6 +73,7 @@ var Actions = function () {
         value: function generateMove(unit_id, player) {
             //ESte estado es el de mantener la unidad seleccionada
             return {
+                tipo: "SAVE_MAP",
                 type: "MOVE",
                 unit_id: unit_id,
                 player: player
@@ -70,6 +83,7 @@ var Actions = function () {
         key: "generateCursorMovement",
         value: function generateCursorMovement(new_position) {
             return {
+                tipo: "SAVE_MAP",
                 type: "CURSOR_MOVE",
                 position: new_position
             };
@@ -79,6 +93,7 @@ var Actions = function () {
         value: function generateSetListener(map) {
             //Este es el estado de espera para seleccionar una unidad
             return {
+                tipo: "SAVE_MAP",
                 type: "SET_LISTENER",
                 map: map
             };
@@ -88,6 +103,7 @@ var Actions = function () {
         value: function generateAttack(defendingUnitId, player, selectedUnit) {
             //Este estado se envía la unidad a atacar (se eliminará del array) y si es del jugador o no
             return {
+                tipo: "SAVE_MAP",
                 type: "ATTACK",
                 defendingUnitId: defendingUnitId,
                 selectedUnit: selectedUnit,
@@ -101,6 +117,7 @@ var Actions = function () {
         value: function generateFinish() {
             //Este estado por ahora simplemente hace que no se pueda jugar hasta que se reinicie la partida
             return {
+                tipo: "SAVE_MAP",
                 type: "FINISH"
             };
         }
@@ -108,6 +125,7 @@ var Actions = function () {
         key: "generateNextTurn",
         value: function generateNextTurn() {
             return {
+                tipo: "SAVE_MAP",
                 type: "NEXT_TURN"
             };
         }
@@ -115,6 +133,7 @@ var Actions = function () {
         key: "generateNextAction",
         value: function generateNextAction(selectedUnit) {
             return {
+                tipo: "SAVE_MAP",
                 selectedUnit: selectedUnit,
                 type: "NEXT_ACTION"
             };
@@ -123,6 +142,7 @@ var Actions = function () {
         key: "generateCustomMap",
         value: function generateCustomMap(terrains) {
             return {
+                tipo: "SAVE_MAP",
                 terrains: terrains,
                 type: "CUSTOM_MAP_INIT"
             };
@@ -157,6 +177,10 @@ exports.Reducer = function () {
                     } else {
                         state.units[action.unit_id].action = 1;
                     }
+                } else {
+                    state.units[action.unit_id].action = 2;
+                    state.units[action.unit_id].used = true;
+                    state.units[action.unit_id].hasAttacked = true;
                 }
             }
             // Si la unidad tiene posiblidad de atacar
@@ -228,8 +252,16 @@ exports.Reducer = function () {
             var attackingUnit = state.units[state.selectedUnit];
             // Necesitamos externalizar también el índice de la unidad actual, porque será útil al eliminar la unidad
             var selectedUnit = action.selectedUnit;
+            // Obtenemos también el terreno de la unidad a atacar, para obtener la defensa
+            // Obtenemos el índice de la casilla
+            var terrainIndex = Utils_1.myIndexOf(
+            // Convertimos el array de terrenos a sus posiciones
+            state.terrains.map(function (terrain) {
+                return terrain.position;
+            }), defendingUnit.position);
+            var terrain = terrainIndex > -1 ? state.terrains[terrainIndex] : null;
             // Después, calculamos la cantidad de vida a eliminar
-            var healthRemoved = attackingUnit.calculateAttack(defendingUnit);
+            var healthRemoved = attackingUnit.calculateAttack(defendingUnit, terrain ? terrain.defenseWeak : 0, terrain ? terrain.defenseStrong : 0);
             // Comprobamos que la unidad defendiendo le queden todavía vida
             if (defendingUnit.health - healthRemoved > 0) {
                 // Si es el caso, le cambiamos la cantidad de vida
@@ -320,6 +352,22 @@ exports.Reducer = function () {
                 cursorPosition: state.cursorPosition,
                 selectedUnit: state.selectedUnit,
                 type: state.type
+            };
+        case "SELECT":
+            state.units[action.selectedUnit].action = 0;
+            state.units[action.selectedUnit].used = false;
+            state.units[action.selectedUnit].hasAttacked = false;
+            //Simplemente se modificará la unidad seleccionada
+            return {
+                turn: state.turn,
+                actualState: state.actualState,
+                units: state.units,
+                visitables: state.visitables,
+                terrains: state.terrains,
+                map: state.map,
+                cursorPosition: state.cursorPosition,
+                selectedUnit: action.selectedUnit,
+                type: "SET_LISTENER"
             };
         default:
             return state;
