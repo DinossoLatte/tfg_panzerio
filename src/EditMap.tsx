@@ -11,7 +11,6 @@ import { Pair, Cubic, myIndexOf, CUBIC_DIRECTIONS, myIndexOfCubic, Pathfinding }
 import { UnitCell } from './UnitCell';
 import { UnitStats } from './UnitStats';
 import { EditStats } from './EditStats';
-import { Unit, Infantry, Tank, General, UNITS, UNITS_ESP } from './Unit';
 import { Terrain, Plains, ImpassableMountain, Hills, Forest, TERRAINS, TERRAINS_ESP } from './Terrains';
 
 export class EditMap extends React.Component<any, any> {
