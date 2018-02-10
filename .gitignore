@@ -63,7 +63,8 @@ dist/bundle.js.map
 
 # Eliminamos los archivos resultados de la compilación del servidor
 srv/src/
-srv_compiled
+srv/srv/
+srv_compiled/
 srv/server.js
 
 # IDEs
