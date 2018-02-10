@@ -1,3 +1,5 @@
+import * as sqlite from 'sqlite3';
+
 import { Unit } from './Unit';
 import { store } from './Store';
 import { Terrain } from './Terrains';
