@@ -211,7 +211,8 @@ export class Pathfinding {
                                     let indexOfObstacle = myIndexOf(state.terrains.map(x => x.position), new_cubic.getPair());
                                     // Si se admite, añadimos la posición y la cantidad de movimientos para pasar por la casilla
                                     // Por ahora se comprueba si está en la lista de obstáculos, en cuyo caso coge la cantidad. En caso contrario, asumimos Plains
-                                    new_neighbours.push([new_cubic, indexOfObstacle > -1?state.terrains[indexOfObstacle].movement_penalty-1:0]);
+                                    // No tiene sentido las restricciones de movimiento para unidades aéreas
+                                    new_neighbours.push([new_cubic, indexOfObstacle > -1 && state.units[unit_id].property!=1?state.terrains[indexOfObstacle].movement_penalty-1:0]);
                                 }
                             }
                         } else { // Si no, esta casilla ya la tenemos en vecinos, pero tiene un movimiento != 0, por lo que reducimos el movimiento de la casilla

@@ -53,6 +53,15 @@ export function getInitialState(callback: () => void) {
 
 export class Actions {
     //Estos son los estados posibles
+
+    static selectUnit(selectedUnit: number): Redux.AnyAction {
+        //Este estado es el de cambiar la posición (justo cuando hace clic de a donde quiere ir)
+        return {
+            type: "SELECT",
+            selectedUnit: selectedUnit
+        };
+    }
+
     static generateChangeUnitPos(unit_id: number, new_position: Pair, selectedUnit: number, player:boolean) : Redux.AnyAction {
         //Este estado es el de cambiar la posición (justo cuando hace clic de a donde quiere ir)
         return {
@@ -316,6 +325,19 @@ export const Reducer : Redux.Reducer<State> =
                     cursorPosition: state.cursorPosition,
                     selectedUnit: state.selectedUnit,
                     type: state.type
+                }
+            case "SELECT":
+                //Simplemente se modificará la unidad seleccionada 
+                return {
+                    turn: state.turn,
+                    actualState: state.actualState,
+                    units: state.units,
+                    visitables: state.visitables,
+                    terrains: state.terrains,
+                    map: state.map,
+                    cursorPosition: state.cursorPosition,
+                    selectedUnit: action.selectedUnit,
+                    type: "SET_LISTENER"
                 }
             default:
                 return state;
