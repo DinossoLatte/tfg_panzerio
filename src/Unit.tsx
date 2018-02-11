@@ -17,8 +17,9 @@ export class Unit {
     health: number; // Cantidad de vida
     range: number; // Alcance del ataque
     action: number; //Variable que indica si está en movimiento (0), ataque (1) o usada (2)
+    property: number; //Tipo de la unidad: terrestre (0), aérea (1).
 
-    constructor(name: string, type: string, movement: number, position: Pair, player: boolean, used: boolean, attackWeak: number, attackStrong: number, defenseWeak: number, defenseStrong: number, health: number, range: number, action: number, hasAttacked?: boolean) {
+    constructor(name: string, type: string, movement: number, position: Pair, player: boolean, used: boolean, attackWeak: number, attackStrong: number, defenseWeak: number, defenseStrong: number, health: number, range: number, action: number, property: number, hasAttacked?: boolean) {
         this.name = name;
         this.type = type;
         this.movement = movement;
@@ -33,6 +34,7 @@ export class Unit {
         this.range = range;
         this.hasAttacked = hasAttacked?hasAttacked:false;
         this.action = action;
+        this.property = property;
     }
 
     // Esta función calculará la cantidad de vida eliminada de la unidad defendiendo.
@@ -75,6 +77,8 @@ export class Infantry extends Unit {
         2,
         // Alcance
         1,
+        0,
+        //Tipo (property)
         0);
     }
 }
@@ -90,6 +94,8 @@ export class Tank extends Unit {
         4,
         // Alcance
         1,
+        0,
+        //Tipo (property)
         0);
     }
 }
@@ -105,6 +111,8 @@ export class General extends Unit {
         2,
         // Alcance
         0,
+        0,
+        //Tipo (property)
         0);
     }
 }
@@ -120,7 +128,9 @@ export class Paratrooper extends Unit {
         3,
         // Alcance
         1,
-        0);
+        0,
+        //Tipo (property)
+        1);
     }
 }
 
@@ -135,6 +145,8 @@ export class Artillery extends Unit {
         3,
         // Alcance
         3,
+        0,
+        //Tipo (property)
         0);
     }
 }

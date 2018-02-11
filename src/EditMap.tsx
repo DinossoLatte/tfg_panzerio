@@ -11,13 +11,13 @@ import { Pair, Cubic, myIndexOf, CUBIC_DIRECTIONS, myIndexOfCubic, Pathfinding, 
 import { UnitCell } from './UnitCell';
 import { UnitStats } from './UnitStats';
 import { EditStats } from './EditStats';
-import { Terrain, Plains, ImpassableMountain, Hills, Forest, TERRAINS, TERRAINS_ESP } from './Terrains';
+import { Terrain, Plains, ImpassableMountain, Hills, Forest, River, TERRAINS, TERRAINS_ESP } from './Terrains';
 
 export class EditMap extends React.Component<any, any> {
     editStats: EditStats = null;
 
     restartState() {
-        this.state = { 
+        this.state = {
             cells: new Array<Array<EditCell>>(this.props.horizontal),
             rows: this.props.vertical,
             columns: this.props.horizontal,
@@ -40,7 +40,7 @@ export class EditMap extends React.Component<any, any> {
                 {storeEdit.getState().type!=1?<button id="terrainButton" name="terrainButton" onClick={this.onClickCreateTerrain.bind(this)}>Crear terreno</button>:""}
                 {storeEdit.getState().type==1?<p>Acción: Creación de terreno. Terreno seleccionado: {storeEdit.getState().selected}</p>:""}
                     {storeEdit.getState().type==1?<div>
-                        <label> Selecciona el tipo de unidad:
+                        <label> Selecciona el tipo de terreno:
                             <select defaultValue={null} value={storeEdit.getState().selected} onChange={evt => this.selected(evt.target.value)}>
                                 {this.selectOptionsTerrains()}
                             </select>

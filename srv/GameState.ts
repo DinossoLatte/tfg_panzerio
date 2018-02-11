@@ -3,9 +3,9 @@ import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
 import { store, saveState } from './Store';
 import { Map } from './Map';
-import { Pair, Cubic, CUBIC_DIRECTIONS, myIndexOf, myIndexOfCubic, Pathfinding, Network } from './Utils';
-import { Unit, Infantry, Tank, General } from './Unit';
-import { Terrain, Plains, ImpassableMountain, Hills, Forest } from './Terrains';
+import { Pair, Cubic, CUBIC_DIRECTIONS, myIndexOf, myIndexOfCubic, Pathfinding, Network } from '../src/Utils';
+import { Unit, Infantry, Tank, General, Paratrooper, Artillery } from '../src/Unit';
+import { Terrain, Plains, ImpassableMountain, Hills, Forest } from '../src/Terrains';
 
 //Aquí declaramos las variables del estado
 export type State = {
@@ -20,132 +20,70 @@ export type State = {
     readonly type: string
 }
 
-//El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
-export var InitialState: State = undefined;
-
-// Esta función se encargará de devolver el estado inicial, es la única forma de ofrecer un objeto inmutable:
-export function getInitialState(callback: () => void) {
-    // Creamos la petición al servidor
-    var connection = new WebSocket("ws://localhost:8080/");
-    console.log("Connection established with server");
-    // Establecemos la conexión
-    connection.onmessage = function(event: MessageEvent) {
-        console.log("Receiving data ...");
-        console.log("Message: "+event.data);
-        if(event.data == "Command not understood") {
-            // Enviamos un error, algo ha pasado con el servidor
-            throw new Error;
-        }
-        // Obtenemos el estado
-        InitialState = Network.parseStateFromServer(event.data);
-        // Una vez tengamos el estado, llamamos al callback aportado, que permitirá saber con certeza que el estado está disponible
-        callback();
-    };
-    connection.onopen = function() {
-        console.log("Connection available for sending action");
-        // Enviamos la solicitud de estado inicial (se ha modificado a tipo para hacer el menor número de cambios posibles al código)
-        // La variable tipo indica el tipo de la acción
-        connection.send(JSON.stringify({
-            tipo: "getInitialState"
-        }));
-        console.log("Action sent.");
-    }
+export var InitialState: State = {
+    turn: 0,
+    actualState: 0,
+    units: [General.create(new Pair(-1, -1), true), Infantry.create(new Pair(-1, -1), true), Tank.create(new Pair(-1, -1), true),Paratrooper.create(new Pair(-1, -1), true),
+        Artillery.create(new Pair(-1, -1), true), General.create(new Pair(-1, -1), false), Infantry.create(new Pair(-1, -1), false), Tank.create(new Pair(-1, -1), false)],
+    visitables: null,
+    terrains: [ImpassableMountain.create(new Pair(2, 2)), ImpassableMountain.create(new Pair(3, 2)), Hills.create(new Pair(2, 3)), Forest.create(new Pair(3, 3))],
+    cursorPosition: new Pair(0, 0),
+    map: null,
+    selectedUnit: null,
+    type: "SET_LISTENER"
 }
 
-export class Actions {
-    //Estos son los estados posibles
-
-    static selectUnit(selectedUnit: number): Redux.AnyAction {
-        //Este estado es el de cambiar la posición (justo cuando hace clic de a donde quiere ir)
-        return {
-            tipo: "SAVE_MAP",
-            type: "SELECT",
-            selectedUnit: selectedUnit
+export function parseActionMap(data: any) {
+        // Definimos la salida, un mapa, y lo populamos con datos por defecto
+        let result = {
+            selectedUnit: 0,
+            type: "",
+            unit_id: 0,
+            new_position: new Pair(0,0),
+            player: true,
+            position: new Pair(0,0),
+            map: undefined as Map,
+            defendingUnitId: 0,
+            terrains: [] as Array<Terrain>
         };
-    }
-
-    static generateChangeUnitPos(unit_id: number, new_position: Pair, selectedUnit: number, player:boolean) : Redux.AnyAction {
-        //Este estado es el de cambiar la posición (justo cuando hace clic de a donde quiere ir)
-        return {
-            tipo: "SAVE_MAP",
-            type: "CHANGE_UNIT_POS",
-            unit_id: unit_id,
-            new_position: new_position,
-            selectedUnit: selectedUnit,
-            player: player
-        };
-    }
-
-    static generateMove(unit_id: number,player: boolean) : Redux.AnyAction {
-        //ESte estado es el de mantener la unidad seleccionada
-        return {
-            tipo: "SAVE_MAP",
-            type: "MOVE",
-            unit_id: unit_id,
-            player: player
-        };
-    }
-
-    static generateCursorMovement(new_position: Pair) : Redux.AnyAction {
-        return {
-            tipo: "SAVE_MAP",
-            type: "CURSOR_MOVE",
-            position: new_position
+        // Primero, convertimos el objeto en un mapa
+        let json = data;
+        // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
+        // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
+        if(json.unit_id){
+            result.unit_id = json.unit_id;
         }
-    }
-
-    static generateSetListener(map: Map) : Redux.AnyAction {
-        //Este es el estado de espera para seleccionar una unidad
-        return {
-            tipo: "SAVE_MAP",
-            type: "SET_LISTENER",
-            map: map
-        };
-    }
-
-    static generateAttack( defendingUnitId: number, player: boolean, selectedUnit: number) : Redux.AnyAction {
-        //Este estado se envía la unidad a atacar (se eliminará del array) y si es del jugador o no
-        return {
-            tipo: "SAVE_MAP",
-            type: "ATTACK",
-            defendingUnitId: defendingUnitId,
-            selectedUnit: selectedUnit,
-            player: player
+        if(json.player){
+            result.player = json.player;
         }
-    }
-
-    // Se le pasa el mapa porque es necesario, en caso contrario no se podría reiniciar correctamente.
-    static generateFinish() : Redux.AnyAction {
-        //Este estado por ahora simplemente hace que no se pueda jugar hasta que se reinicie la partida
-        return {
-            tipo: "SAVE_MAP",
-            type: "FINISH"
+        if(json.selectedUnit){
+            result.selectedUnit = json.selectedUnit;
         }
-    }
-
-    static generateNextTurn() : Redux.AnyAction{
-        return {
-            tipo: "SAVE_MAP",
-            type: "NEXT_TURN"
+        if(json.defendingUnitId){
+            result.defendingUnitId = json.defendingUnitId;
         }
-    }
-
-    static generateNextAction(selectedUnit: number) : Redux.AnyAction{
-        return {
-            tipo: "SAVE_MAP",
-            selectedUnit: selectedUnit,
-            type: "NEXT_ACTION"
+        if(json.type){
+            result.type = json.type;
         }
-    }
-
-    static generatePreGameConfiguration(terrains: Terrain[], units: Unit[]) : Redux.AnyAction {
-        return {
-            tipo: "SAVE_MAP",
-            terrains: terrains,
-            units: units,
-            type: "PRE_GAME_CONFIGURATION"
-        };
-    }
+        // Después, creamos un Pair con los datos introducidos
+        if(json.new_position){
+            result.new_position = new Pair(json.new_position.row, json.new_position.column);
+        }
+        if(json.position){
+            result.position = new Pair(json.position.row, json.position.column);
+        }
+        // Ahora vamos con los terrenos:
+        let terrains: Array<{name: string, image: string, movement_penalty: number, position:{row: number, column: number}, defenseWeak: number, defenseStrong: number}> = json.terrains;
+        // Para cada uno, crearemos una unidad con esos datos.
+        if(terrains) {
+            result.terrains = terrains.map(terrain => new Terrain(terrain.name, terrain.image, terrain.movement_penalty, new Pair(terrain.position.row, terrain.position.column),
+                terrain.defenseWeak, terrain.defenseStrong));
+        }
+        if(json.map){
+            result.map = new Map(json.map.rows, json.map.columns);
+        }
+        // Retornamos el estado final
+        return result;
 }
 
 //Y aquí se producirá el cambio
@@ -170,10 +108,6 @@ export const Reducer : Redux.Reducer<State> =
                         }else{
                             state.units[action.unit_id].action = 1;
                         }
-                    }else{
-                        state.units[action.unit_id].action = 2;
-                        state.units[action.unit_id].used = true;
-                        state.units[action.unit_id].hasAttacked = true;
                     }
 
                 }
@@ -202,7 +136,8 @@ export const Reducer : Redux.Reducer<State> =
                     visitables_pair = Pathfinding.getAttackableUnits(state.units[action.unit_id]);
                 } else { // En caso contrario
                     // Ejecutamos el método para encontrar casillas movibles
-                    visitables_pair = Pathfinding.getMovableCells(state, action.unit_id, action.player);
+                    // TODO problema encontrado aquí ya que se almacena el mapa sin las casillas
+                    //visitables_pair = Pathfinding.getMovableCells(state, action.unit_id, action.player);
                 }
 
                 return {
@@ -248,21 +183,13 @@ export const Reducer : Redux.Reducer<State> =
                 // Necesitamos externalizar también el índice de la unidad actual, porque será útil al eliminar la unidad
                 let selectedUnit = action.selectedUnit;
                 // Obtenemos también el terreno de la unidad a atacar, para obtener la defensa
-                // Obtenemos el índice de la casilla del defensor
-                let defendingTerrainIndex = myIndexOf(
+                // Obtenemos el índice de la casilla
+                let terrainIndex = myIndexOf(
                     // Convertimos el array de terrenos a sus posiciones
                     state.terrains.map(terrain => terrain.position), defendingUnit.position)
-                // Obtenemos el terreno del defensor, teniendo en cuenta que cuando no exista, será Plains
-                let defendingTerrain = defendingTerrainIndex > -1?state.terrains[defendingTerrainIndex]:null;
-                // Con el mismo procedimiento, encontraremos la posición del atacante
-                let attackingTerrainIndex = myIndexOf(
-                    // Convertimos el array de terrenos a sus posiciones
-                    state.terrains.map(terrain => terrain.position), attackingUnit.position);
-                let attackingTerrain = attackingTerrainIndex > -1?state.terrains[attackingTerrainIndex]:null;
+                let terrain = terrainIndex > -1?state.terrains[terrainIndex]:null;
                 // Después, calculamos la cantidad de vida a eliminar
-                let healthRemoved = attackingUnit.calculateAttack(defendingUnit,
-                     defendingTerrain?defendingTerrain.defenseWeak:0, defendingTerrain?defendingTerrain.defenseStrong:0,
-                     attackingTerrain?attackingTerrain.attackWeak:0, attackingTerrain?attackingTerrain.attackStrong:0);
+                let healthRemoved = attackingUnit.calculateAttack(defendingUnit, terrain?terrain.defenseWeak:0, terrain?terrain.defenseStrong:0);
                 // Comprobamos que la unidad defendiendo le queden todavía vida
                 if (defendingUnit.health - healthRemoved > 0) {
                     // Si es el caso, le cambiamos la cantidad de vida
@@ -337,13 +264,12 @@ export const Reducer : Redux.Reducer<State> =
                     selectedUnit: null,
                     type: "SET_LISTENER"
                 }
-            case "PRE_GAME_CONFIGURATION":
+            case "CUSTOM_MAP_INIT":
                 // Si se quiere importar un mapa, se cambiará los terrenos
-                console.log("Unidades: "+action.units);
                 return {
                     turn: state.turn,
                     actualState: state.actualState,
-                    units: action.units,
+                    units: state.units,
                     visitables: state.visitables,
                     terrains: action.terrains,
                     map: state.map,
@@ -352,9 +278,6 @@ export const Reducer : Redux.Reducer<State> =
                     type: state.type
                 }
             case "SELECT":
-                state.units[action.selectedUnit].action = 0;
-                state.units[action.selectedUnit].used = false;
-                state.units[action.selectedUnit].hasAttacked = false;
                 //Simplemente se modificará la unidad seleccionada
                 return {
                     turn: state.turn,

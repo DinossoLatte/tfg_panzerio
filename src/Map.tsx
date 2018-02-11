@@ -6,7 +6,7 @@ import { Actions, State, InitialState, Reducer, getInitialState } from './GameSt
 import { Cell } from './Cell';
 import { TerrainCell } from './TerrainCell';
 import { Pair, Cubic, myIndexOf, myIndexOfCubic, Pathfinding } from './Utils';
-import { Unit } from './Unit';
+import { Unit, UNITS, UNITS_ESP } from './Unit';
 import { Plains } from './Terrains';
 import { UnitCell } from './UnitCell';
 import { UnitStats } from './UnitStats';
@@ -36,7 +36,13 @@ export class Map extends React.Component<any, any> {
                 {store.getState().actualState==0?<button id="nextTurn" name="nextTurn" onClick={this.onClickTurn.bind(this)}>Pasar turno</button>:""}
                 {store.getState().selectedUnit!=null && store.getState().turn >= 2?<button id="cancelAction" name="cancelAction" onClick={this.onClickCancelAction.bind(this)}>Cancelar acción</button>:""}
                 {store.getState().selectedUnit!=null && store.getState().turn >= 2 && store.getState().units[store.getState().selectedUnit].action<2?<button id="nextAction" name="nextAction" onClick={this.onClickUnitAction.bind(this)}>Pasar acción</button>:""}
-                {store.getState().turn < 2?<button onClick={this.onClickNextUnit.bind(this)}>Siguiente unidad (Pre juego)</button>:""}
+                {store.getState().turn < 2?<div>
+                    <label> Selecciona la unidad:
+                        <select defaultValue={null} value={store.getState().selectedUnit} onChange={evt => this.selectUnit(evt.target.value)}>
+                            {this.selectOptions()}
+                        </select>
+                    </label>
+                    <button onClick={this.onClickPlaceUnit.bind(this)}>Seleccionar unidad</button></div>:""}
                 {this.state.alertUnitsNotPlaced?<p className="alert">ATENCIÓN: Algunas de las unidades no han sido posicionadas en el juego, por favor, posicione las unidades en el juego</p>:""}
                 <div>
                     <UnitStats />
@@ -48,6 +54,28 @@ export class Map extends React.Component<any, any> {
                 </div>
             </div>
         );
+    }
+
+    //Se guarda dicha unidad como seleccionada
+    selectUnit(evt: string){
+        saveState(Actions.selectUnit(Number(evt)));
+    }
+
+    selectOptions(){
+        //Creamos todos los options a partir de todas las unidades de la lista de unidades
+        let army = [<option selected value={null}>--Selecciona--</option>];
+        for(var i = 0; i < store.getState().units.length; i++){
+            //Se usa for para generalizar si se añadieran más unidades
+            if(store.getState().units[i].player == (store.getState().turn%2==0)){
+                for (var j = 0; j < UNITS.length; j++){
+                    if(store.getState().units[i].name==UNITS[j]){
+                        // La unidad será nombrada de esa manera para poder distinguirla y saber además su tipo
+                        army.push(<option value={i}>{"Unidad "+i+" - "+UNITS_ESP[j]}</option>);
+                    }
+                }
+            }
+        }
+        return army;
     }
 
     onClickExit(event : React.MouseEvent<HTMLElement>) {
@@ -97,6 +125,30 @@ export class Map extends React.Component<any, any> {
         saveState(Actions.generateSetListener(this));
     }
 
+    onClickPlaceUnit(mouseEvent: MouseEvent) {
+        // Obtenemos el índice
+        let selectedIndex = store.getState().selectedUnit;
+        console.log("Index: "+selectedIndex);
+        // Si no está definido
+        if(selectedIndex == null
+            || (// O en el caso de estarlo, es posible incrementar el índice
+                // Si la próxima unidad no es del jugador
+                !store.getState().units[selectedIndex + 1].player == (store.getState().turn%2 == 0)
+                || store.getState().units.length <= selectedIndex + 1 // O sobrepasa el límite de la lista
+        )) {
+            console.log("Entra en no definido");
+            // Entonces debemos encontrar el índice de una unidad del jugador
+            selectedIndex = store.getState().units.indexOf(store.getState().units.find((unit) => unit.player == (store.getState().turn%2 == 0)));
+        }
+        console.log("Resutado "+selectedIndex);
+
+        // Ejecutamos la selección de unidad
+        store.dispatch(Actions.generateMove(selectedIndex, store.getState().turn%2 == 0));
+        // Y, para indicar al jugador de la unidad seleccionada, cambiamos el
+        // indicador de la izquierda
+        this.unitStats.setState({ unit: store.getState().units[selectedIndex], terrain: null });
+    }
+/*
     onClickNextUnit(mouseEvent: MouseEvent) {
         // Obtenemos el índice
         let selectedIndex = store.getState().selectedUnit;
@@ -126,7 +178,7 @@ export class Map extends React.Component<any, any> {
         // indicador de la izquierda
         this.unitStats.setState({ unit: store.getState().units[selectedIndex], terrain: null });
     }
-
+*/
     onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
         let keyCode = keyEvent.key;
         let cursorPosition, newCursorPosition : Pair;
@@ -281,7 +333,7 @@ export class Map extends React.Component<any, any> {
             }
         } else if(!hasAttacked // En el caso de que tenga posiblidad de atacar y ha hecho click a la unidad enemiga
             || store.getState().turn >= 2 // O no estamos en la fase de pre juego
-        ) { 
+        ) {
             // Realizamos el ataque:
             saveState(Actions.generateAttack(unitIndex, side, null));
         }

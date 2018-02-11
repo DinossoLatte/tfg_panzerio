@@ -3,8 +3,13 @@ import * as sqlite from 'sqlite3';
 import { Unit } from './Unit';
 import { store } from './Store';
 import { Terrain } from './Terrains';
+import { Army } from './Army';
 import { Map } from './Map';
+import { EditMap } from './EditMap';
+import { Profile } from './Profile';
 import { State } from './GameState';
+import { StateEdit } from './GameEditState';
+import { StateProfile } from './GameProfileState';
 import * as Units from './Unit';
 
 export class Pair {
@@ -214,7 +219,8 @@ export class Pathfinding {
                                     let indexOfObstacle = myIndexOf(state.terrains.map(x => x.position), new_cubic.getPair());
                                     // Si se admite, añadimos la posición y la cantidad de movimientos para pasar por la casilla
                                     // Por ahora se comprueba si está en la lista de obstáculos, en cuyo caso coge la cantidad. En caso contrario, asumimos Plains
-                                    new_neighbours.push([new_cubic, indexOfObstacle > -1?state.terrains[indexOfObstacle].movement_penalty-1:0]);
+                                    // No tiene sentido las restricciones de movimiento para unidades aéreas
+                                    new_neighbours.push([new_cubic, indexOfObstacle > -1 && state.units[unit_id].property!=1?state.terrains[indexOfObstacle].movement_penalty-1:0]);
                                 }
                             }
                         } else { // Si no, esta casilla ya la tenemos en vecinos, pero tiene un movimiento != 0, por lo que reducimos el movimiento de la casilla
@@ -362,14 +368,67 @@ export class Network {
         if(visitables)
             result.visitables = visitables.map(pair => new Pair(pair.row, pair.column));
         // Ahora vamos con las unidades:
-        let units: Array<{name: string, type: string, movement: number, position:{row: number,column: number}, player: boolean, used: boolean, attackWeak: number, attackStrong: number, defenseWeak: number, defenseStrong: number, health: number, range: number, hasAttacked: boolean}> = json.units
+        let units: Array<{name: string, type: string, movement: number, position:{row: number,column: number}, player: boolean, used: boolean, attackWeak: number, attackStrong: number, defenseWeak: number, defenseStrong: number, health: number, range: number, property: number, hasAttacked: boolean}> = json.units
         // Para cada uno, crearemos una unidad con esos datos.
         if(units) {
             result.units = units.map(unit => new Unit(unit.name, unit.type, unit.movement, new Pair(unit.position.row, unit.position.column),
-                unit.player, unit.used, unit.attackWeak, unit.attackStrong, unit.defenseWeak, unit.defenseStrong, unit.health, unit.range, 0, unit.hasAttacked));
+                unit.player, unit.used, unit.attackWeak, unit.attackStrong, unit.defenseWeak, unit.defenseStrong, unit.health, unit.range, 0, unit.property, unit.hasAttacked));
         }
         // Finalmente, nos quedan los terrenos, mismo proceso
         result.terrains = this.parseMap(json.terrains);
+        // Retornamos el estado final
+        return result;
+    }
+
+    public static parseStateEditFromServer(data: string): StateEdit {
+        // Definimos la salida, un mapa, y lo populamos con datos por defecto
+        let result = {
+            map: undefined as EditMap,
+            terrains: [] as Array<Terrain>,
+            cursorPosition: new Pair(0, 0),
+            selected: "",
+            type: 0
+        };
+        // Primero, convertimos el objeto en un mapa
+        let json = JSON.parse(data);
+        // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
+        // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
+        result.selected = json.selected;
+        result.type = json.type;
+        // Después, creamos un Pair con los datos introducidos
+        result.cursorPosition = new Pair(json.cursorPosition.row, json.cursorPosition.column);
+        // Finalmente, nos quedan los terrenos, mismo proceso
+        result.terrains = this.parseMap(json.terrains);
+        // Retornamos el estado final
+        return result;
+    }
+
+    public static parseStateProfileFromServer(data: string): StateProfile {
+        // Definimos la salida, un mapa, y lo populamos con datos por defecto
+        let result = {
+            profile: undefined as Profile,
+            armies: [] as Array<Army>,
+            selectedArmy: 0,
+            selected: "",
+            type: "0"
+        };
+        // Primero, convertimos el objeto en un mapa
+        let json = JSON.parse(data);
+        // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
+        // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
+        result.selected = json.selected;
+        result.selectedArmy = json.selectedArmy;
+        result.type = json.type;
+        // Ahora vamos con los batallones:
+        let armies: Array<{army: Array<{ type: string, number: number }>, name: string}> = json.armies;
+        // Para cada uno, crearemos una unidad con esos datos.
+        for(var i = 0; i < armies.length; i++){
+            var army = new Array<{type: string, number: number}>();
+            for(var j = 0; i < armies[i].army.length; j++){
+                army.push({type: armies[i].army[j].type, number:armies[i].army[j].number});
+            }
+            result.armies.push(new Army(army,armies[i].name));
+        }
         // Retornamos el estado final
         return result;
     }
