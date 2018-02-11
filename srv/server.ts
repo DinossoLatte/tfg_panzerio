@@ -1,3 +1,7 @@
+import { StringDecoder } from 'string_decoder';
+import * as webSocket from 'ws';
+import * as FileSystem from 'fs';
+
 import * as Units from '../src/Unit';
 import * as Utils from '../src/Utils';
 import * as Terrains from '../src/Terrains';
@@ -7,7 +11,7 @@ import * as GameEditState from './GameEditState';
 import * as StoreEdit from './StoreEdit';
 import * as GameProfileState from './GameProfileState';
 import * as StoreProfile from './StoreProfile';
-import * as webSocket from 'ws';
+import * as UtilsServer from './UtilsServer';
 
 var server = new webSocket.Server({ port: 8080 });
 
@@ -55,6 +59,27 @@ server.on('connection', function connect(ws) {
                 StoreProfile.saveState(actprofile);
                 //Enviamos el nuevo estado
                 ws.send(JSON.stringify(StoreProfile.storeProfile.getState()));
+            // - Guardado del mapa
+            case "saveMap":
+                // Obtenemos los datos de la petición
+                let map = message.map;
+                // Ejecutamos el almacenado en la BD
+                UtilsServer.MapsDatabase.saveMap(map, (code: { status: boolean, error: string }) => {
+                    // Si hay error
+                    if(status) {
+                        // Entonces indicamos al receptor el guardado incorrecto del mapa
+                        ws.send(JSON.stringify({
+                            status: false,
+                            error: "Couldn't save map. Error: "+code.error
+                        }));
+                    } else {
+                        // En caso contrario, avisamos del guardado correcto
+                        ws.send(JSON.stringify({
+                            status: true,
+                            error: "Saved successfully"
+                        }))
+                    }
+                });                                
                 break;
             default:
                 console.warn("Action sent not understood! Type is "+message.type);

@@ -1,3 +1,5 @@
+import * as sqlite from 'sqlite3';
+
 import { Unit } from './Unit';
 import { store } from './Store';
 import { Terrain } from './Terrains';
@@ -8,6 +10,7 @@ import { Profile } from './Profile';
 import { State } from './GameState';
 import { StateEdit } from './GameEditState';
 import { StateProfile } from './GameProfileState';
+import * as Units from './Unit';
 
 export class Pair {
     row : any;
@@ -430,13 +433,85 @@ export class Network {
         return result;
     }
 
-    public static parseMap(terrains: Array<{ name: string, image: string, movement_penalty: number, position:{ row: number, column: number}, defenseWeak: number, defenseStrong: number}>): Terrain[] {
+    public static parseMap(terrains: 
+        Array<{ name: string, image: string, movement_penalty: number,
+             position:{ row: number, column: number},
+             defenseWeak: number, defenseStrong: number 
+             attackWeak: number, attackStrong: number }
+        >): Terrain[] {
         let result: Terrain[] = [];
         if(terrains) {
             result = terrains.map(terrain => new Terrain(terrain.name, terrain.image, terrain.movement_penalty,
-                new Pair(terrain.position.row, terrain.position.column), terrain.defenseWeak ,terrain.defenseStrong));
+                new Pair(terrain.position.row, terrain.position.column), terrain.defenseWeak ,terrain.defenseStrong,
+                terrain.attackWeak, terrain.attackStrong));
         }
 
         return result;
+    }
+
+    /// Esta función se encargará de obtener el conjunto de unidades dado el par indicado
+    /// Aunque no es usado por ningún archivo relacionado con el servidor, será usado
+    /// cuando se disponga del guardado de ejércitos en servidor
+    /// 
+    /// El argumento side permitirá indicar el bando del ejército, sea del jugador o enemigo
+    public static parseArmy(unitsPair: Array<{ type: string, number: number }>, side: boolean): Array<Unit> {
+        // Primero, creamos el array que contendrá el resultado
+        let units: Array<Unit> = new Array<Unit>();
+        // Iteramos por los elementos del array
+        for(let index = 0; index < unitsPair.length; index++) {
+            let pair = unitsPair[index];
+            // Este contador indicará el número de unidades restantes del tipo
+            let unitsLeft = pair.number;
+            // Mientras queden unidades por crear
+            while(unitsLeft > 0) {
+                // Dependiendo del tipo, se creará una unidad u otra
+                // Todas las unidades se crearán en la posición (-1, -1)
+                switch(pair.type) {
+                    case "General":
+                        units.push(Units.General.create(new Pair(-1, -1), side));
+                        break;
+                    case "Infantry":
+                        units.push(Units.Infantry.create(new Pair(-1, -1), side));
+                        break;
+                    case "Tank":
+                        units.push(Units.Tank.create(new Pair(-1, -1), side));
+                        break;
+                }
+                // Finalmente, indicamos que hemos creado la unidad de este tipo
+                --unitsLeft;
+            }
+        }
+        // Retornamos el conjunto de unidades del bando
+        return units;
+    }
+
+    /// Este método se encargará de enviar los datos del mapa al servidor, para que se guarden en BD
+    public static sendMapToServer(map: { rows: number, columns: number, map: Array<Terrain> }
+        , callback?: (error: { status: boolean, errorCode: string }) => void) {
+        // Primero, establecemos la conexión con el servidor
+        let connection = new WebSocket("ws://localhost:8080/");
+        connection.onmessage = function(event: MessageEvent) {
+            // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
+            // el comando se haya entendido
+            if(event.data == "Command not understood") {
+                // Lanzamos un error
+                console.log("Error when attempting to save, server didn't understood request");
+                if(callback) {
+                    callback({ status: false, errorCode: event.data });
+                }
+            } else {
+                // En caso contrario, ejecutamos el callback sin errores
+                if(callback) {
+                    callback({ status: true, errorCode: "Success" });
+                }
+            }
+        };
+        connection.onopen = () => {
+            // Al abrirse la conexión, informamos al servidor del mapa
+            connection.send(JSON.stringify({
+                type: "saveMap",
+                map: map
+            }));
+        }
     }
 }

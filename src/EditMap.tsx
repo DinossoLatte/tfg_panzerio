@@ -7,11 +7,11 @@ import { ReducerEdit, StateEdit, EditActions, InitialStateEdit} from './GameEdit
 import { Cell } from './Cell';
 import { EditCell } from './EditCell';
 import { TerrainCell } from './TerrainCell';
-import { Pair, Cubic, myIndexOf, CUBIC_DIRECTIONS, myIndexOfCubic, Pathfinding } from './Utils';
+import { Pair, Cubic, myIndexOf, CUBIC_DIRECTIONS, myIndexOfCubic, Pathfinding, Network } from './Utils';
 import { UnitCell } from './UnitCell';
 import { UnitStats } from './UnitStats';
 import { EditStats } from './EditStats';
-import { Terrain, Plains, ImpassableMountain, Hills, Forest, TERRAINS, TERRAINS_ESP } from './Terrains';
+import { Terrain, Plains, ImpassableMountain, Hills, Forest, River, TERRAINS, TERRAINS_ESP } from './Terrains';
 
 export class EditMap extends React.Component<any, any> {
     editStats: EditStats = null;
@@ -85,14 +85,17 @@ export class EditMap extends React.Component<any, any> {
     onClickGenerateMap(event: React.MouseEvent<HTMLElement>) {
         // Para generar el mapa, convertiremos el conjunto de terrenos en un JSON
         let terrains = storeEdit.getState().terrains;
-        // Generamos el JSON que contendrán los datos del mapa,
-        let result = JSON.stringify({
+        let jsonResult = {
             // Este elemento contiene los terrenos
             map: terrains,
             // También debemos definir las filas y columnas
             rows: this.state.rows,
             columns: this.state.columns
-        });
+        };
+        // Generamos el JSON que contendrán los datos del mapa,
+        let result = JSON.stringify(jsonResult);
+        // Enviaremos al servidor el contenido del mapa
+        Network.sendMapToServer(jsonResult);
         // Finalmente, mostramos en el textarea el resultado
         this.setState({
             cells: this.state.cells,
@@ -205,6 +208,8 @@ export class EditMap extends React.Component<any, any> {
             case "Forest":
                 terrain = Forest.create(newPosition);
                 break;
+            case "River":
+                terrain = River.create(newPosition);
             default:
         };
 

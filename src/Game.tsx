@@ -4,8 +4,9 @@ import { Map } from './Map';
 import { Actions, getInitialState } from './GameState';
 import { EditMap } from './EditMap';
 import { store } from './Store';
-import { Network } from './Utils';
+import { Network, Pair } from './Utils';
 import { Profile } from './Profile'
+import { Infantry, Tank, General, Unit } from './Unit';
 
 class EnterGameButton extends React.Component<any, any> {
     constructor(props: any) {
@@ -99,7 +100,19 @@ class PreGameMenu extends React.Component<any, any> {
     constructor(props: any) {
         super(props);
         this.state = {
-            custom: false
+            custom: false,
+            // Inicialmente, contendrán los mismos datos que el estado, en estos objectos se almacenarán
+            // los ejércitos introducidos por el usuario
+            playerArmy: [
+                { type: "General", number: 1 },
+                { type: "Infantry", number: 1 },
+                { type: "Tank", number: 1}
+            ],
+            enemyArmy: [
+                { type: "General", number: 1 },
+                { type: "Infantry", number: 1 },
+                { type: "Tank", number: 1}
+            ]
         };
     }
 
@@ -111,7 +124,10 @@ class PreGameMenu extends React.Component<any, any> {
         <div className="preGameMenu">
             <h2>Menu de pre juego</h2>
             <div className="playerMenu">
-                <SideOptionMenu player={true} />
+                <SideOptionMenu player={true} parentObject={this} />
+            </div>
+            <div> className="enemyMenu">
+                <SideOptionMenu player={false} parentObject={this} />
             </div>
             <div className="mapMenu">
                 <select id="map" onClick={this.updateMap.bind(this)}>
@@ -128,6 +144,16 @@ class PreGameMenu extends React.Component<any, any> {
     }
 
     startGame(event: MouseEvent) {
+        // Generamos las unidades del juego
+        let units = new Array<Unit>();
+        // Y obtenemos el estado inicial del mapa
+        let map = store.getState().terrains;
+        console.log("Player army: "+this.state.playerArmy);
+        // Ejecutamos la función que se encargará de obtener las unidades asociadas al par tipo y número
+        units = units.concat(Network.parseArmy(this.state.playerArmy, true));
+        units = units.concat(Network.parseArmy(this.state.enemyArmy, false));
+        console.log(JSON.stringify(units));
+
         // Definimos las dimensiones básicas del mapa
         let rows = 6;
         let columns = 6;
@@ -136,13 +162,13 @@ class PreGameMenu extends React.Component<any, any> {
             // Primero, obtenemos el JSON resultante
             let custom = JSON.parse((document.getElementById("customMap") as HTMLTextAreaElement).value);
             // Obtenemos por un lado el mapa
-            let newMap = Network.parseMap(custom.map);
-            // Y cambiamos el estado para tener esto en cuenta
-            store.dispatch(Actions.generateCustomMap(newMap));
+            map = Network.parseMap(custom.map);
             // Modificamos las dimensiones del mapa
             rows = custom.rows;
             columns = custom.columns;
         }
+        store.dispatch(Actions.generatePreGameConfiguration(map, units));
+        // Actualizamos el juego para avisar de los cambios
         this.props.parentObject.setState({ 
             gameState: 2,
             rows: rows,
@@ -177,9 +203,28 @@ class SideOptionMenu extends React.Component<any, any> {
     render() {
         return (
             <div className={"sideOption"+this.state.player?"Player":"Enemy"}>
-                <p>Aqui vendrán las opciones del jugador {this.state.player?"Aliado":"Enemigo"}</p>
+                <p>Introduce en el siguiente campo el código de ejército: </p>
+                
+                <textarea id={"army_"+this.props.player} onChange={this.onChangeArmy.bind(this)} placeholder="Introduzca aqui el código de ejército" />
             </div>
         );
+    }
+
+    onChangeArmy(mouseEvent: React.MouseEvent<HTMLElement>) {
+        console.log("Changed for "+this.props.player);
+        // Obtenemos el dato de entrada
+        let textArea: HTMLTextAreaElement = document.getElementById("army_"+this.props.player) as HTMLTextAreaElement;
+        let unitsJSON = textArea.value;
+        // Lo transformamos en el tipo requerido
+        let unitsPair: Array<{ type: string, number: number }> = JSON.parse(unitsJSON);
+        console.log()
+        // Cambiamos el estado del padre
+        this.props.parentObject.setState({
+            custom: this.props.parentObject.state.custom,
+            // Dependiendo de que sea el jugador o no, cambiamos el elemento del estado
+            playerArmy: this.props.player?unitsPair:this.props.parentObject.state.playerArmy,
+            enemyArmy: !this.props.player?unitsPair:this.props.parentObject.state.enemyArmy
+        })
     }
 }
 
@@ -236,7 +281,7 @@ class Game extends React.Component<any, any> {
                 result = <OptionsMenu parentObject={this} />;
                 break;
             case 2:
-                result = <Map horizontal={this.state.rows} vertical={this.state.columns} parentObject={this} />;
+                result = <Map horizontal={this.state.columns} vertical={this.state.rows} parentObject={this} />;
                 break;
             case 3:
                 result = <CreateMenu parentObject={this} />;

@@ -156,9 +156,11 @@ export class Map extends React.Component<any, any> {
         // Si no está definido
         if(selectedIndex == null
             || (// O en el caso de estarlo, es posible incrementar el índice
+                // O sobrepasa el límite de la lista
+                store.getState().units.length <= selectedIndex + 1 ||
                 // Si la próxima unidad no es del jugador
                 !store.getState().units[selectedIndex + 1].player == (store.getState().turn%2 == 0)
-                || store.getState().units.length <= selectedIndex + 1 // O sobrepasa el límite de la lista
+                
         )) {
             console.log("Entra en no definido");
             // Entonces debemos encontrar el índice de una unidad del jugador
