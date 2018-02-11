@@ -41,12 +41,14 @@ body {
 .unit {
     margin-left: -230px;
     margin-right: -40px;
+    z-index: 1;
 }
 
 .obstacle {
     position: relative;
     margin-left: -230px;
     margin-right: -40px;
+    z-index: -1;
 }
 .selector {
     display: block;

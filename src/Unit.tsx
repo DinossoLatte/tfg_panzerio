@@ -36,13 +36,29 @@ export class Unit {
     }
 
     // Esta función calculará la cantidad de vida eliminada de la unidad defendiendo.
-    calculateAttack(defendingUnit: Unit, defenseWeakBonus: number, defenseStrongBonus: number): number {
+    calculateAttack(defendingUnit: Unit, defenseWeakBonus: number,
+         defenseStrongBonus: number, attackWeakBonus: number,
+         attackStrongBonus: number): number {
         let healthRemoved: number = 0;
-        if (this.attackWeak > defendingUnit.defenseWeak + defenseWeakBonus) {
-            healthRemoved += this.attackWeak - defendingUnit.defenseWeak + defenseWeakBonus;
+        // Calculamos las defensas
+        let calculatedWeakDefense = defendingUnit.defenseWeak + defenseWeakBonus;
+        // Si la defensa débil es menor a 0
+        if(calculatedWeakDefense < 0) {
+            // Entonces restauramos a 0
+            calculatedWeakDefense = 0;
         }
-        if (this.attackStrong > defendingUnit.defenseStrong + defenseStrongBonus) {
-            healthRemoved += this.attackStrong - defendingUnit.defenseStrong + defenseStrongBonus;
+        // Realizamos lo mismo con la defensa fuerte
+        let calculatedStrongDefense = defendingUnit.defenseStrong + defenseStrongBonus;
+        if(calculatedStrongDefense < 0) {
+            calculatedStrongDefense = 0;
+        }
+        // En ambos casos, en el caso de que el ataque sea negativo,
+        // no se cumplirá la regla y no importará que sea negativo
+        if (this.attackWeak + attackWeakBonus > calculatedWeakDefense) {
+            healthRemoved += this.attackWeak - calculatedWeakDefense;
+        }
+        if (this.attackStrong + attackStrongBonus > calculatedStrongDefense) {
+            healthRemoved += this.attackStrong - calculatedStrongDefense;
         }
         return healthRemoved;
     }
