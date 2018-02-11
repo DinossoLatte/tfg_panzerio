@@ -5,6 +5,7 @@ import * as Redux from 'redux';
 import { storeProfile, saveState, } from './StoreProfile';
 import { ProfileActions } from './GameProfileState';
 import { Army } from './Army';
+import { UNITS, UNITS_ESP } from './Unit';
 
 export class Profile extends React.Component<any, any> {
 
@@ -26,6 +27,24 @@ export class Profile extends React.Component<any, any> {
         }
     }
 
+    //Se crean los options segun la lista de unidades disponibles (empieza en 1 para no contar general)
+    selectOptionsUnits() {
+        let army = [<option selected value={null}>--Selecciona--</option>];
+        for (var i = 1; i < UNITS.length; i++) {
+            army.push(<option value={UNITS[i]}>{UNITS_ESP[i]}</option>);
+        }
+        return army;
+    }
+
+    selectOptionsUnitsDelete() {
+        let army = [<option selected value={null}>--Selecciona--</option>];
+        for(var i = 1; i < UNITS.length; i++) {
+            if(storeProfile.getState().armies[storeProfile.getState().selectedArmy].unitList.some(x => x.type == UNITS[i] && x.number > 0)) {
+                army.push(<option value={UNITS[i]}>{UNITS_ESP[i]}</option>);
+            }
+        }
+        return army;
+    }
     /// Este listener se encargará de cambiar a la edición del batallón
     onClickAddEdit(event: React.MouseEvent<HTMLElement>) {
         // Si está definido el nombre
@@ -77,9 +96,11 @@ export class Profile extends React.Component<any, any> {
         // 'result' contendrá el conjunto de elementos HTML que se representará
         let result = [];
         // Y estos contadores tendrán el número de unidades del correspondiente tipo
-        let generalNumber = 0;
-        let infantryNumber = 0;
-        let tankNumber = 0;
+        let armyNumbers = [];
+        //Es necesario hacer este bucle porque sino no se puede incializar a 0 el array
+        for (var j = 0; j < UNITS.length; j++) {
+            armyNumbers.push(0);
+        }
         let index = (
             // Si el índice introducido es null
             armyIndex == null ?
@@ -88,35 +109,21 @@ export class Profile extends React.Component<any, any> {
                 // En caso contrario, usamos el que nos da de argumento
                 armyIndex);
         // Iteramos por cada tipo de unidad del ejército
-        for (var armyIndex = 0; armyIndex < storeProfile.getState().armies[index].unitList.length; armyIndex++) {
-            // Según el tipo de la unidad, le asignaremos el contador correspondiente
-            // TODO esto deberá de cambiar para admitir cualquier atributo de la unidad, es decir, poder crear nuevos tipos de unidades
-            // Seleccionamos el elemento iterado
-            let unitNumberPair = storeProfile.getState().armies[index].unitList[armyIndex]
-            // Y comprobamos el tipo
-            switch (unitNumberPair.type) {
-                case "General":
-                    generalNumber = unitNumberPair.number;
-                    break;
-                case "Infantry":
-                    infantryNumber = unitNumberPair.number;
-                    break;
-                case "Tank":
-                    tankNumber = unitNumberPair.number;
-                    break;
-                default:
-                    // Este caso no debería ocurrir nunca
-                    console.error("renderArmyContents, el tipo de la unidad no se tiene en cuenta!");
-                    break;
-            }
+        for(let indexArmy = 0; indexArmy < storeProfile.getState().armies[index].unitList.length; indexArmy++) {
+            // Obtenemos el par tipo y número
+            let unitTypePair = storeProfile.getState().armies[index].unitList[indexArmy];
+            // Obtenemos el índice del tipo de la unidad
+            let typeIndex = UNITS.findIndex(type => type == unitTypePair.type);
+            // E asignaremos al valor del número de unidades del tipo el valor del par
+            armyNumbers[typeIndex] = unitTypePair.number;
         }
         // Finalmente, añadiremos a los componentes el número de unidades
-        result.push(<p>Generales: {generalNumber}</p>);
-        result.push(<p>Infanterías: {infantryNumber}</p>);
-        result.push(<p>Tanques: {tankNumber}</p>)
+        for(let indexNumbers = 0; indexNumbers < armyNumbers.length; indexNumbers++) {
+            result.push(<p>{UNITS_ESP[indexNumbers]}: {armyNumbers[indexNumbers]}</p>);
+        }
         return result;
-
     }
+
 
     /// Esta función se encargará de renderizar una lista de los ejércitos del usuario
     renderArmyList() {
@@ -356,11 +363,8 @@ export class Profile extends React.Component<any, any> {
                 </div> : storeProfile.getState().type >= "2" && storeProfile.getState().armies.length == 0 ? <div id="error">No hay batallones para seleccionar</div> : ""}
                 {storeProfile.getState().type == "1" || storeProfile.getState().type == "4" ? <div>
                     <label> Selecciona el tipo de unidad:
-
                         <select defaultValue={null} value={storeProfile.getState().selected} onChange={evt => this.selectUnit(evt.target.value)}>
-                            <option selected value={null}>--Selecciona--</option>
-                            <option value="Infantry">Infantería</option>
-                            <option value="Tank">Tanque</option>
+                            {this.selectOptionsUnits()}
                         </select>
                     </label>
                     {storeProfile.getState().selected != null ? <button id="addUnit" name="addUnit" className="addUnitButton" onClick={this.onClickAddUnit.bind(this)}>Añadir unidad</button> : ""}
@@ -373,8 +377,7 @@ export class Profile extends React.Component<any, any> {
                     <label> Selecciona el tipo de unidad:
                         <select defaultValue={null} value={storeProfile.getState().selected} onChange={evt => this.selectUnit(evt.target.value)}>
                             <option selected value={null}>--Selecciona--</option>
-                            {storeProfile.getState().armies[storeProfile.getState().selectedArmy].unitList.filter(pair => pair.type == "Infantry").length != 0 ? <option value="Infantry">Infantería</option> : ""}
-                            {storeProfile.getState().armies[storeProfile.getState().selectedArmy].unitList.filter(pair => pair.type == "Tank").length != 0 ? <option value="Tank">Tanque</option> : ""}
+                            {this.selectOptionsUnitsDelete()}
                         </select>
                     </label>
                     {storeProfile.getState().selected != null ? <button id="deleteUnit" name="deleteUnit" className="deleteUnitButton" onClick={this.onClickDeleteUnit.bind(this)}>Eliminar unidad</button> : ""}
