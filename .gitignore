@@ -64,8 +64,8 @@ dist/bundle.js.map
 # Eliminamos los archivos resultados de la compilación del servidor
 srv/src/
 srv/srv/
-srv/server.js
 srv_compiled/
+srv/server.js
 
 # IDEs
 .vscode
