@@ -73,11 +73,11 @@ export function parseActionMap(data: any) {
             result.position = new Pair(json.position.row, json.position.column);
         }
         // Ahora vamos con los terrenos:
-        let terrains: Array<{name: string, image: string, movement_penalty: number, position:{row: number, column: number}, defenseWeak: number, defenseStrong: number}> = json.terrains;
+        let terrains: Array<{name: string, image: string, movement_penalty: number, position:{row: number, column: number}, defenseWeak: number, defenseStrong: number, attackWeak: number, attackStrong: number}> = json.terrains;
         // Para cada uno, crearemos una unidad con esos datos.
         if(terrains) {
             result.terrains = terrains.map(terrain => new Terrain(terrain.name, terrain.image, terrain.movement_penalty, new Pair(terrain.position.row, terrain.position.column),
-                terrain.defenseWeak, terrain.defenseStrong));
+                terrain.defenseWeak, terrain.defenseStrong, terrain.attackWeak, terrain.attackStrong));
         }
         if(json.map){
             result.map = new Map(json.map.rows, json.map.columns);
@@ -189,7 +189,7 @@ export const Reducer : Redux.Reducer<State> =
                     state.terrains.map(terrain => terrain.position), defendingUnit.position)
                 let terrain = terrainIndex > -1?state.terrains[terrainIndex]:null;
                 // Después, calculamos la cantidad de vida a eliminar
-                let healthRemoved = attackingUnit.calculateAttack(defendingUnit, terrain?terrain.defenseWeak:0, terrain?terrain.defenseStrong:0);
+                let healthRemoved = attackingUnit.calculateAttack(defendingUnit, terrain?terrain.defenseWeak:0, terrain?terrain.defenseStrong:0, terrain?terrain.attackWeak:0, terrain?terrain.attackStrong:0);
                 // Comprobamos que la unidad defendiendo le queden todavía vida
                 if (defendingUnit.health - healthRemoved > 0) {
                     // Si es el caso, le cambiamos la cantidad de vida

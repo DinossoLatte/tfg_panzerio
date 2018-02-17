@@ -79,7 +79,53 @@ server.on('connection', function connect(ws) {
                             error: "Saved successfully"
                         }))
                     }
-                });                                
+                });
+                break;
+            case "getMap":
+                // Obtenemos los datos de la petición
+                let getMap = message.map;
+                // Ejecutamos el almacenado en la BD
+                UtilsServer.MapsDatabase.getMap(getMap, (code: { status: boolean, error: string,  map: { rows: number, columns: number,
+                    terrains: {name: string, image: string, movement_penalty: number, position_row: number, position_cols: number,
+                         defense_weak: number, defense_strong: number, attack_weak: number, attack_strong: number}[]} }) => {
+                    // Si hay error
+                    if(status) {
+                        // Entonces indicamos al receptor el guardado incorrecto del mapa
+                        ws.send(JSON.stringify({
+                            status: false,
+                            error: "Couldn't get map. Error: "+code.error,
+                            map: null
+                        }));
+                    } else {
+                        // En caso contrario, avisamos del guardado correcto
+                        ws.send(JSON.stringify({
+                            status: true,
+                            error: "Got successfully",
+                            map: code.map
+                        }))
+                    }
+                });
+                break;
+            case "getMapId":
+                // Ejecutamos el almacenado en la BD
+                UtilsServer.MapsDatabase.getMapId((code: { status: boolean, error: string,  mapId: number[] }) => {
+                    // Si hay error
+                    if(status) {
+                        // Entonces indicamos al receptor el guardado incorrecto del mapa
+                        ws.send(JSON.stringify({
+                            status: false,
+                            error: "Couldn't get map. Error: "+code.error,
+                            mapId: null
+                        }));
+                    } else {
+                        // En caso contrario, avisamos del guardado correcto
+                        ws.send(JSON.stringify({
+                            status: true,
+                            error: "Got successfully",
+                            mapId: code.mapId
+                        }))
+                    }
+                });
                 break;
             default:
                 console.warn("Action sent not understood! Type is "+message.type);

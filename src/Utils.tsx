@@ -433,10 +433,10 @@ export class Network {
         return result;
     }
 
-    public static parseMap(terrains: 
+    public static parseMap(terrains:
         Array<{ name: string, image: string, movement_penalty: number,
              position:{ row: number, column: number},
-             defenseWeak: number, defenseStrong: number 
+             defenseWeak: number, defenseStrong: number
              attackWeak: number, attackStrong: number }
         >): Terrain[] {
         let result: Terrain[] = [];
@@ -452,7 +452,7 @@ export class Network {
     /// Esta función se encargará de obtener el conjunto de unidades dado el par indicado
     /// Aunque no es usado por ningún archivo relacionado con el servidor, será usado
     /// cuando se disponga del guardado de ejércitos en servidor
-    /// 
+    ///
     /// El argumento side permitirá indicar el bando del ejército, sea del jugador o enemigo
     public static parseArmy(unitsPair: Array<{ type: string, number: number }>, side: boolean): Array<Unit> {
         // Primero, creamos el array que contendrá el resultado
@@ -513,5 +513,24 @@ export class Network {
                 map: map
             }));
         }
+    }
+
+    public static parseMapServer(data: string): any {
+        // Definimos la salida, un mapa, y lo populamos con datos por defecto
+        let result = {
+            terrains: [] as Array<Terrain>,
+            rows: 0,
+            columns: 0
+        };
+        // Primero, convertimos el objeto en un mapa
+        let json = JSON.parse(data);
+        // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
+        // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
+        result.rows = json.rows;
+        result.columns = json.columns;
+        // Finalmente, nos quedan los terrenos, mismo proceso
+        result.terrains = this.parseMap(json.terrains);
+        // Retornamos el estado final
+        return result;
     }
 }
