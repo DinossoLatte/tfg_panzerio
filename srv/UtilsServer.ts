@@ -101,7 +101,7 @@ export class MapsDatabase {
             } else {
                 console.log(mapData);
                 // obtenemos el mapa
-                MapsDatabase.connection.get("SELECT rows, columns FROM map where id_map = $mapId;", {$mapId: mapData.id}, (err: Error, rows: any) => {
+                MapsDatabase.connection.get("SELECT rows, cols FROM map where id = $mapId;", {$mapId: mapData.id}, (err: Error, rows: any) => {
                     // Si hay error
                     if(err) {
                         console.log("Error trying to get the ID of the last map created");
@@ -109,7 +109,7 @@ export class MapsDatabase {
                     } else {
                         // En este caso, tendremos los datos
                         row = rows['rows'];
-                        columns = rows['columns'];
+                        columns = rows['cols'];
                     }
                 });
 
@@ -135,7 +135,6 @@ export class MapsDatabase {
 
     public static getMapId(callback: (code: { status: boolean, error: string, mapId: number[] }) => void) {
         // Inicializamos o no la BD
-        let mapId = new Array<number>();
         MapsDatabase.initOrCallDatabase((err: Error) => {
             // Comprobamos el mensaje de error
             if(err) {
@@ -143,14 +142,18 @@ export class MapsDatabase {
                 console.error("Se ha producido un error intentando abrir la BD!");
                 callback({ status: false, error: "Can't connect to DB", mapId: null });
             } else {
-                MapsDatabase.connection.each("SELECT id_map FROM map;", (err: Error, rows: any) => {
+                let mapId = new Array<number>();
+                MapsDatabase.connection.each("SELECT id FROM map;", (err: Error, rows: any) => {
                     // Si hay error
                     if(err) {
                         console.log("Error trying to get the ID of the last map created");
-                        callback({ status: false, error: "Error trying to get the ID of the last map created", map: null });
+                        callback({ status: false, error: "Error trying to get the ID of the last map created", mapId: null });
                     } else {
                         // En este caso, tendremos los datos
-                        mapId.push(rows['id_map']);
+                        var i = 0;
+                        mapId.push(Number(rows['id']));
+                        console.log(mapId[i]);
+                        i++;
                     }
                 });
 

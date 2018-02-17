@@ -66,7 +66,7 @@ server.on('connection', function connect(ws) {
                 // Ejecutamos el almacenado en la BD
                 UtilsServer.MapsDatabase.saveMap(map, (code: { status: boolean, error: string }) => {
                     // Si hay error
-                    if(status) {
+                    if(code.status) {
                         // Entonces indicamos al receptor el guardado incorrecto del mapa
                         ws.send(JSON.stringify({
                             status: false,
@@ -89,7 +89,7 @@ server.on('connection', function connect(ws) {
                     terrains: {name: string, image: string, movement_penalty: number, position_row: number, position_cols: number,
                          defense_weak: number, defense_strong: number, attack_weak: number, attack_strong: number}[]} }) => {
                     // Si hay error
-                    if(status) {
+                    if(code.status) {
                         // Entonces indicamos al receptor el guardado incorrecto del mapa
                         ws.send(JSON.stringify({
                             status: false,
@@ -110,7 +110,8 @@ server.on('connection', function connect(ws) {
                 // Ejecutamos el almacenado en la BD
                 UtilsServer.MapsDatabase.getMapId((code: { status: boolean, error: string,  mapId: number[] }) => {
                     // Si hay error
-                    if(status) {
+                    console.log("server: "+code.status+","+code.error+","+code.mapId);
+                    if(code.status) {
                         // Entonces indicamos al receptor el guardado incorrecto del mapa
                         ws.send(JSON.stringify({
                             status: false,
@@ -128,7 +129,7 @@ server.on('connection', function connect(ws) {
                 });
                 break;
             default:
-                console.warn("Action sent not understood! Type is "+message.type);
+                console.warn("Action sent not understood! Type is "+message.tipo);
                 ws.send("Command not understood");
         }
     });

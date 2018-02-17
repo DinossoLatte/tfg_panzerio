@@ -485,7 +485,7 @@ export class Network {
         return units;
     }
 
-    /// Este método se encargará de enviar los datos del mapa al servidor, para que se guarden en BD
+    // Este método se encargará de enviar los datos del mapa al servidor, para que se guarden en BD
     public static sendMapToServer(map: { rows: number, columns: number, map: Array<Terrain> }
         , callback?: (error: { status: boolean, errorCode: string }) => void) {
         // Primero, establecemos la conexión con el servidor
@@ -509,7 +509,7 @@ export class Network {
         connection.onopen = () => {
             // Al abrirse la conexión, informamos al servidor del mapa
             connection.send(JSON.stringify({
-                type: "saveMap",
+                tipo: "saveMap",
                 map: map
             }));
         }

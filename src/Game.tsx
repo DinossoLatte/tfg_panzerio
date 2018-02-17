@@ -100,7 +100,6 @@ class PreGameMenu extends React.Component<any, any> {
     constructor(props: any) {
         super(props);
         this.state = {
-            custom: false,
             // Inicialmente, contendrán los mismos datos que el estado, en estos objectos se almacenarán
             // los ejércitos introducidos por el usuario
             playerArmy: [
@@ -121,7 +120,7 @@ class PreGameMenu extends React.Component<any, any> {
 
     render() {
         // En el caso de querer usar un mapa, mostramos una zona para ponerlo
-        let customMap = this.state.custom?<textarea id="customMap">Introduzca el JSON aqui</textarea>:"";
+        //let customMap = this.state.custom?<textarea id="customMap">Introduzca el JSON aqui</textarea>:"";
 
         return (
         <div className="preGameMenu">
@@ -136,8 +135,6 @@ class PreGameMenu extends React.Component<any, any> {
                 <select id="map" defaultValue={null} value={this.state.selected} onChange={evt => this.updateMap(evt.target.value)}>
                     {this.selectMaps()}
                 </select>
-
-                {customMap}
 
                 <button onClick={this.startGame.bind(this)}>Empezar juego</button>
                 <button onClick={this.exitPreGame.bind(this)}>Volver</button>
@@ -160,7 +157,7 @@ class PreGameMenu extends React.Component<any, any> {
         connection.onmessage = function(event: MessageEvent) {
             // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
             // el comando se haya entendido
-            let data = JSON.parse(event.data);
+            console.log(JSON.stringify(event));
             if(event.data == "Command not understood") {
                 // Lanzamos un error
                 console.log("Error when attempting to save, server didn't understood request");
@@ -168,6 +165,8 @@ class PreGameMenu extends React.Component<any, any> {
                     callback({ status: false, errorCode: event.data , mapId: null });
                 }
             } else {
+                console.log(event.data);
+                let data = JSON.parse(event.data);
                 // En caso contrario, ejecutamos el callback sin errores
                 if(callback) {
                     callback({ status: true, errorCode: "Success", mapId: data.mapId });
@@ -178,7 +177,7 @@ class PreGameMenu extends React.Component<any, any> {
         connection.onopen = () => {
             // Al abrirse la conexión, informamos al servidor del mapa
             connection.send(JSON.stringify({
-                type: "getMapId"
+                tipo: "getMapId"
             }));
         }
     }
@@ -192,6 +191,7 @@ class PreGameMenu extends React.Component<any, any> {
         connection.onmessage = function(event: MessageEvent) {
             // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
             // el comando se haya entendido
+            console.log(JSON.stringify(event));
             let data = Network.parseMapServer(event.data);
             if(event.data == "Command not understood") {
                 // Lanzamos un error
@@ -220,7 +220,7 @@ class PreGameMenu extends React.Component<any, any> {
         connection.onopen = () => {
             // Al abrirse la conexión, informamos al servidor del mapa
             connection.send(JSON.stringify({
-                type: "getMap",
+                tipo: "getMap",
                 map: map
             }));
         }
