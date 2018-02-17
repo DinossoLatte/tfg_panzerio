@@ -509,9 +509,48 @@ export class Network {
         connection.onopen = () => {
             // Al abrirse la conexión, informamos al servidor del mapa
             connection.send(JSON.stringify({
-                type: "saveMap",
+                tipo: "saveMap",
                 map: map
             }));
+        }
+    }
+
+    public static sendProfileToServer(profile: {
+            id: number,
+            name: string,
+            gamesWon: number,
+            gamesLost: number,
+            armies: Array<{ id: number, name: string, pair: Array<{ type: string, number: number }> }>
+        }, callback?: (error: { status: boolean, errorCode: string }) => void) {
+        // Primero, establecer la conexión con el servidor
+        let connection = new WebSocket("ws://localhost:8080/");
+        // Definimos el evento de recepción de mensaje
+        connection.onmessage = function(event: MessageEvent) {
+            console.log(event.data);
+            // Comprobamos cuál ha sido la respuesta
+            if(event.data == "Command not understood") {
+                // Retornamos al callback el fallo de la conexión
+                callback({ status: false, errorCode: event.data});
+            } else {
+                // En caso contrario, el comando se entendió. Comprobamos ahora si el mensaje contiene éxito de la operación
+                let statusCode: { status: boolean, error: string } = JSON.parse(event.data);
+                if(statusCode.status) {
+                    // Se ha realizado la operación correctamente
+                    callback({ status: true, errorCode: statusCode.error });
+                } else {
+                    // Avisamos por pantalla y emitiremos el resultado
+                    console.warn("Ha fallado la petición de guardado del perfil al servidor!");
+                    console.warn("Error: "+statusCode.error);
+                    callback({ status: false, errorCode: statusCode.error });
+                }
+            }
+        };
+        connection.onopen = function() {
+            // Enviamos el mensaje
+            connection.send(JSON.stringify({
+                tipo: "saveProfile",
+                profile: profile
+            }))
         }
     }
 }
