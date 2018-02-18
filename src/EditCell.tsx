@@ -23,7 +23,8 @@ export class EditCell extends React.Component<any, any> {
         // Despues comprobando que esta casilla esté en esa posición
         let cursor = positionCursor.column == this.props.column && positionCursor.row == this.props.row;
         let pair = new Pair(this.props.row, this.props.column);
-        let indexTerrain = myIndexOf(storeEdit.getState().terrains.map(x => x.position), pair);
+        // .filter( != null) es necesario, al añadirse nulls al terreno si no hay ninguno
+        let indexTerrain = myIndexOf(storeEdit.getState().terrains.filter(elem => elem != null).map(x => x.position), pair);
         let terrain = indexTerrain > -1?storeEdit.getState().terrains[indexTerrain]:Terrain.Plains.create(pair);
         return (
                 <div className="div_cell">
