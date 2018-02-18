@@ -83,13 +83,15 @@ server.on('connection', function connect(ws) {
                 break;
             case "getMap":
                 // Obtenemos los datos de la petición
-                let getMap = message.map;
+                let getMapvar = message.map;
                 // Ejecutamos el almacenado en la BD
-                UtilsServer.MapsDatabase.getMap(getMap, (code: { status: boolean, error: string,  map: { rows: number, columns: number,
+                console.log(JSON.stringify(getMapvar));
+                UtilsServer.MapsDatabase.getMap(Number(getMapvar), (code: { status: boolean, error: string,  map: { rows: number, columns: number,
                     terrains: {name: string, image: string, movement_penalty: number, position_row: number, position_cols: number,
                          defense_weak: number, defense_strong: number, attack_weak: number, attack_strong: number}[]} }) => {
                     // Si hay error
-                    if(code.status) {
+                    console.log("server: "+code.status+","+code.error+","+JSON.stringify(code.map));
+                    if(!code.status) {
                         // Entonces indicamos al receptor el guardado incorrecto del mapa
                         ws.send(JSON.stringify({
                             status: false,
@@ -111,7 +113,7 @@ server.on('connection', function connect(ws) {
                 UtilsServer.MapsDatabase.getMapId((code: { status: boolean, error: string,  mapId: number[] }) => {
                     // Si hay error
                     console.log("server: "+code.status+","+code.error+","+code.mapId);
-                    if(code.status) {
+                    if(!code.status) {
                         // Entonces indicamos al receptor el guardado incorrecto del mapa
                         ws.send(JSON.stringify({
                             status: false,

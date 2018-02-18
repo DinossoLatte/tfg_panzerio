@@ -84,14 +84,17 @@ export class MapsDatabase {
         });
     }
 
-    public static getMap(mapData: { id: number }, callback: (code: { status: boolean, error: string, map: { rows: number, columns: number,
+    // obtenemos el mapa
+    /**/
+
+    public static getMap(mapData: number, callback: (code: { status: boolean, error: string, map: { rows: number, columns: number,
         terrains: {name: string, image: string, movement_penalty: number, position_row: number, position_cols: number,
              defense_weak: number, defense_strong: number, attack_weak: number, attack_strong: number}[] }}) => void) {
         // Inicializamos o no la BD
         let row = 0;
         let columns = 0;
-        let terrains = new Array<{name: string, image: string, movement_penalty: number, position_row: number, position_cols: number,
-             defense_weak: number, defense_strong: number, attack_weak: number, attack_strong: number}>();
+        let terrains : {name: string, image: string, movement_penalty: number, position_row: number, position_cols: number,
+             defense_weak: number, defense_strong: number, attack_weak: number, attack_strong: number}[] = [];
         MapsDatabase.initOrCallDatabase((err: Error) => {
             // Comprobamos el mensaje de error
             if(err) {
@@ -99,37 +102,38 @@ export class MapsDatabase {
                 console.error("Se ha producido un error intentando abrir la BD!");
                 callback({ status: false, error: "Can't connect to DB", map: null });
             } else {
-                console.log(mapData);
-                // obtenemos el mapa
-                MapsDatabase.connection.get("SELECT rows, cols FROM map where id = $mapId;", {$mapId: mapData.id}, (err: Error, rows: any) => {
+                MapsDatabase.connection.get("SELECT rows, cols FROM map where id = $mapId;", {$mapId: Number(mapData)}, (err: Error, rows: any) => {
                     // Si hay error
                     if(err) {
                         console.log("Error trying to get the ID of the last map created");
                         callback({ status: false, error: "Error trying to get the ID of the last map created", map: null });
                     } else {
                         // En este caso, tendremos los datos
+                        console.log(JSON.stringify(mapData));
+                        console.log(JSON.stringify(rows));
                         row = rows['rows'];
                         columns = rows['cols'];
+                        MapsDatabase.connection.each("SELECT name, image, movement_penalty, position_row, position_cols, defense_weak, defense_strong, attack_weak, attack_strong FROM terrain where id_map = $mapId;", {$mapId: mapData}, (err: Error, rows2: any) => {
+                            // Si hay error
+                            console.log(JSON.stringify(err));
+                            if(err) {
+                                console.log("Error trying to get the ID of the last map created");
+                                callback({ status: false, error: "Error trying to get the ID of the last map created", map: null });
+                            } else {
+                                // En este caso, tendremos los datos
+                                console.log("Aqui "+rows2['name']);
+                                console.log(rows2['image']);
+                                terrains.push({name: rows2['name'].toString(), image: rows2['image'].toString(), movement_penalty: Number(rows2['movement_penalty']), position_row: Number(rows2['position_row']),
+                                    position_cols: Number(rows2['position_cols']), defense_weak: Number(rows2['defense_weak']), defense_strong: Number(rows2['defense_strong']), attack_weak: Number(rows2['attack_weak']),
+                                    attack_strong: Number(rows2['attack_strong'])});
+                            }
+                        }, () => {
+                            callback({status: true, error: "Success", map:{rows: row, columns: columns, terrains: terrains}});
+                        });
                     }
                 });
-
-                MapsDatabase.connection.each("SELECT name, image, movement_penalty," +
-                     "position_row, position_cols, defense_weak, defense_strong, attack_weak," +
-                     " attack_strong FROM terrains where id_map = $mapId;", {$mapId: mapData.id}, (err: Error, rows: any) => {
-                    // Si hay error
-                    if(err) {
-                        console.log("Error trying to get the ID of the last map created");
-                        callback({ status: false, error: "Error trying to get the ID of the last map created", map: null });
-                    } else {
-                        // En este caso, tendremos los datos
-                        terrains.push({name: rows['name'], image: rows['image'], movement_penalty: rows['movement_penalty'], position_row: rows['position_row'],
-                            position_cols: rows['position_cols'], defense_weak: rows['defense_weak'], defense_strong: rows['defense_strong'], attack_weak: rows['attack_weak'],
-                            attack_strong: rows['attack_strong']})
-                    }
-                });
-
-                callback({status: true, error: "Success", map:{rows: row, columns: columns, terrains: terrains}});
             }
+
         });
     }
 
@@ -142,7 +146,8 @@ export class MapsDatabase {
                 console.error("Se ha producido un error intentando abrir la BD!");
                 callback({ status: false, error: "Can't connect to DB", mapId: null });
             } else {
-                let mapId = new Array<number>();
+                var i = 0;
+                let mapId : number[] = [];
                 MapsDatabase.connection.each("SELECT id FROM map;", (err: Error, rows: any) => {
                     // Si hay error
                     if(err) {
@@ -150,14 +155,11 @@ export class MapsDatabase {
                         callback({ status: false, error: "Error trying to get the ID of the last map created", mapId: null });
                     } else {
                         // En este caso, tendremos los datos
-                        var i = 0;
                         mapId.push(Number(rows['id']));
-                        console.log(mapId[i]);
-                        i++;
                     }
-                });
-
-                callback({status: true, error: "Success", mapId: mapId});
+                }, () => {
+					callback({ status: true, error: "Success", mapId: mapId });
+				});
             }
         });
     }

@@ -157,7 +157,7 @@ class PreGameMenu extends React.Component<any, any> {
         connection.onmessage = function(event: MessageEvent) {
             // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
             // el comando se haya entendido
-            console.log(JSON.stringify(event));
+            console.log("AQUI "+JSON.stringify(event));
             if(event.data == "Command not understood") {
                 // Lanzamos un error
                 console.log("Error when attempting to save, server didn't understood request");
@@ -169,9 +169,10 @@ class PreGameMenu extends React.Component<any, any> {
                 let data = JSON.parse(event.data);
                 // En caso contrario, ejecutamos el callback sin errores
                 if(callback) {
+                    console.log(JSON.stringify(data.mapId));
                     callback({ status: true, errorCode: "Success", mapId: data.mapId });
-                    game.setState({custom: game.state.custom, playerArmy: game.state.playerArmy, enemyArmy: game.state.enemyArmy, mapId: data.mapId});
                 }
+                game.setState({custom: game.state.custom, playerArmy: game.state.playerArmy, enemyArmy: game.state.enemyArmy, mapId: data.mapId});
             }
         };
         connection.onopen = () => {
@@ -191,7 +192,7 @@ class PreGameMenu extends React.Component<any, any> {
         connection.onmessage = function(event: MessageEvent) {
             // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
             // el comando se haya entendido
-            console.log(JSON.stringify(event));
+            console.log("Datos "+JSON.stringify(event.data));
             let data = Network.parseMapServer(event.data);
             if(event.data == "Command not understood") {
                 // Lanzamos un error
@@ -204,17 +205,17 @@ class PreGameMenu extends React.Component<any, any> {
                 if(callback) {
                     callback({ status: true, errorCode: "Success", map: event.data });
                     // Generamos las unidades del juego
-                    let units = new Array<Unit>();
-                    units = units.concat(Network.parseArmy(game.state.playerArmy, true));
-                    units = units.concat(Network.parseArmy(game.state.enemyArmy, false));
-                    console.log(JSON.stringify(units));
-                    store.dispatch(Actions.generatePreGameConfiguration(data.terrains, units));
-                    game.props.parentObject.setState({
-                        gameState: 2,
-                        rows: data.rows,
-                        columns: data.columns
-                    });
                 }
+                let units = new Array<Unit>();
+                units = units.concat(Network.parseArmy(game.state.playerArmy, true));
+                units = units.concat(Network.parseArmy(game.state.enemyArmy, false));
+                console.log("Terrenos "+JSON.stringify(data.terrains));
+                store.dispatch(Actions.generatePreGameConfiguration(data.terrains, units));
+                game.props.parentObject.setState({
+                    gameState: 2,
+                    rows: data.rows,
+                    columns: data.columns
+                });
             }
         };
         connection.onopen = () => {
@@ -227,7 +228,8 @@ class PreGameMenu extends React.Component<any, any> {
     }
 
     startGame(event: MouseEvent) {
-        // Generamos las unidades del juego
+        this.getMapFromServer(this.state.selected);
+    /*    // Generamos las unidades del juego
         let units = new Array<Unit>();
         // Y obtenemos el estado inicial del mapa
         let map = store.getState().terrains;
@@ -256,7 +258,7 @@ class PreGameMenu extends React.Component<any, any> {
             gameState: 2,
             rows: rows,
             columns: columns
-        });
+        });*/
     }
 
     // Actualiza el componente de poder introducir el mapa, en el caso de seleccionar
