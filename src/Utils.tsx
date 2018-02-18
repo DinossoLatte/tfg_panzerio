@@ -554,3 +554,27 @@ export class Network {
         }
     }
 }
+
+export class Parsers {
+    public static stringifyCyclicObject(obj: any): string {
+        let result = "";
+        let isAlreadyInJSON: Object[] = [];
+        // Ejecutamos el stringify, pero incluimos el callback que realizará la comprobación de si está el objeto o no
+        result = JSON.stringify(obj, (key: string, value: any) => {
+            // Primero, ¿El valor es válido? Esto será es distinto de null y el tipo es un objeto
+            if(value != null && value instanceof Object) {
+                // Si es el caso, vemos si lo hemos puesto
+                if(isAlreadyInJSON.indexOf(value) > -1) {
+                    // Lo hemos puesto, por lo que lo saltamos
+                    return ;
+                } else {
+                    // En otro caso, lo pondremos y lo añadimos a visitados
+                    isAlreadyInJSON.push(value);
+                }
+            }
+            // Finalmente retornamos el valor a introducir, que sólo lo retornará cuando es válido ponerlo
+            return value;
+        });
+        return result;
+    }
+}

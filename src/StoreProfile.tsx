@@ -3,7 +3,7 @@ import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
 import { Profile } from './Profile';
 import { ReducerProfile, StateProfile } from './GameProfileState';
-import { Pair, Cubic, Network } from './Utils';
+import { Pair, Cubic, Network, Parsers } from './Utils';
 import { Unit } from './Unit';
 import { Army } from './Army';
 import { Terrain } from './Terrains';
@@ -15,7 +15,7 @@ export interface StoreProfile extends Redux.Store<StateProfile> {
 export var storeProfile = Redux.createStore<StateProfile>(ReducerProfile);
 
 export function saveState(act: Redux.AnyAction) {
-    saveStateServer(act);
+    saveStateServer(Parsers.stringifyCyclicObject(act));
     storeProfile.dispatch(act);
     var profile: Profile = storeProfile.getState().profile;
     var armies: Array<Army> = storeProfile.getState().armies;
@@ -27,8 +27,7 @@ export function saveState(act: Redux.AnyAction) {
 //Este será el estado actual que se guardará en cliente, el servidor tendrá guardado el estado real
 export var actualState: StateProfile = undefined;
 
-export function saveStateServer(act: Redux.AnyAction){
-    let action = act.copy;
+export function saveStateServer(act: string){
     var connection = new WebSocket("ws://localhost:8080/");
     console.log("Connection established with server");
     // Establecemos la conexión
@@ -45,7 +44,7 @@ export function saveStateServer(act: Redux.AnyAction){
     connection.onopen = function() {
         console.log("Connection available for sending action");
         // Enviamos la solicitud
-        connection.send(JSON.stringify(action));
+        connection.send(act);
         console.log("Action sent.");
     }
 }
