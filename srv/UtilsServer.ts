@@ -158,8 +158,8 @@ export class MapsDatabase {
                         mapId.push(Number(rows['id']));
                     }
                 }, () => {
-					callback({ status: true, error: "Success", mapId: mapId });
-				});
+			callback({ status: true, error: "Success", mapId: mapId });
+		});
             }
         });
     }
