@@ -187,15 +187,8 @@ class PreGameMenu extends React.Component<any, any> {
             if(event.data == "Command not understood") {
                 // Lanzamos un error
                 console.log("Error when attempting to save, server didn't understood request");
-                if(callback) {
-                    callback({ status: false, errorCode: event.data, map: null });
-                }
             } else {
                 // En caso contrario, ejecutamos el callback sin errores
-                if(callback) {
-                    callback({ status: true, errorCode: "Success", map: event.data });
-                    // Generamos las unidades del juego
-                }
                 let units = new Array<Unit>();
                 units = units.concat(Network.parseArmy(game.state.playerArmy, true));
                 units = units.concat(Network.parseArmy(game.state.enemyArmy, false));
