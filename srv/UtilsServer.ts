@@ -105,8 +105,8 @@ export class MapsDatabase {
                 MapsDatabase.connection.get("SELECT rows, cols FROM map where id = $mapId;", {$mapId: Number(mapData)}, (err: Error, rows: any) => {
                     // Si hay error
                     if(err) {
-                        console.log("Error trying to get the ID of the last map created");
-                        callback({ status: false, error: "Error trying to get the ID of the last map created", map: null });
+                        console.log("Error trying to get rows and cols");
+                        callback({ status: false, error: "Error trying to get rows and cols", map: null });
                     } else {
                         // En este caso, tendremos los datos
                         console.log(JSON.stringify(mapData));
@@ -117,8 +117,8 @@ export class MapsDatabase {
                             // Si hay error
                             console.log(JSON.stringify(err));
                             if(err) {
-                                console.log("Error trying to get the ID of the last map created");
-                                callback({ status: false, error: "Error trying to get the ID of the last map created", map: null });
+                                console.log("Error trying to get the map");
+                                callback({ status: false, error: "Error trying to get the map", map: null });
                             } else {
                                 // En este caso, tendremos los datos
                                 console.log("Aqui "+rows2['name']);
@@ -151,8 +151,8 @@ export class MapsDatabase {
                 MapsDatabase.connection.each("SELECT id FROM map;", (err: Error, rows: any) => {
                     // Si hay error
                     if(err) {
-                        console.log("Error trying to get the ID of the last map created");
-                        callback({ status: false, error: "Error trying to get the ID of the last map created", mapId: null });
+                        console.log("Error trying to get the ID");
+                        callback({ status: false, error: "Error trying to get the ID", mapId: null });
                     } else {
                         // En este caso, tendremos los datos
                         mapId.push(Number(rows['id']));
