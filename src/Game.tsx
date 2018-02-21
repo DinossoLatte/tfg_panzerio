@@ -119,9 +119,6 @@ class PreGameMenu extends React.Component<any, any> {
     }
 
     render() {
-        // En el caso de querer usar un mapa, mostramos una zona para ponerlo
-        //let customMap = this.state.custom?<textarea id="customMap">Introduzca el JSON aqui</textarea>:"";
-
         return (
         <div className="preGameMenu">
             <h2>Menu de pre juego</h2>
@@ -157,21 +154,14 @@ class PreGameMenu extends React.Component<any, any> {
         connection.onmessage = function(event: MessageEvent) {
             // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
             // el comando se haya entendido
-            console.log("AQUI "+JSON.stringify(event));
+            console.log("recepción de la información del servidor "+JSON.stringify(event));
             if(event.data == "Command not understood") {
                 // Lanzamos un error
                 console.log("Error when attempting to save, server didn't understood request");
-                if(callback) {
-                    callback({ status: false, errorCode: event.data , mapId: null });
-                }
+                //No es necesario llamar al callback porque este ya es el nivel final (cliente)
             } else {
                 console.log(event.data);
                 let data = JSON.parse(event.data);
-                // En caso contrario, ejecutamos el callback sin errores
-                if(callback) {
-                    console.log(JSON.stringify(data.mapId));
-                    callback({ status: true, errorCode: "Success", mapId: data.mapId });
-                }
                 game.setState({custom: game.state.custom, playerArmy: game.state.playerArmy, enemyArmy: game.state.enemyArmy, mapId: data.mapId});
             }
         };
@@ -229,36 +219,6 @@ class PreGameMenu extends React.Component<any, any> {
 
     startGame(event: MouseEvent) {
         this.getMapFromServer(this.state.selected);
-    /*    // Generamos las unidades del juego
-        let units = new Array<Unit>();
-        // Y obtenemos el estado inicial del mapa
-        let map = store.getState().terrains;
-        console.log("Player army: "+this.state.playerArmy);
-        // Ejecutamos la función que se encargará de obtener las unidades asociadas al par tipo y número
-        units = units.concat(Network.parseArmy(this.state.playerArmy, true));
-        units = units.concat(Network.parseArmy(this.state.enemyArmy, false));
-        console.log(JSON.stringify(units));
-
-        // Definimos las dimensiones básicas del mapa
-        let rows = 6;
-        let columns = 6;
-        // Antes de ejecutar, comprobamos que exista un mapa personalizado
-        if(this.state.custom) {
-            // Primero, obtenemos el JSON resultante
-            let custom = JSON.parse((document.getElementById("customMap") as HTMLTextAreaElement).value);
-            // Obtenemos por un lado el mapa
-            map = Network.parseMap(custom.map);
-            // Modificamos las dimensiones del mapa
-            rows = custom.rows;
-            columns = custom.columns;
-        }
-        store.dispatch(Actions.generatePreGameConfiguration(map, units));
-        // Actualizamos el juego para avisar de los cambios
-        this.props.parentObject.setState({
-            gameState: 2,
-            rows: rows,
-            columns: columns
-        });*/
     }
 
     // Actualiza el componente de poder introducir el mapa, en el caso de seleccionar
