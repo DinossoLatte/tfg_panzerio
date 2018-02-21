@@ -6,13 +6,14 @@ import { storeProfile, saveState, } from './StoreProfile';
 import { ProfileActions } from './GameProfileState';
 import { Army } from './Army';
 import { UNITS, UNITS_ESP } from './Unit';
+import { Network } from './Utils';
 
 export class Profile extends React.Component<any, any> {
 
     constructor(props: any) {
         super(props);
         this.state = {
-            name: null
+            name: "Jugador"
         };
     }
 
@@ -337,6 +338,42 @@ export class Profile extends React.Component<any, any> {
         window.alert("El siguiente texto le permitirá usar este ejército en el juego: \n"+exportedArmy);
     }
 
+    /// Este método se encargará de guardar el perfil en la BD
+    onClickSaveProfile() {
+        // Primero, obtenemos el perfil en su totalidad
+        let profile: {
+            id: number,
+            name: string,
+            gamesWon: number,
+            gamesLost: number,
+            armies: Array<{ id: number, name: string, pair: Array<{ type: string, number: number }> }>
+        } = {
+            id: 0, // El id es = 0 al estar creandose el perfil
+            name: "Jugador",
+            gamesWon: 0, // El número de partidas jugadas en este momento será 0, por lo que ambas variables a 0.
+            gamesLost: 0,
+            armies: storeProfile.getState().armies // Iteramos por los ejércitos
+                .map(army => { // Lo convertiremos en un map que almacena los datos
+                    return {
+                        id: 0, // Los ids de los ejércitos serán 0, al estar creandose
+                        name: army.name,
+                        pair: army.unitList
+                    };
+                })
+        };
+        // Una vez tengamos el perfil convertido, procedemos a guardarlo
+        Network.sendProfileToServer(profile, (statusCode: { status: boolean, errorCode: string }) => {
+            // Vemos cómo ha salido la operación
+            if(!statusCode.status) {
+                // Si ha salido mal, alertamos al usuario
+                window.alert("No se ha podido guardar correctamente el perfil");
+            } else {
+                // En caso contrario, indicamos el guardado correcto
+                window.alert("Se ha guardado correctamente el perfil");
+            }
+        })
+    }
+
     render() {
         return (
             <div>
@@ -349,6 +386,7 @@ export class Profile extends React.Component<any, any> {
                 {storeProfile.getState().type != "1" ? <button id="createArmy" name="createArmy" className="createArmyButton" onClick={this.onClickCreateArmy.bind(this)}>Crear un nuevo ejército</button> : ""}
                 {storeProfile.getState().type != "2" ? <button id="editArmy" name="editArmy" className="editArmyButton" onClick={this.onClickEditArmy.bind(this)}>Editar un ejército</button> : ""}
                 {storeProfile.getState().type > "2" ? <button id="exportArmy" name="exportArmy" className="exportArmyButton" onClick={this.onClickExportArmy.bind(this)}>Exportar ejército</button> : ""}
+                <button id="saveProfile" name="saveProfile" className="saveProfileButton" onClick={this.onClickSaveProfile.bind(this)}>Guardar perfil</button>
                 <button id="exitButton" name="exitButton" onClick={this.onClickExitMenu.bind(this)}>Volver al menú</button>
                 {storeProfile.getState().type >= "2" && storeProfile.getState().armies.length > 0 ? <div>
                     <label> Selecciona el batallón:
