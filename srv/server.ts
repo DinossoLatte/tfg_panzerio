@@ -19,7 +19,7 @@ server.on('connection', function connect(ws) {
     // Este será el inicio del servidor, por ahora nos encargaremos de mostrarle el estado
     console.log("Conected with client");
     ws.on("message", function getInitialState(data) {
-        console.log("Got following action: "+data);
+        console.log("Got following action: " + data);
         // Dependiendo del estado, retornaremos una cosa u otra
         let message = JSON.parse(data as string);
         switch (message.tipo) {
@@ -28,8 +28,8 @@ server.on('connection', function connect(ws) {
                 var state = {
                     turn: 0,
                     actualState: 0,
-                    units: [Units.General.create(new Utils.Pair(-1, -1), true), Units.Infantry.create(new Utils.Pair(-1, -1), true), Units.Tank.create(new Utils.Pair(-1, -1), true),Units.Paratrooper.create(new Utils.Pair(-1, -1), true),Units.Artillery.create(new Utils.Pair(-1, -1), true), Units.General.create(new Utils.Pair(-1, -1), false),
-                        Units.Infantry.create(new Utils.Pair(-1, -1), false), Units.Tank.create(new Utils.Pair(-1, -1), false)],
+                    units: [Units.General.create(new Utils.Pair(-1, -1), true), Units.Infantry.create(new Utils.Pair(-1, -1), true), Units.Tank.create(new Utils.Pair(-1, -1), true), Units.Paratrooper.create(new Utils.Pair(-1, -1), true), Units.Artillery.create(new Utils.Pair(-1, -1), true), Units.General.create(new Utils.Pair(-1, -1), false),
+                    Units.Infantry.create(new Utils.Pair(-1, -1), false), Units.Tank.create(new Utils.Pair(-1, -1), false)],
                     visitables: null,
                     terrains: [Terrains.ImpassableMountain.create(new Utils.Pair(2, 2)), Terrains.ImpassableMountain.create(new Utils.Pair(3, 2)), Terrains.Hills.create(new Utils.Pair(2, 3)), Terrains.Forest.create(new Utils.Pair(3, 3))],
                     cursorPosition: new Utils.Pair(0, 0),
@@ -59,18 +59,20 @@ server.on('connection', function connect(ws) {
                 StoreProfile.saveState(actprofile);
                 //Enviamos el nuevo estado
                 ws.send(JSON.stringify(StoreProfile.storeProfile.getState()));
+                break;
             // - Guardado del mapa
             case "saveMap":
                 // Obtenemos los datos de la petición
                 let map = message.map;
                 // Ejecutamos el almacenado en la BD
-                UtilsServer.MapsDatabase.saveMap(map, (code: { status: boolean, error: string }) => {
+                UtilsServer.MapsDatabase.saveMap(map, (error: Error) => {
                     // Si hay error
                     if(code.status) {
+
                         // Entonces indicamos al receptor el guardado incorrecto del mapa
                         ws.send(JSON.stringify({
                             status: false,
-                            error: "Couldn't save map. Error: "+code.error
+                            error: "Couldn't save map. Error: " + error.message
                         }));
                     } else {
                         // En caso contrario, avisamos del guardado correcto
@@ -130,9 +132,18 @@ server.on('connection', function connect(ws) {
                     }
                 });
                 break;
+            case "saveProfile":
+                // Extraemos el perfil
+                let profile = message.profile;
+                UtilsServer.ProfileDatabase.saveProfile(profile, (statusCode: UtilsServer.StatusCode) => {
+                    // Devolveremos el contenido de la petición
+                    ws.send(JSON.stringify(statusCode));
+                });
+                break;
             default:
-                console.warn("Action sent not understood! Type is "+message.tipo);
+                console.warn("Action sent not understood! Type is " + message.tipo);
                 ws.send("Command not understood");
+                break;
         }
     });
 });
