@@ -140,10 +140,28 @@ export class Actions {
 
     static generatePreGameConfiguration(terrains: Terrain[], units: Unit[]) : Redux.AnyAction {
         return {
-            tipo: "SAVE_MAP",
-            terrains: terrains,
-            units: units,
+            // Como es pre juego, el estado debe sincronizarse con el servidor
+            tipo: "SYNC_STATE",
+            // Introducimos todo el estado dentro del envío al servidor
+            state: {
+                turn: 0,
+                actualState: store.getState().actualState,
+                visitables: store.getState().visitables,
+                cursorPosition: store.getState().cursorPosition,
+                map: store.getState().map,
+                selectedUnit: store.getState().selectedUnit,
+                type: store.getState().type,
+                terrains: terrains,
+                units: units,
+            },
             type: "PRE_GAME_CONFIGURATION"
+        };
+    }
+
+    static generateNewStateFromServer(state: State) : Redux.AnyAction {
+        return {
+            type: "NEW_STATE_FROM_SERVER",
+            state: state
         };
     }
 }
@@ -302,13 +320,46 @@ export const Reducer : Redux.Reducer<State> =
                 // En este caso retornamos el objeto inicial InitialState.
                 return InitialState;
             case "NEXT_TURN":
-                //Se actualizan los used
-                for(var i = 0 ; i < state.units.length ; i++) {
-                    state.units[i].used = false;
-                    // Actualizamos también el estado de ataque
-                    state.units[i].hasAttacked = false;
-                    state.units[i].action = 0;
+                // Comprobamos el tipo de turno, si es pre juego o no
+                if(state.turn < 1) {
+                    // Si es pre juego, simplemente recargaremos las unidades
+                    for(var i = 0 ; i < state.units.length ; i++) {
+                        state.units[i].used = false;
+                        state.units[i].hasAttacked = false;
+                        state.units[i].action = 0;
+                    }
                 }
+                // Primero, bloqueamos las unidades del jugador, para evitar que haga movimientos durante la espera del turno
+                // Ahora iteramos por éstas y le activaremos el usado
+                for(let unitIndex = 0; unitIndex < store.getState().units.length; unitIndex++) {
+                    // Debido al hecho de que si asignamos la unidad a una variable, ésta no cambiará la unidad en el array,
+                    // se utilizará directamente la unidad del array
+                    if(store.getState().units[unitIndex].player) {
+                        // Si la unidad es del jugador, se desactivará
+                        store.getState().units[unitIndex].used = true;
+                        store.getState().units[unitIndex].hasAttacked = true;
+                        store.getState().units[unitIndex].action = 2;
+                    }
+                }
+                // Ahora, teniendo el control del jugador desactivado, se llamará a la espera del turno del otro jugador
+                Network.sendWaitTurn((statusCode) => {
+                    // Comprobamos el resultado
+                    if(statusCode.status) {
+                        // Si ha salido bien, llamaremos al nuevo estado
+                        store.dispatch(Actions.generateNewStateFromServer(statusCode.state));
+                    } else {
+                        // En caso contrario avisaremos al cliente
+                        console.log(statusCode.error);
+                        // Y indicaremos que la conexión ha fallado y que debe reiniciar la pestaña
+                        window.alert("No se ha podido enviar la información al servidor, por favor, recargue esta pestaña para continuar");
+                    }
+                    // Finalmente, aseguramos que las unidades del jugador son seleccionables
+                    for(var i = 0 ; i < state.units.length ; i++) {
+                        state.units[i].used = false;
+                        state.units[i].hasAttacked = false;
+                        state.units[i].action = 0;
+                    }
+                })
                 return {
                     turn: state.turn+1,
                     actualState: state.actualState,
@@ -338,14 +389,13 @@ export const Reducer : Redux.Reducer<State> =
                     type: "SET_LISTENER"
                 }
             case "PRE_GAME_CONFIGURATION":
-                // Si se quiere importar un mapa, se cambiará los terrenos
-                console.log("Unidades: "+action.units);
+                // Si se quiere importar un mapa, se cambiará los terrenos y las unidades
                 return {
                     turn: state.turn,
                     actualState: state.actualState,
-                    units: action.units,
+                    units: action.state.units,
                     visitables: state.visitables,
-                    terrains: action.terrains,
+                    terrains: action.state.terrains,
                     map: state.map,
                     cursorPosition: state.cursorPosition,
                     selectedUnit: state.selectedUnit,
@@ -367,6 +417,11 @@ export const Reducer : Redux.Reducer<State> =
                     selectedUnit: action.selectedUnit,
                     type: "SET_LISTENER"
                 }
+            case "NEW_STATE_FROM_SERVER":
+                // Reemplazamos el estado obtenido por la acción
+                InitialState = action.state;
+                // Y retornamos el estado de la acción
+                return action.state;
             default:
                 return state;
         }

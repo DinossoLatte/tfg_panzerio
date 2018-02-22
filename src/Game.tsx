@@ -3,7 +3,7 @@ import * as Redux from 'redux';
 import { Map } from './Map';
 import { Actions, getInitialState } from './GameState';
 import { EditMap } from './EditMap';
-import { store } from './Store';
+import { store, saveState } from './Store';
 import { Network, Pair } from './Utils';
 import { Profile } from './Profile'
 import { Infantry, Tank, General, Unit } from './Unit';
@@ -167,7 +167,7 @@ class PreGameMenu extends React.Component<any, any> {
             rows = custom.rows;
             columns = custom.columns;
         }
-        store.dispatch(Actions.generatePreGameConfiguration(map, units));
+        saveState(Actions.generatePreGameConfiguration(map, units));
         // Actualizamos el juego para avisar de los cambios
         this.props.parentObject.setState({ 
             gameState: 2,

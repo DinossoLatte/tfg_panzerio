@@ -7,7 +7,7 @@ import { Army } from './Army';
 import { Map } from './Map';
 import { EditMap } from './EditMap';
 import { Profile } from './Profile';
-import { State } from './GameState';
+import { State, Actions } from './GameState';
 import { StateEdit } from './GameEditState';
 import { StateProfile } from './GameProfileState';
 import * as Units from './Unit';
@@ -338,6 +338,13 @@ export class Pathfinding {
 
 // Esta clase contendrán métodos auxiliares con respecto a la conexión entre cliente y servidor
 export class Network {
+
+    /// Esta función permitirá crear la conexión, con la idea de cambiar los parametros en el caso de cambio
+    public static getConnection() {
+        // Retornamos la conexión
+        return new WebSocket("ws://localhost:8080/");
+    }
+
     public static parseStateFromServer(data: string): State {
         // Definimos la salida, un mapa, y lo populamos con datos por defecto
         let result = {
@@ -489,7 +496,7 @@ export class Network {
     public static sendMapToServer(map: { rows: number, columns: number, map: Array<Terrain> }
         , callback?: (error: { status: boolean, errorCode: string }) => void) {
         // Primero, establecemos la conexión con el servidor
-        let connection = new WebSocket("ws://localhost:8080/");
+        let connection = Network.getConnection();
         connection.onmessage = function(event: MessageEvent) {
             // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
             // el comando se haya entendido
@@ -523,7 +530,7 @@ export class Network {
             armies: Array<{ id: number, name: string, pair: Array<{ type: string, number: number }> }>
         }, callback?: (error: { status: boolean, errorCode: string }) => void) {
         // Primero, establecer la conexión con el servidor
-        let connection = new WebSocket("ws://localhost:8080/");
+        let connection = Network.getConnection();
         // Definimos el evento de recepción de mensaje
         connection.onmessage = function(event: MessageEvent) {
             console.log(event.data);
@@ -551,6 +558,30 @@ export class Network {
                 tipo: "saveProfile",
                 profile: profile
             }))
+        }
+    }
+
+    public static sendWaitTurn(callback: (statusCode: { status: boolean, error: string, state: State }) => void) {
+        // Como siempre, iniciamos la conexión
+        let connection = Network.getConnection();
+        connection.onopen = function() {
+            connection.send(JSON.stringify({
+                tipo: "waitTurn"
+            }));
+        }
+        connection.onmessage = function(message: MessageEvent) {
+            if(message.data == "Command not understood") {
+                callback({ status: false, error: message.data, state: null });
+            } else {
+                // Se comprueba la respuesta, generalmente será correcta
+                let result = JSON.parse(message.data);
+                // Vemos el resultado
+                if(result.status) {
+                    // Si es correcto, obtenemos el estado y llamamos al callback
+                    let newState = Network.parseStateFromServer(JSON.stringify(result.state));
+                    callback({ status: true, error: "Success", state: newState });
+                }
+            }
         }
     }
 }

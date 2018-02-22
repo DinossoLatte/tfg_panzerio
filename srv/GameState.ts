@@ -23,8 +23,7 @@ export type State = {
 export var InitialState: State = {
     turn: 0,
     actualState: 0,
-    units: [General.create(new Pair(-1, -1), true), Infantry.create(new Pair(-1, -1), true), Tank.create(new Pair(-1, -1), true),Paratrooper.create(new Pair(-1, -1), true),
-        Artillery.create(new Pair(-1, -1), true), General.create(new Pair(-1, -1), false), Infantry.create(new Pair(-1, -1), false), Tank.create(new Pair(-1, -1), false)],
+    units: [],
     visitables: null,
     terrains: [ImpassableMountain.create(new Pair(2, 2)), ImpassableMountain.create(new Pair(3, 2)), Hills.create(new Pair(2, 3)), Forest.create(new Pair(3, 3))],
     cursorPosition: new Pair(0, 0),
@@ -73,11 +72,11 @@ export function parseActionMap(data: any) {
             result.position = new Pair(json.position.row, json.position.column);
         }
         // Ahora vamos con los terrenos:
-        let terrains: Array<{name: string, image: string, movement_penalty: number, position:{row: number, column: number}, defenseWeak: number, defenseStrong: number}> = json.terrains;
+        let terrains: Array<{name: string, image: string, movement_penalty: number, position:{row: number, column: number}, defenseWeak: number, defenseStrong: number, attackWeak: number, attackStrong: number}> = json.terrains;
         // Para cada uno, crearemos una unidad con esos datos.
         if(terrains) {
             result.terrains = terrains.map(terrain => new Terrain(terrain.name, terrain.image, terrain.movement_penalty, new Pair(terrain.position.row, terrain.position.column),
-                terrain.defenseWeak, terrain.defenseStrong));
+                terrain.defenseWeak, terrain.defenseStrong, terrain.attackWeak, terrain.attackStrong));
         }
         if(json.map){
             result.map = new Map(json.map.rows, json.map.columns);
@@ -183,13 +182,21 @@ export const Reducer : Redux.Reducer<State> =
                 // Necesitamos externalizar también el índice de la unidad actual, porque será útil al eliminar la unidad
                 let selectedUnit = action.selectedUnit;
                 // Obtenemos también el terreno de la unidad a atacar, para obtener la defensa
-                // Obtenemos el índice de la casilla
-                let terrainIndex = myIndexOf(
+                // Obtenemos el índice de la casilla del defensor
+                let defendingTerrainIndex = myIndexOf(
                     // Convertimos el array de terrenos a sus posiciones
                     state.terrains.map(terrain => terrain.position), defendingUnit.position)
-                let terrain = terrainIndex > -1?state.terrains[terrainIndex]:null;
+                // Obtenemos el terreno del defensor, teniendo en cuenta que cuando no exista, será Plains
+                let defendingTerrain = defendingTerrainIndex > -1?state.terrains[defendingTerrainIndex]:null;
+                // Con el mismo procedimiento, encontraremos la posición del atacante
+                let attackingTerrainIndex = myIndexOf(
+                    // Convertimos el array de terrenos a sus posiciones
+                    state.terrains.map(terrain => terrain.position), attackingUnit.position);
+                let attackingTerrain = attackingTerrainIndex > -1?state.terrains[attackingTerrainIndex]:null;
                 // Después, calculamos la cantidad de vida a eliminar
-                let healthRemoved = attackingUnit.calculateAttack(defendingUnit, terrain?terrain.defenseWeak:0, terrain?terrain.defenseStrong:0);
+                let healthRemoved = attackingUnit.calculateAttack(defendingUnit,
+                     defendingTerrain?defendingTerrain.defenseWeak:0, defendingTerrain?defendingTerrain.defenseStrong:0,
+                     attackingTerrain?attackingTerrain.attackWeak:0, attackingTerrain?attackingTerrain.attackStrong:0);
                 // Comprobamos que la unidad defendiendo le queden todavía vida
                 if (defendingUnit.health - healthRemoved > 0) {
                     // Si es el caso, le cambiamos la cantidad de vida
@@ -214,6 +221,7 @@ export const Reducer : Redux.Reducer<State> =
                 }else if(state.units.filter(x => x.player && x.name=="General").length==0){
                     actualstate=2;
                 }
+                
                 return {
                     turn: state.turn,
                     actualState: actualstate,
@@ -290,6 +298,9 @@ export const Reducer : Redux.Reducer<State> =
                     selectedUnit: action.selectedUnit,
                     type: "SET_LISTENER"
                 }
+            case "SYNC_STATE":
+                // Retornamos como estado el dado por la acción
+                return action.state;
             default:
                 return state;
         }

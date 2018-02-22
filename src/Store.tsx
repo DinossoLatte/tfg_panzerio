@@ -9,6 +9,7 @@ import { Unit } from './Unit';
 import { Terrain } from './Terrains';
 
 export function saveState(act: Redux.AnyAction) {
+    console.log(JSON.stringify(act));
     saveStateServer(()=>{}, act);
     store.dispatch(act);
     // Refresca el mapa y el resto de variables del estado
@@ -20,7 +21,10 @@ export function saveState(act: Redux.AnyAction) {
     var selectedUnit: number = store.getState().selectedUnit;
     var cursorPosition: Pair = store.getState().cursorPosition;
     var type: string = store.getState().type;
-    map.setState({});
+    // Si map está definido, lo actualizamos
+    if(map) {
+        map.setState({});    
+    }
 }
 
 export interface Store extends Redux.Store<State> {

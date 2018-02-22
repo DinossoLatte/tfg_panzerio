@@ -78,7 +78,6 @@ export const ReducerProfile : Redux.Reducer<StateProfile> =
     (state: StateProfile = InitialStateProfile, action: Redux.AnyAction) => {
         switch(action.actionType) {
             case "SAVE":
-                action.profile.forceUpdate();
                 return{
                     profile: action.profile,
                     armies: action.armies,

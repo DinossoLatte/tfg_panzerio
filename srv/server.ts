@@ -1,6 +1,7 @@
 import { StringDecoder } from 'string_decoder';
 import * as webSocket from 'ws';
 import * as FileSystem from 'fs';
+import { AnyAction } from 'redux';
 
 import * as Units from '../src/Unit';
 import * as Utils from '../src/Utils';
@@ -28,8 +29,7 @@ server.on('connection', function connect(ws) {
                 var state = {
                     turn: 0,
                     actualState: 0,
-                    units: [Units.General.create(new Utils.Pair(-1, -1), true), Units.Infantry.create(new Utils.Pair(-1, -1), true), Units.Tank.create(new Utils.Pair(-1, -1), true), Units.Paratrooper.create(new Utils.Pair(-1, -1), true), Units.Artillery.create(new Utils.Pair(-1, -1), true), Units.General.create(new Utils.Pair(-1, -1), false),
-                    Units.Infantry.create(new Utils.Pair(-1, -1), false), Units.Tank.create(new Utils.Pair(-1, -1), false)],
+                    units: [],
                     visitables: null,
                     terrains: [Terrains.ImpassableMountain.create(new Utils.Pair(2, 2)), Terrains.ImpassableMountain.create(new Utils.Pair(3, 2)), Terrains.Hills.create(new Utils.Pair(2, 3)), Terrains.Forest.create(new Utils.Pair(3, 3))],
                     cursorPosition: new Utils.Pair(0, 0),
@@ -38,6 +38,14 @@ server.on('connection', function connect(ws) {
                     type: "SET_LISTENER"
                 };
                 ws.send(JSON.stringify(state));
+                break;
+            // Este se llamará cuando se quiera sincronizar el estado del cliente con el servidor
+            case "SYNC_STATE":
+                // Asumimos que lo que nos venga del cliente es correcto, sustituimos el estado
+                Store.saveState({
+                    type: "SYNC_STATE",
+                    state: message.state
+                });
                 break;
             case "SAVE_MAP":
                 let actmap = GameState.parseActionMap(message);
@@ -90,6 +98,13 @@ server.on('connection', function connect(ws) {
                     ws.send(JSON.stringify(statusCode));
                 });
                 break;
+            case "waitTurn":
+                // En este caso, se espera a que el servidor realice el cambio en el estado, que lo haría el otro jugador
+                // Para probar, actualmete se saltará el turno
+                Store.saveState({ type: "NEXT_TURN" });
+                // Devolveremos el estado resultante, para sincronizarlo con el jugador
+                ws.send(JSON.stringify(Store.store.getState()));
+                break;          
             default:
                 console.warn("Action sent not understood! Type is " + message.tipo);
                 ws.send("Command not understood");
