@@ -100,7 +100,6 @@ class PreGameMenu extends React.Component<any, any> {
     constructor(props: any) {
         super(props);
         this.state = {
-            custom: false,
             // Inicialmente, contendrán los mismos datos que el estado, en estos objectos se almacenarán
             // los ejércitos introducidos por el usuario
             playerArmy: [
@@ -112,30 +111,27 @@ class PreGameMenu extends React.Component<any, any> {
                 { type: "General", number: 1 },
                 { type: "Infantry", number: 1 },
                 { type: "Tank", number: 1}
-            ]
+            ],
+            mapId: [] as Array<number>,
+            selected: null
         };
+        this.getMapIdFromServer();
     }
 
     render() {
-        // En el caso de querer usar un mapa, mostramos una zona para ponerlo
-        let customMap = this.state.custom?<textarea id="customMap">Introduzca el JSON aqui</textarea>:"";
-        
         return (
         <div className="preGameMenu">
             <h2>Menu de pre juego</h2>
             <div className="playerMenu">
                 <SideOptionMenu player={true} parentObject={this} />
             </div>
-            <div> className="enemyMenu">
+            <div className="enemyMenu">
                 <SideOptionMenu player={false} parentObject={this} />
             </div>
             <div className="mapMenu">
-                <select id="map" onClick={this.updateMap.bind(this)}>
-                    <option id="map1" selected={true}>Mapa 1</option>
-                    <option id="custom">Personalizado</option>
+                <select id="map" defaultValue={null} value={this.state.selected} onChange={evt => this.updateMap(evt.target.value)}>
+                    {this.selectMaps()}
                 </select>
-
-                {customMap}
 
                 <button onClick={this.startGame.bind(this)}>Empezar juego</button>
                 <button onClick={this.exitPreGame.bind(this)}>Volver</button>
@@ -143,49 +139,86 @@ class PreGameMenu extends React.Component<any, any> {
         </div>);
     }
 
-    startGame(event: MouseEvent) {
-        // Generamos las unidades del juego
-        let units = new Array<Unit>();
-        // Y obtenemos el estado inicial del mapa
-        let map = store.getState().terrains;
-        console.log("Player army: "+this.state.playerArmy);
-        // Ejecutamos la función que se encargará de obtener las unidades asociadas al par tipo y número
-        units = units.concat(Network.parseArmy(this.state.playerArmy, true));
-        units = units.concat(Network.parseArmy(this.state.enemyArmy, false));
-        console.log(JSON.stringify(units));
-
-        // Definimos las dimensiones básicas del mapa
-        let rows = 6;
-        let columns = 6;
-        // Antes de ejecutar, comprobamos que exista un mapa personalizado
-        if(this.state.custom) {
-            // Primero, obtenemos el JSON resultante
-            let custom = JSON.parse((document.getElementById("customMap") as HTMLTextAreaElement).value);
-            // Obtenemos por un lado el mapa
-            map = Network.parseMap(custom.map);
-            // Modificamos las dimensiones del mapa
-            rows = custom.rows;
-            columns = custom.columns;
+    selectMaps(){
+        let army = [<option selected value={null}>--Selecciona--</option>];
+        for(var i = 0; i < this.state.mapId.length; i++){
+            army.push(<option value={this.state.mapId[i]}>{"Mapa "+this.state.mapId[i]}</option>);
         }
-        store.dispatch(Actions.generatePreGameConfiguration(map, units));
-        // Actualizamos el juego para avisar de los cambios
-        this.props.parentObject.setState({ 
-            gameState: 2,
-            rows: rows,
-            columns: columns
-        });
+        return army;
+    }
+
+    getMapIdFromServer(callback?: (error: { status: boolean, errorCode: string, mapId: number }) => void) {
+        // Primero, establecemos la conexión con el servidor
+        let game = this;
+        let connection = new WebSocket("ws://localhost:8080/");
+        connection.onmessage = function(event: MessageEvent) {
+            // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
+            // el comando se haya entendido
+            console.log("recepción de la información del servidor "+JSON.stringify(event));
+            if(event.data == "Command not understood") {
+                // Lanzamos un error
+                console.log("Error when attempting to save, server didn't understood request");
+                //No es necesario llamar al callback porque este ya es el nivel final (cliente)
+            } else {
+                console.log(event.data);
+                let data = JSON.parse(event.data);
+                game.setState({custom: game.state.custom, playerArmy: game.state.playerArmy, enemyArmy: game.state.enemyArmy, mapId: data.mapId});
+            }
+        };
+        connection.onopen = () => {
+            // Al abrirse la conexión, informamos al servidor del mapa
+            connection.send(JSON.stringify({
+                tipo: "getMapId"
+            }));
+        }
+    }
+
+    //Get map
+    getMapFromServer(map: { id: number }
+        , callback?: (error: { status: boolean, errorCode: string, map: string }) => void) {
+        // Primero, establecemos la conexión con el servidor
+        let game = this;
+        let connection = new WebSocket("ws://localhost:8080/");
+        connection.onmessage = function(event: MessageEvent) {
+            // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
+            // el comando se haya entendido
+            console.log("Datos "+JSON.stringify(event.data));
+            let data = Network.parseMapServer(event.data);
+            if(event.data == "Command not understood") {
+                // Lanzamos un error
+                console.log("Error when attempting to save, server didn't understood request");
+            } else {
+                // En caso contrario, ejecutamos el callback sin errores
+                let units = new Array<Unit>();
+                units = units.concat(Network.parseArmy(game.state.playerArmy, true));
+                units = units.concat(Network.parseArmy(game.state.enemyArmy, false));
+                console.log("Terrenos "+JSON.stringify(data.terrains));
+                store.dispatch(Actions.generatePreGameConfiguration(data.terrains, units));
+                game.props.parentObject.setState({
+                    gameState: 2,
+                    rows: data.rows,
+                    columns: data.columns
+                });
+            }
+        };
+        connection.onopen = () => {
+            // Al abrirse la conexión, informamos al servidor del mapa
+            connection.send(JSON.stringify({
+                tipo: "getMap",
+                map: map
+            }));
+        }
+    }
+
+    startGame(event: MouseEvent) {
+        this.getMapFromServer(this.state.selected);
     }
 
     // Actualiza el componente de poder introducir el mapa, en el caso de seleccionar
     // la opción de 'Personalizado'.
-    updateMap(mouseEvent: MouseEvent) {
+    updateMap(evt: string) {
         // Comprobamos que el select tenga seleccionado el 'custom'
-        let select: HTMLSelectElement = document.getElementById("map") as HTMLSelectElement;
-        if(select.options[select.selectedIndex].id == "custom") {
-            this.setState({ custom: true });
-        } else {
-            this.setState({ custom: false });
-        }
+        this.setState({ selected: Number(evt) });
     }
 
     exitPreGame(mouseEvent: MouseEvent) {
@@ -204,7 +237,7 @@ class SideOptionMenu extends React.Component<any, any> {
         return (
             <div className={"sideOption"+this.state.player?"Player":"Enemy"}>
                 <p>Introduce en el siguiente campo el código de ejército: </p>
-                
+
                 <textarea id={"army_"+this.props.player} onChange={this.onChangeArmy.bind(this)} placeholder="Introduzca aqui el código de ejército" />
             </div>
         );
@@ -289,7 +322,7 @@ class Game extends React.Component<any, any> {
             case 4:
                 result = <EditMap horizontal={this.state.editx} vertical={this.state.edity} parentObject={this} />;
                 break;
-            case 5: 
+            case 5:
                 result = <PreGameMenu parentObject={this} />;
                 break;
             case 6:
