@@ -113,6 +113,7 @@ class PreGameMenu extends React.Component<any, any> {
                 { type: "Tank", number: 1}
             ],
             mapId: [] as Array<number>,
+            mapName: [] as Array<string>,
             selected: null
         };
         this.getMapIdFromServer();
@@ -142,12 +143,12 @@ class PreGameMenu extends React.Component<any, any> {
     selectMaps(){
         let army = [<option selected value={null}>--Selecciona--</option>];
         for(var i = 0; i < this.state.mapId.length; i++){
-            army.push(<option value={this.state.mapId[i]}>{"Mapa "+this.state.mapId[i]}</option>);
+            army.push(<option value={this.state.mapId[i]}>{this.state.mapName[i]}</option>);
         }
         return army;
     }
 
-    getMapIdFromServer(callback?: (error: { status: boolean, errorCode: string, mapId: number }) => void) {
+    getMapIdFromServer(callback?: (error: { status: boolean, errorCode: string, mapId: number[], mapName: string[] }) => void) {
         // Primero, establecemos la conexión con el servidor
         let game = this;
         let connection = new WebSocket("ws://localhost:8080/");
@@ -162,7 +163,7 @@ class PreGameMenu extends React.Component<any, any> {
             } else {
                 console.log(event.data);
                 let data = JSON.parse(event.data);
-                game.setState({custom: game.state.custom, playerArmy: game.state.playerArmy, enemyArmy: game.state.enemyArmy, mapId: data.mapId});
+                game.setState({custom: game.state.custom, playerArmy: game.state.playerArmy, enemyArmy: game.state.enemyArmy, mapId: data.mapId, mapName: data.mapName});
             }
         };
         connection.onopen = () => {
@@ -211,7 +212,9 @@ class PreGameMenu extends React.Component<any, any> {
     }
 
     startGame(event: MouseEvent) {
-        this.getMapFromServer(this.state.selected);
+        if(this.state.selected!=null){
+            this.getMapFromServer(this.state.selected);
+        }
     }
 
     // Actualiza el componente de poder introducir el mapa, en el caso de seleccionar

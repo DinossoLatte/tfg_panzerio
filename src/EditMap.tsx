@@ -21,6 +21,7 @@ export class EditMap extends React.Component<any, any> {
             cells: new Array<Array<EditCell>>(this.props.horizontal),
             rows: this.props.vertical,
             columns: this.props.horizontal,
+            name: "",
             json: null
         };
         storeEdit.dispatch(EditActions.generateSetListener(this));
@@ -46,6 +47,7 @@ export class EditMap extends React.Component<any, any> {
                             </select>
                         </label>
                     </div>:""}
+                Nombre: <input type="text" value={this.state.name} onChange={evt => this.updateInput(evt.target.value)} />
                 <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
                 <button id="generateButton" name="generateButton" onClick={this.onClickGenerateMap.bind(this)}>Guardar mapa</button>
                 {this.state.json?<textarea>{this.state.json}</textarea>:""}
@@ -59,6 +61,11 @@ export class EditMap extends React.Component<any, any> {
                 </div>
             </div>
         );
+    }
+
+    //Actualiza el valor del nombre del mapa
+    updateInput(title: string) {
+        this.setState({ name: title });
     }
 
     selectOptionsTerrains(){
@@ -85,12 +92,17 @@ export class EditMap extends React.Component<any, any> {
     onClickGenerateMap(event: React.MouseEvent<HTMLElement>) {
         // Para generar el mapa, convertiremos el conjunto de terrenos en un JSON
         let terrains = storeEdit.getState().terrains;
+        let name =  this.state.name.trim();
+        if(name.trim()==""){
+            name = "Mapa sin nombre";
+        }
         let jsonResult = {
             // Este elemento contiene los terrenos
             map: terrains,
             // También debemos definir las filas y columnas
             rows: this.state.rows,
-            columns: this.state.columns
+            columns: this.state.columns,
+            name: name
         };
         // Generamos el JSON que contendrán los datos del mapa,
         let result = JSON.stringify(jsonResult);
@@ -101,6 +113,7 @@ export class EditMap extends React.Component<any, any> {
             cells: this.state.cells,
             rows: this.state.rows,
             columns: this.state.columns,
+            name: name,
             json: result
         });
     }
