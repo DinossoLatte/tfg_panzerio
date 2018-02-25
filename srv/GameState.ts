@@ -110,11 +110,6 @@ export const Reducer : Redux.Reducer<State> =
                     }
 
                 }
-                // Si la unidad tiene posiblidad de atacar
-                if(!state.units[action.unit_id].hasAttacked && state.units[action.unit_id].action==1) {
-                    // Regeneramos los visitables, pero esta vez sólo obteniendo la distancia absoluta para los enemigos
-                    visitables = Pathfinding.getAttackableUnits(state.units[action.unit_id]);
-                }
                 return {
                     turn: state.turn,
                     actualState: state.actualState,
@@ -129,16 +124,6 @@ export const Reducer : Redux.Reducer<State> =
             case "MOVE":
                 // Casillas disponibles
                 let visitables_pair: Array<Pair> = [];
-                // Si la unidad actual está en fase de ataque.
-                if(state.units[action.unit_id].action == 1) {
-                    // Ejecutamos el método para encontrar unidades enemigas atacables
-                    visitables_pair = Pathfinding.getAttackableUnits(state.units[action.unit_id]);
-                } else { // En caso contrario
-                    // Ejecutamos el método para encontrar casillas movibles
-                    // TODO problema encontrado aquí ya que se almacena el mapa sin las casillas
-                    //visitables_pair = Pathfinding.getMovableCells(state, action.unit_id, action.player);
-                }
-
                 return {
                     turn: state.turn,
                     actualState: state.actualState,
