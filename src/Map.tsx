@@ -42,7 +42,7 @@ export class Map extends React.Component<any, any> {
                             {this.selectOptions()}
                         </select>
                     </label>
-                    <button onClick={this.onClickPlaceUnit.bind(this)}>Seleccionar unidad</button></div>:""}
+                </div>:""}
                 {this.state.alertUnitsNotPlaced?<p className="alert">ATENCIÓN: Algunas de las unidades no han sido posicionadas en el juego, por favor, posicione las unidades en el juego</p>:""}
                 <div>
                     <UnitStats />
@@ -66,7 +66,7 @@ export class Map extends React.Component<any, any> {
         let army = [<option selected value={null}>--Selecciona--</option>];
         for(var i = 0; i < store.getState().units.length; i++){
             //Se usa for para generalizar si se añadieran más unidades
-            if(store.getState().units[i].player == (store.getState().turn%2==0)){
+            if(store.getState().units[i].player == (store.getState().turn%2 == 0)){
                 for (var j = 0; j < UNITS.length; j++){
                     if(store.getState().units[i].name==UNITS[j]){
                         // La unidad será nombrada de esa manera para poder distinguirla y saber además su tipo
@@ -316,6 +316,7 @@ export class Map extends React.Component<any, any> {
                 )){
                 let selectedUnit = store.getState().selectedUnit; // Índice de la unidad seleccionada
                 let actualPosition = store.getState().units[selectedUnit].position; //Obtenemos la posición actual
+                console.log("Unidad seleccionada: "+selectedUnit);
                 //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
                 if(unitIndex != -1 && unitEnemy && store.getState().units[selectedUnit].action == 1 && !store.getState().units[selectedUnit].hasAttacked
                     // Nos aseguramos también que el turno sea mayor a 2
@@ -330,7 +331,7 @@ export class Map extends React.Component<any, any> {
                 }
             }
         } else if(!hasAttacked // En el caso de que tenga posiblidad de atacar y ha hecho click a la unidad enemiga
-            || store.getState().turn >= 2 // O no estamos en la fase de pre juego
+            && store.getState().turn >= 2 // O no estamos en la fase de pre juego
         ) {
             // Realizamos el ataque:
             saveState(Actions.generateAttack(unitIndex, side, null));

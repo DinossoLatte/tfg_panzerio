@@ -300,7 +300,17 @@ export const Reducer : Redux.Reducer<State> =
                 }
             case "SYNC_STATE":
                 // Retornamos como estado el dado por la acción
-                return action.state;
+                return {
+                    turn: action.state.turn,
+                    actualState: action.state.actualState,
+                    units: action.state.units,
+                    visitables: action.state.visitables,
+                    terrains: action.state.terrains,
+                    map: action.state.map,
+                    cursorPosition: action.state.cursorPosition,
+                    selectedUnit: action.state.selectedUnit,
+                    type: action.state.type
+                };
             default:
                 return state;
         }

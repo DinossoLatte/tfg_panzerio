@@ -46,6 +46,10 @@ server.on('connection', function connect(ws) {
                     type: "SYNC_STATE",
                     state: message.state
                 });
+                ws.send(JSON.stringify({
+                    status: true,
+                    state: Store.store.getState()
+                }))
                 break;
             case "SAVE_MAP":
                 let actmap = GameState.parseActionMap(message);
@@ -100,10 +104,35 @@ server.on('connection', function connect(ws) {
                 break;
             case "waitTurn":
                 // En este caso, se espera a que el servidor realice el cambio en el estado, que lo haría el otro jugador
-                // Para probar, actualmete se saltará el turno
+                // Primero, comprobamos que estemos en la fase de pre juego
+                if(Store.store.getState().turn <= 2) {
+                    // Si es el caso, tenemos que posicionar nuestras unidades
+                    Store.saveState({
+                        type: "CHANGE_UNIT_POS",
+                        unit_id: 3,
+                        new_position: { row: 1, column: 4 },
+                        selectedUnit: null,
+                        player: false
+                    });
+                    Store.saveState({
+                        type: "CHANGE_UNIT_POS",
+                        unit_id: 4,
+                        new_position: { row: 0, column: 3 },
+                        selectedUnit: null,
+                        player: false
+                    });
+                    Store.saveState({
+                        type: "CHANGE_UNIT_POS",
+                        unit_id: 5,
+                        new_position: { row: 1, column: 3 },
+                        selectedUnit: null,
+                        player: false
+                    });
+                }
+                // En cualquiera de los casos, saltaremos el turno del jugador enemigo
                 Store.saveState({ type: "NEXT_TURN" });
                 // Devolveremos el estado resultante, para sincronizarlo con el jugador
-                ws.send(JSON.stringify(Store.store.getState()));
+                ws.send(JSON.stringify({ status: true, state: Store.store.getState() }));
                 break;          
             default:
                 console.warn("Action sent not understood! Type is " + message.tipo);

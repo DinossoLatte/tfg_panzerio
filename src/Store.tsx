@@ -9,20 +9,24 @@ import { Unit } from './Unit';
 import { Terrain } from './Terrains';
 
 export function saveState(act: Redux.AnyAction) {
-    console.log(JSON.stringify(act));
-    saveStateServer(()=>{}, act);
+    // Si contiene 'tipo', será un envío a servidor
+    if(act.tipo) {
+        saveStateServer(()=>{}, act);
+    }
     store.dispatch(act);
     // Refresca el mapa y el resto de variables del estado
     var turn: number = store.getState().turn;
     var actualState: number = store.getState().actualState;
     var map: Map = store.getState().map;
     var units: Array<Unit> = store.getState().units;
+    console.log(JSON.stringify(units));
     var terrains: Array<Terrain> = store.getState().terrains;
     var selectedUnit: number = store.getState().selectedUnit;
     var cursorPosition: Pair = store.getState().cursorPosition;
     var type: string = store.getState().type;
     // Si map está definido, lo actualizamos
     if(map) {
+        console.log("actualiza el mapa");
         map.setState({});    
     }
 }
