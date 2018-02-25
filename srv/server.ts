@@ -79,7 +79,8 @@ server.on('connection', function connect(ws) {
                 // Ejecutamos el almacenado en la BD
                 UtilsServer.MapsDatabase.saveMap(map, (error: Error) => {
                     // Si hay error
-                    if (error) {
+                    if(code.status) {
+
                         // Entonces indicamos al receptor el guardado incorrecto del mapa
                         ws.send(JSON.stringify({
                             status: false,
@@ -90,6 +91,55 @@ server.on('connection', function connect(ws) {
                         ws.send(JSON.stringify({
                             status: true,
                             error: "Saved successfully"
+                        }))
+                    }
+                });
+                break;
+            case "getMap":
+                // Obtenemos los datos de la petición
+                let getMapvar = message.map;
+                // Obtenemos el mapa
+                console.log(JSON.stringify(getMapvar));
+                UtilsServer.MapsDatabase.getMap(Number(getMapvar), (code: { status: boolean, error: string,  map: { rows: number, columns: number,
+                    terrains: {name: string, image: string, movement_penalty: number, position_row: number, position_cols: number,
+                         defense_weak: number, defense_strong: number, attack_weak: number, attack_strong: number}[]} }) => {
+                    // Si hay error
+                    console.log("server: "+code.status+","+code.error+","+JSON.stringify(code.map));
+                    if(!code.status) {
+                        // Entonces indicamos al receptor la obtención incorrecta del mapa
+                        ws.send(JSON.stringify({
+                            status: false,
+                            error: "Couldn't get map. Error: "+code.error,
+                            map: null
+                        }));
+                    } else {
+                        // En caso contrario, avisamos de la obtención correcta
+                        ws.send(JSON.stringify({
+                            status: true,
+                            error: "Got successfully",
+                            map: code.map
+                        }))
+                    }
+                });
+                break;
+            case "getMapId":
+                // Obtenemos los id de los mapas
+                UtilsServer.MapsDatabase.getMapId((code: { status: boolean, error: string,  mapId: number[] }) => {
+                    // Si hay error
+                    console.log("server: "+code.status+","+code.error+","+code.mapId);
+                    if(!code.status) {
+                        // Entonces indicamos al receptor que se han obtenido mal
+                        ws.send(JSON.stringify({
+                            status: false,
+                            error: "Couldn't get map. Error: "+code.error,
+                            mapId: null
+                        }));
+                    } else {
+                        // En caso contrario, avisamos de que se han obtenido correctamente
+                        ws.send(JSON.stringify({
+                            status: true,
+                            error: "Got successfully",
+                            mapId: code.mapId
                         }))
                     }
                 });

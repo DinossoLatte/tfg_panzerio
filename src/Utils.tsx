@@ -440,10 +440,10 @@ export class Network {
         return result;
     }
 
-    public static parseMap(terrains: 
+    public static parseMap(terrains:
         Array<{ name: string, image: string, movement_penalty: number,
              position:{ row: number, column: number},
-             defenseWeak: number, defenseStrong: number 
+             defenseWeak: number, defenseStrong: number
              attackWeak: number, attackStrong: number }
         >): Terrain[] {
         let result: Terrain[] = [];
@@ -459,7 +459,7 @@ export class Network {
     /// Esta función se encargará de obtener el conjunto de unidades dado el par indicado
     /// Aunque no es usado por ningún archivo relacionado con el servidor, será usado
     /// cuando se disponga del guardado de ejércitos en servidor
-    /// 
+    ///
     /// El argumento side permitirá indicar el bando del ejército, sea del jugador o enemigo
     public static parseArmy(unitsPair: Array<{ type: string, number: number }>, side: boolean): Array<Unit> {
         // Primero, creamos el array que contendrá el resultado
@@ -492,7 +492,7 @@ export class Network {
         return units;
     }
 
-    /// Este método se encargará de enviar los datos del mapa al servidor, para que se guarden en BD
+    // Este método se encargará de enviar los datos del mapa al servidor, para que se guarden en BD
     public static sendMapToServer(map: { rows: number, columns: number, map: Array<Terrain> }
         , callback?: (error: { status: boolean, errorCode: string }) => void) {
         // Primero, establecemos la conexión con el servidor
@@ -520,6 +520,33 @@ export class Network {
                 map: map
             }));
         }
+    }
+
+    public static parseMapServer(data: string): {terrains: {name: string, image: string, movement_penalty: number,
+            position: Pair, defenseWeak: number, defenseStrong: number, attackWeak: number, attackStrong: number}[], rows: number, columns: number} {
+        // Definimos la salida, un mapa, y lo populamos con datos por defecto
+        let result = {
+            terrains: [] as Array<Terrain>,
+            rows: 0,
+            columns: 0
+        };
+        // Primero, convertimos el objeto en un mapa
+        console.log("EN Parse: "+JSON.stringify(data));
+        let json = JSON.parse(data);
+        // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
+        // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
+        result.rows = json.map.rows;
+        result.columns = json.map.columns;
+        // Finalmente, nos quedan los terrenos, mismo proceso
+        for(var i = 0; i<json.map.terrains.length; i++){
+            let terrain = json.map.terrains[i];
+            result.terrains.push(new Terrain(terrain.name, terrain.image, terrain.movement_penalty,
+                new Pair(terrain.position_row, terrain.position_cols), terrain.defenseWeak ,terrain.defenseStrong,
+                terrain.attackWeak, terrain.attackStrong));
+        }
+        // Retornamos el estado final
+        console.log("RESULTADO "+JSON.stringify(result));
+        return result;
     }
 
     public static sendProfileToServer(profile: {
