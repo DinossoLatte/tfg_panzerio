@@ -28,7 +28,7 @@ export class MapsDatabase {
     /// al terminar ejecutará el callback introducido con el código.
     /// code.status indicará si ha habido un error
     /// code.error indicará el error o en su defecto, "Success"
-    public static saveMap(mapData: { rows: number, columns: number, map: any[] }, callback: (error: Error) => void) {
+    public static saveMap(mapData: { rows: number, columns: number, map: any[], name: string }, callback: (error: Error) => void) {
         // Inicializamos o no la BD
         MapsDatabase.initOrCallDatabase((err: Error) => {
             // Comprobamos el mensaje de error
@@ -39,11 +39,12 @@ export class MapsDatabase {
             } else {
                 console.log(mapData);
                 // Preparamos el guardado del mapa
-                let statement = MapsDatabase.connection.prepare("INSERT INTO map(rows, cols) VALUES ($rows, $cols)");
+                let statement = MapsDatabase.connection.prepare("INSERT INTO map(rows, cols, name) VALUES ($rows, $cols, $name)");
                 // Y lo ejecutamos con los valores obtenidos del mapa
                 statement.run({
                     $rows: mapData.rows,
-                    $cols: mapData.columns
+                    $cols: mapData.columns,
+                    $name: mapData.name
                 }, (runResult: sqlite.RunResult, error: Error) => {
                     // Comprobamos si hay error:
                     if(err) {
@@ -95,12 +96,13 @@ export class MapsDatabase {
     // obtenemos el mapa
     /**/
 
-    public static getMap(mapData: number, callback: (code: { status: boolean, error: string, map: { rows: number, columns: number,
+    public static getMap(mapData: number, callback: (code: { status: boolean, error: string, map: { rows: number, columns: number, name: string,
         terrains: {name: string, image: string, movement_penalty: number, position_row: number, position_cols: number,
              defense_weak: number, defense_strong: number, attack_weak: number, attack_strong: number}[] }}) => void) {
         // Inicializamos o no la BD
         let row = 0;
         let columns = 0;
+        let name = "";
         let terrains : {name: string, image: string, movement_penalty: number, position_row: number, position_cols: number,
              defense_weak: number, defense_strong: number, attack_weak: number, attack_strong: number}[] = [];
         MapsDatabase.initOrCallDatabase((err: Error) => {
@@ -110,7 +112,7 @@ export class MapsDatabase {
                 console.error("Se ha producido un error intentando abrir la BD!");
                 callback({ status: false, error: "Can't connect to DB", map: null });
             } else {
-                MapsDatabase.connection.get("SELECT rows, cols FROM map where id = $mapId;", {$mapId: Number(mapData)}, (err: Error, rows: any) => {
+                MapsDatabase.connection.get("SELECT rows, cols, name FROM map where id = $mapId;", {$mapId: Number(mapData)}, (err: Error, rows: any) => {
                     // Si hay error
                     if(err) {
                         console.log("Error trying to get rows and cols");
@@ -121,6 +123,7 @@ export class MapsDatabase {
                         console.log(JSON.stringify(rows));
                         row = rows['rows'];
                         columns = rows['cols'];
+                        name = rows['name'];
                         MapsDatabase.connection.each("SELECT name, image, movement_penalty, position_row, position_cols, defense_weak, defense_strong, attack_weak, attack_strong FROM terrain where id_map = $mapId;", {$mapId: mapData}, (err: Error, rows2: any) => {
                             // Si hay error
                             console.log(JSON.stringify(err));
@@ -136,7 +139,7 @@ export class MapsDatabase {
                                     attack_strong: Number(rows2['attack_strong'])});
                             }
                         }, () => {
-                            callback({status: true, error: "Success", map:{rows: row, columns: columns, terrains: terrains}});
+                            callback({status: true, error: "Success", map:{rows: row, columns: columns, name: name, terrains: terrains}});
                         });
                     }
                 });
@@ -145,28 +148,30 @@ export class MapsDatabase {
         });
     }
 
-    public static getMapId(callback: (code: { status: boolean, error: string, mapId: number[] }) => void) {
+    public static getMapId(callback: (code: { status: boolean, error: string, mapId: number[], mapName: string[] }) => void) {
         // Inicializamos o no la BD
         MapsDatabase.initOrCallDatabase((err: Error) => {
             // Comprobamos el mensaje de error
             if(err) {
                 // Si hay error, lo mostramos en pantalla
                 console.error("Se ha producido un error intentando abrir la BD!");
-                callback({ status: false, error: "Can't connect to DB", mapId: null });
+                callback({ status: false, error: "Can't connect to DB", mapId: null, mapName: null });
             } else {
                 var i = 0;
                 let mapId : number[] = [];
-                MapsDatabase.connection.each("SELECT id FROM map;", (err: Error, rows: any) => {
+                let mapName : string[] = [];
+                MapsDatabase.connection.each("SELECT id, name FROM map;", (err: Error, rows: any) => {
                     // Si hay error
                     if(err) {
                         console.log("Error trying to get the ID");
-                        callback({ status: false, error: "Error trying to get the ID", mapId: null });
+                        callback({ status: false, error: "Error trying to get the ID", mapId: null, mapName: null });
                     } else {
                         // En este caso, tendremos los datos
                         mapId.push(Number(rows['id']));
+                        mapName.push(rows['name']);
                     }
                 }, () => {
-			callback({ status: true, error: "Success", mapId: mapId });
+			callback({ status: true, error: "Success", mapId: mapId, mapName: mapName });
 		});
             }
         });
@@ -285,7 +290,7 @@ export class ProfileDatabase {
                     }
                 });
             }
-        });        
+        });
     }
 
     /// Este método se encargará de guardar el perfil en la BD.

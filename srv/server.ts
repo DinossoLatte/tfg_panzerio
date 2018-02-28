@@ -80,8 +80,7 @@ server.on('connection', function connect(ws) {
                 // Ejecutamos el almacenado en la BD
                 UtilsServer.MapsDatabase.saveMap(map, (error: Error) => {
                     // Si hay error
-                    if(code.status) {
-
+                    if(error) {
                         // Entonces indicamos al receptor el guardado incorrecto del mapa
                         ws.send(JSON.stringify({
                             status: false,
@@ -101,7 +100,7 @@ server.on('connection', function connect(ws) {
                 let getMapvar = message.map;
                 // Obtenemos el mapa
                 console.log(JSON.stringify(getMapvar));
-                UtilsServer.MapsDatabase.getMap(Number(getMapvar), (code: { status: boolean, error: string,  map: { rows: number, columns: number,
+                UtilsServer.MapsDatabase.getMap(Number(getMapvar), (code: { status: boolean, error: string,  map: { rows: number, columns: number, name: string,
                     terrains: {name: string, image: string, movement_penalty: number, position_row: number, position_cols: number,
                          defense_weak: number, defense_strong: number, attack_weak: number, attack_strong: number}[]} }) => {
                     // Si hay error
@@ -125,7 +124,7 @@ server.on('connection', function connect(ws) {
                 break;
             case "getMapId":
                 // Obtenemos los id de los mapas
-                UtilsServer.MapsDatabase.getMapId((code: { status: boolean, error: string,  mapId: number[] }) => {
+                UtilsServer.MapsDatabase.getMapId((code: { status: boolean, error: string,  mapId: number[], mapName: string[] }) => {
                     // Si hay error
                     console.log("server: "+code.status+","+code.error+","+code.mapId);
                     if(!code.status) {
@@ -133,14 +132,16 @@ server.on('connection', function connect(ws) {
                         ws.send(JSON.stringify({
                             status: false,
                             error: "Couldn't get map. Error: "+code.error,
-                            mapId: null
+                            mapId: null,
+                            mapName: null
                         }));
                     } else {
                         // En caso contrario, avisamos de que se han obtenido correctamente
                         ws.send(JSON.stringify({
                             status: true,
                             error: "Got successfully",
-                            mapId: code.mapId
+                            mapId: code.mapId,
+                            mapName: code.mapName
                         }))
                     }
                 });

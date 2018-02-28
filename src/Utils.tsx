@@ -528,7 +528,8 @@ export class Network {
         let result = {
             terrains: [] as Array<Terrain>,
             rows: 0,
-            columns: 0
+            columns: 0,
+            name: ""
         };
         // Primero, convertimos el objeto en un mapa
         console.log("EN Parse: "+JSON.stringify(data));
@@ -537,6 +538,7 @@ export class Network {
         // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
         result.rows = json.map.rows;
         result.columns = json.map.columns;
+        result.name = json.map.name;
         // Finalmente, nos quedan los terrenos, mismo proceso
         for(var i = 0; i<json.map.terrains.length; i++){
             let terrain = json.map.terrains[i];
