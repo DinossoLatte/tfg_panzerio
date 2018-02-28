@@ -2,6 +2,7 @@ import { StringDecoder } from 'string_decoder';
 import * as webSocket from 'ws';
 import * as FileSystem from 'fs';
 import { AnyAction } from 'redux';
+import * as jwt from 'jsonwebtoken';
 
 import * as Units from '../src/Unit';
 import * as Utils from '../src/Utils';
@@ -183,7 +184,14 @@ server.on('connection', function connect(ws) {
                 Store.saveState({ type: "NEXT_TURN" });
                 // Devolveremos el estado resultante, para sincronizarlo con el jugador
                 ws.send(JSON.stringify({ status: true, state: Store.store.getState() }));
-                break;          
+                break;   
+            case "logIn":
+                // Este caso se llamará cuando el cliente haga inicio de sesión
+                // Primero, obtenemos el token de inicio de sesión, un JWK
+                let token = message.token;
+                // Llamamos a la obtención del clientId
+                let decoded = jwt.decode(token);
+                console.log(decoded);
             default:
                 console.warn("Action sent not understood! Type is " + message.tipo);
                 ws.send("Command not understood");

@@ -1,5 +1,7 @@
 import * as React from 'react';
 import * as Redux from 'redux';
+import { GoogleLogin, GoogleLogout, GoogleLoginResponse } from 'react-google-login'
+
 import { Map } from './Map';
 import { Actions, getInitialState } from './GameState';
 import { EditMap } from './EditMap';
@@ -304,7 +306,12 @@ class CreateMenu extends React.Component<any, any> {
 class Game extends React.Component<any, any> {
     constructor(props : any) {
         super(props);
-        this.state = { gameState: 0, editx: "5", edity: "5" }; // 0 es el menu del juego, 1 será el menú de opciones, 2 el juego, 3 edición de map y 5 el pre juego
+        this.state = {
+            gameState: 0,
+            editx: "5",// 0 es el menu del juego, 1 será el menú de opciones, 2 el juego, 3 edición de map y 5 el pre juego
+            edity: "5",
+            clientId: null // Id del cliente loggeado
+        }; 
     }
 
     render() {
@@ -329,12 +336,26 @@ class Game extends React.Component<any, any> {
                 result = <Profile parentObject={this} />;
                 break;
             default:
+                let loginInfo = null;
+                if(this.state.clientId) { // Si el usuario ha iniciado sesión
+                    loginInfo = <GoogleLogout onLogoutSuccess={this.onLogOut.bind(this)} />// La sección de registro contendrá el cierre de sesión
+                } else {
+                    loginInfo = <GoogleLogin clientId="0" onSuccess={this.onLogIn.bind(this)} onFailure={() => console.error("Inicio de sesión fallido")}  /> // En otro caso, contendrá el inicio de sesión
+                }
                 result = (
-                    <div className="menu">
-                        <EnterGameButton parentObject={this} /><br />
-                        <EditGameButton parentObject={this} /><br />
-                        <ProfileButton parentObject={this} /><br />
-                        <OptionsMenuButton parentObject={this} /><br />
+                    <div>
+                        <script src="https://apis.google.com/js/platform.js" async defer></script>
+                        <meta name="google-signin-client_id" content="YOUR_CLIENT_ID.apps.googleusercontent.com" />
+
+                        <div className="menu">
+                            <EnterGameButton parentObject={this} /><br />
+                            <EditGameButton parentObject={this} /><br />
+                            <ProfileButton parentObject={this} /><br />
+                            <OptionsMenuButton parentObject={this} /><br />
+                        </div>
+                        <div className="loginDiv">
+                            {loginInfo}
+                        </div> 
                     </div>
                 );
                 break;
@@ -344,11 +365,30 @@ class Game extends React.Component<any, any> {
     }
 
     changeGameState(stateNumber: number) {
-        this.setState({ gameState: stateNumber, editx: this.state.editx, edity: this.state.edity});
+        this.setState({
+            gameState: stateNumber,
+            editx: this.state.editx,
+            edity: this.state.edity,
+            clientId: this.state.clientId
+        });
     }
 
     setMapSize(x: string, y: string){
         this.setState({ gameState: this.state.gameState, editx: x, edity: y});
+    }
+
+    onLogIn(response: GoogleLoginResponse) {
+        // Enviamos al servidor los datos del login
+        Network.sendLogInInfo(() => {
+            console.log("Datos de login enviados");
+        }, response);
+    }
+
+    onLogOut() {
+        // Enviamos el cerrado de sesión al servidor
+        Network.sendLogOut(() => {
+            console.log("Enviado logout");
+        })
     }
 }
 

@@ -611,6 +611,43 @@ export class Network {
             }
         }
     }
+
+    public static sendLogInInfo(callback: (statusCode: { status: boolean, error: string}) => void, logInData: any) {
+        let connection = Network.getConnection();
+        connection.onopen = function() {
+            connection.send(JSON.stringify({
+                tipo: "logIn",
+                token: logInData
+            }));
+        };
+        connection.onmessage = function(message: MessageEvent) {
+            // Si el comando enviado es correcto
+            if(message.data == "Command not understoood") {
+                callback({ status: false, error: message.data });
+            } else {
+                // Comprobamos el éxito de la operación
+                let result = JSON.parse(message.data);
+                callback({ status: result.status, error: result.error });
+            }
+        }
+    }
+
+    public static sendLogOut(callback: (statusCode: { status: boolean , error: string }) => void) {
+        let connection = Network.getConnection();
+        connection.onopen = function() {
+            connection.send(JSON.stringify({
+                tipo: "logOut"
+            }));
+        };
+        connection.onmessage = function(message: MessageEvent) {
+            if(message.data == "Command not understood") {
+                callback({ status: false, error: message.data });
+            } else {
+                let result = JSON.parse(message.data);
+                callback({ status: result.status, error: result.error });
+            }
+        }
+    }
 }
 
 export class Parsers {
