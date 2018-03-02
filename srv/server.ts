@@ -193,7 +193,8 @@ server.on('connection', function connect(ws) {
                 ws.send(JSON.stringify({ status: true, state: "Success" }));
                 break;
             case "logOut": 
-                
+                // Por ahora, emitimos un OK
+                ws.send(JSON.stringify({ status: true, state: "Success" }));
                 break;
             default:
                 console.warn("Action sent not understood! Type is " + message.tipo);
