@@ -188,11 +188,13 @@ server.on('connection', function connect(ws) {
                 break;   
             case "logIn":
                 // Este caso se llamará cuando el cliente haga inicio de sesión
-                // Primero, obtenemos el token de inicio de sesión, un JWK
+                // Del cliente obtendremos su ID del perfil, suficiente para identificarlo
                 let token = message.token;
-                // Llamamos a la obtención del clientId
-                let decoded = jwt.decode(token);
-                console.log(decoded);
+                ws.send(JSON.stringify({ status: true, state: "Success" }));
+                break;
+            case "logOut": 
+                
+                break;
             default:
                 console.warn("Action sent not understood! Type is " + message.tipo);
                 ws.send("Command not understood");

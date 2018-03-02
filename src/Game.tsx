@@ -340,15 +340,15 @@ class Game extends React.Component<any, any> {
                 break;
             default:
                 let loginInfo = null;
-                if(this.state.clientId) { // Si el usuario ha iniciado sesión
-                    loginInfo = <GoogleLogout onLogoutSuccess={this.onLogOut.bind(this)} />// La sección de registro contendrá el cierre de sesión
+                if(this.state.clientId != null) { // Si el usuario ha iniciado sesión
+                    loginInfo = <GoogleLogout clientId="637676591689-hqqsmqkfh446ot5klmul2tr8q8v1dsq6" onLogoutSuccess={this.onLogOut.bind(this)} />// La sección de registro contendrá el cierre de sesión
                 } else {
-                    loginInfo = <GoogleLogin clientId="0" onSuccess={this.onLogIn.bind(this)} onFailure={() => console.error("Inicio de sesión fallido")}  /> // En otro caso, contendrá el inicio de sesión
+                    loginInfo = <GoogleLogin clientId="637676591689-hqqsmqkfh446ot5klmul2tr8q8v1dsq6" onSuccess={this.onLogIn.bind(this)} onFailure={(e) => console.error(e)}  /> // En otro caso, contendrá el inicio de sesión
                 }
                 result = (
                     <div>
                         <script src="https://apis.google.com/js/platform.js" async defer></script>
-                        <meta name="google-signin-client_id" content="YOUR_CLIENT_ID.apps.googleusercontent.com" />
+                        <meta name="google-signin-client_id" content=" 637676591689-00d0rmr0ib1gsidcqtdleva0qkor596k.apps.googleusercontent.com" />
 
                         <div className="menu">
                             <EnterGameButton parentObject={this} /><br />
@@ -384,13 +384,28 @@ class Game extends React.Component<any, any> {
         // Enviamos al servidor los datos del login
         Network.sendLogInInfo(() => {
             console.log("Datos de login enviados");
-        }, response);
+            // También cambiamos el estado de este objeto para tener en cuenta eso
+            this.setState({
+                gameState: this.state.gameState,
+                editx: this.state.editx,
+                edity: this.state.edity,
+                clientId: response.getBasicProfile().getId()
+            });
+            console.log(this.state.clientId);
+        }, response.getBasicProfile().getId());
     }
 
     onLogOut() {
         // Enviamos el cerrado de sesión al servidor
         Network.sendLogOut(() => {
             console.log("Enviado logout");
+            // También cambiamos el estado de este objeto para tener en cuenta eso
+            this.setState({
+                gameState: this.state.gameState,
+                editx: this.state.editx,
+                edity: this.state.edity,
+                clientId: null
+            });
         })
     }
 }
