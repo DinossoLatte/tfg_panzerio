@@ -295,7 +295,7 @@ export class ProfileDatabase {
 
     /// Este método se encargará de guardar el perfil en la BD.
     /// ATENCIÓN: ¡Este método sólo se realizará de forma transaccional!
-    public static saveProfile(profile: { id: number, name: string, gamesWon: number, gamesLost: number, armies: Array<{ id: number, name: string, pair: Array<{ type: string, number: number }>}>}, callback: (statusCode: StatusCode) => void) {
+    public static saveProfile(profile: { id: number, name: string, gamesWon: number, gamesLost: number, armies: Array<{ id: number, name: string, pair: Array<{ type: string, number: number }>}>, googleId: string}, callback: (statusCode: StatusCode) => void) {
         // Definimos el resultado de la transacción
         let result = { status: true, error: "Success" };
         // Primero, establecemos la conexión con la BD
@@ -312,12 +312,13 @@ export class ProfileDatabase {
                     ProfileDatabase.connection.run("BEGIN TRANSACTION");
                     // Iniciamos el statement con los datos del perfil
                     let statement = ProfileDatabase.connection.prepare(
-                        "INSERT INTO profile(name, games_won, games_lost) VALUES ($name, $gamesWon, $gamesLost)");
+                        "INSERT INTO profile(name, games_won, games_lost, googleId) VALUES ($name, $gamesWon, $gamesLost, $googleId)");
                     // Habiendo preparado el comando, introducimos los datos
                     statement.run({
                         $name: profile.name,
                         $gamesWon: profile.gamesWon,
-                        $gamesLost: profile.gamesLost
+                        $gamesLost: profile.gamesLost,
+                        $googleId: profile.googleId
                     });
                     // Ahora, para crear los objetos hijos, necesitamos obtener el id del perfil creado
                     ProfileDatabase.connection.get("SELECT last_insert_rowid() FROM profile", (stmt: sqlite.Statement, row: any, err: Error) => {

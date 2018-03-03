@@ -13,7 +13,8 @@ export class Profile extends React.Component<any, any> {
     constructor(props: any) {
         super(props);
         this.state = {
-            name: "Jugador"
+            name: "Jugador",
+            googleId: this.props.parentObject.clientId
         };
     }
 
@@ -241,7 +242,6 @@ export class Profile extends React.Component<any, any> {
             // Finalmente ponemos el ejército, TODO de nuevo no es esta la forma de hacerlo
             storeProfile.getState().armies[storeProfile.getState().selectedArmy] = army;
         }
-        // TODO Esta no es la forma de gestionar un estado, para que tener acciones diferentes!?!?
         saveState(ProfileActions.save(this, storeProfile.getState().armies, storeProfile.getState().selectedArmy, storeProfile.getState().selected, storeProfile.getState().type));
     }
 
@@ -346,7 +346,8 @@ export class Profile extends React.Component<any, any> {
             name: string,
             gamesWon: number,
             gamesLost: number,
-            armies: Array<{ id: number, name: string, pair: Array<{ type: string, number: number }> }>
+            armies: Array<{ id: number, name: string, pair: Array<{ type: string, number: number }> }>,
+            googleId: string
         } = {
             id: 0, // El id es = 0 al estar creandose el perfil
             name: "Jugador",
@@ -359,8 +360,11 @@ export class Profile extends React.Component<any, any> {
                         name: army.name,
                         pair: army.unitList
                     };
-                })
+                }),
+            // Incluimos el id del usuario de Google
+            googleId: this.props.parentObject.state.clientId
         };
+        console.log(profile.googleId);
         // Una vez tengamos el perfil convertido, procedemos a guardarlo
         Network.sendProfileToServer(profile, (statusCode: { status: boolean, errorCode: string }) => {
             // Vemos cómo ha salido la operación

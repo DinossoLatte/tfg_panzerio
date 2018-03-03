@@ -56,6 +56,15 @@ export const ReducerProfile : Redux.Reducer<StateProfile> =
                     selected: action.selected,
                     type: action.type
                 };
+            case "CHANGE_GOOGLE_ID":
+                action.profile.forceUpdate();
+                return {
+                    profile: state.profile,
+                    armies: state.armies,
+                    selectedArmy: state.selectedArmy,
+                    selected: state.selected,
+                    type: state.type
+                }
             default:
                 return state;
         }
