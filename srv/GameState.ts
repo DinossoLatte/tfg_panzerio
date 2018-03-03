@@ -111,11 +111,6 @@ export const Reducer : Redux.Reducer<State> =
                     }
 
                 }
-                // Si la unidad tiene posiblidad de atacar
-                if(!state.units[action.unit_id].hasAttacked && state.units[action.unit_id].action==1) {
-                    // Regeneramos los visitables, pero esta vez sólo obteniendo la distancia absoluta para los enemigos
-                    visitables = Pathfinding.getAttackableUnits(state.units[action.unit_id]);
-                }
                 return {
                     turn: state.turn,
                     actualState: state.actualState,
@@ -222,6 +217,7 @@ export const Reducer : Redux.Reducer<State> =
                 }else if(state.units.filter(x => x.player && x.name=="General").length==0){
                     actualstate=2;
                 }
+                
                 return {
                     turn: state.turn,
                     actualState: actualstate,
@@ -298,6 +294,19 @@ export const Reducer : Redux.Reducer<State> =
                     selectedUnit: action.selectedUnit,
                     type: "SET_LISTENER"
                 }
+            case "SYNC_STATE":
+                // Retornamos como estado el dado por la acción
+                return {
+                    turn: action.state.turn,
+                    actualState: action.state.actualState,
+                    units: action.state.units,
+                    visitables: action.state.visitables,
+                    terrains: action.state.terrains,
+                    map: action.state.map,
+                    cursorPosition: action.state.cursorPosition,
+                    selectedUnit: action.state.selectedUnit,
+                    type: action.state.type
+                };
             default:
                 return state;
         }

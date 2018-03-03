@@ -1,6 +1,8 @@
 import { StringDecoder } from 'string_decoder';
 import * as webSocket from 'ws';
 import * as FileSystem from 'fs';
+import { AnyAction } from 'redux';
+import * as jwt from 'jsonwebtoken';
 
 import * as Units from '../src/Unit';
 import * as Utils from '../src/Utils';
@@ -28,8 +30,7 @@ server.on('connection', function connect(ws) {
                 var state = {
                     turn: 0,
                     actualState: 0,
-                    units: [Units.General.create(new Utils.Pair(-1, -1), true), Units.Infantry.create(new Utils.Pair(-1, -1), true), Units.Tank.create(new Utils.Pair(-1, -1), true), Units.Paratrooper.create(new Utils.Pair(-1, -1), true), Units.Artillery.create(new Utils.Pair(-1, -1), true), Units.General.create(new Utils.Pair(-1, -1), false),
-                    Units.Infantry.create(new Utils.Pair(-1, -1), false), Units.Tank.create(new Utils.Pair(-1, -1), false)],
+                    units: [],
                     visitables: null,
                     terrains: [Terrains.ImpassableMountain.create(new Utils.Pair(2, 2)), Terrains.ImpassableMountain.create(new Utils.Pair(3, 2)), Terrains.Hills.create(new Utils.Pair(2, 3)), Terrains.Forest.create(new Utils.Pair(3, 3))],
                     cursorPosition: new Utils.Pair(0, 0),
@@ -38,6 +39,18 @@ server.on('connection', function connect(ws) {
                     type: "SET_LISTENER"
                 };
                 ws.send(JSON.stringify(state));
+                break;
+            // Este se llamará cuando se quiera sincronizar el estado del cliente con el servidor
+            case "SYNC_STATE":
+                // Asumimos que lo que nos venga del cliente es correcto, sustituimos el estado
+                Store.saveState({
+                    type: "SYNC_STATE",
+                    state: message.state
+                });
+                ws.send(JSON.stringify({
+                    status: true,
+                    state: Store.store.getState()
+                }))
                 break;
             case "SAVE_MAP":
                 let actmap = GameState.parseActionMap(message);
@@ -140,6 +153,48 @@ server.on('connection', function connect(ws) {
                     // Devolveremos el contenido de la petición
                     ws.send(JSON.stringify(statusCode));
                 });
+                break;
+            case "waitTurn":
+                // En este caso, se espera a que el servidor realice el cambio en el estado, que lo haría el otro jugador
+                // Primero, comprobamos que estemos en la fase de pre juego
+                if(Store.store.getState().turn <= 2) {
+                    // Si es el caso, tenemos que posicionar nuestras unidades
+                    Store.saveState({
+                        type: "CHANGE_UNIT_POS",
+                        unit_id: 3,
+                        new_position: { row: 1, column: 4 },
+                        selectedUnit: null,
+                        player: false
+                    });
+                    Store.saveState({
+                        type: "CHANGE_UNIT_POS",
+                        unit_id: 4,
+                        new_position: { row: 0, column: 3 },
+                        selectedUnit: null,
+                        player: false
+                    });
+                    Store.saveState({
+                        type: "CHANGE_UNIT_POS",
+                        unit_id: 5,
+                        new_position: { row: 1, column: 3 },
+                        selectedUnit: null,
+                        player: false
+                    });
+                }
+                // En cualquiera de los casos, saltaremos el turno del jugador enemigo
+                Store.saveState({ type: "NEXT_TURN" });
+                // Devolveremos el estado resultante, para sincronizarlo con el jugador
+                ws.send(JSON.stringify({ status: true, state: Store.store.getState() }));
+                break;   
+            case "logIn":
+                // Este caso se llamará cuando el cliente haga inicio de sesión
+                // Del cliente obtendremos su ID del perfil, suficiente para identificarlo
+                let token = message.token;
+                ws.send(JSON.stringify({ status: true, state: "Success" }));
+                break;
+            case "logOut": 
+                // Por ahora, emitimos un OK
+                ws.send(JSON.stringify({ status: true, state: "Success" }));
                 break;
             default:
                 console.warn("Action sent not understood! Type is " + message.tipo);
