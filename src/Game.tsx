@@ -20,20 +20,25 @@ class EnterGameButton extends React.Component<any, any> {
     }
 
     onClick() {
-        // Realizamos una llamada al servidor para obtener el estado inicial de las partidas
-        getInitialState(() => {
-            // Reiniciamos el estado
-            store.dispatch(Actions.generateFinish());
-            // Y también cambiamos el estado del juego
-            this.props.parentObject.changeGameState(5);
-            // Comprobamos si hay ganador o perdedor, en cuyo caso se reiniciará el estado al entrar en el juego
-            if (store.getState().map && store.getState().actualState > 0) {
-                // Si se ha producido esto, debemos reiniciar el estado
+        if(this.props.parentObject.state.clientId==null){
+            window.alert("Necesita iniciar sesión para usar esta opción");
+        }else{
+            // Realizamos una llamada al servidor para obtener el estado inicial de las partidas
+            getInitialState(() => {
+                // Reiniciamos el estado
                 store.dispatch(Actions.generateFinish());
-                // Ejecutamos también el reiniciado de estado del mapa
-                store.getState().map.restartState();
-            }
-        });
+                // Y también cambiamos el estado del juego
+                this.props.parentObject.changeGameState(5);
+                // Comprobamos si hay ganador o perdedor, en cuyo caso se reiniciará el estado al entrar en el juego
+                if (store.getState().map && store.getState().actualState > 0) {
+                    // Si se ha producido esto, debemos reiniciar el estado
+                    store.dispatch(Actions.generateFinish());
+                    // Ejecutamos también el reiniciado de estado del mapa
+                    store.getState().map.restartState();
+                }
+            });
+        }
+
     }
 }
 
@@ -47,7 +52,11 @@ class EditGameButton extends React.Component<any, any> {
     }
 
     onClick() {
-        this.props.parentObject.changeGameState(3);
+        if(this.props.parentObject.state.clientId==null){
+            window.alert("Necesita iniciar sesión para usar esta opción");
+        }else{
+            this.props.parentObject.changeGameState(3);
+        }
     }
 }
 
@@ -61,7 +70,11 @@ class ProfileButton extends React.Component<any, any> {
     }
 
     onClick() {
-        this.props.parentObject.changeGameState(6);
+        if(this.props.parentObject.state.clientId==null){
+            window.alert("Necesita iniciar sesión para usar esta opción");
+        }else{
+            this.props.parentObject.changeGameState(6);
+        }
     }
 }
 
@@ -314,7 +327,7 @@ class Game extends React.Component<any, any> {
             editx: "5",// 0 es el menu del juego, 1 será el menú de opciones, 2 el juego, 3 edición de map y 5 el pre juego
             edity: "5",
             clientId: null // Id del cliente loggeado
-        }; 
+        };
     }
 
     render() {
@@ -358,7 +371,7 @@ class Game extends React.Component<any, any> {
                         </div>
                         <div className="loginDiv">
                             {loginInfo}
-                        </div> 
+                        </div>
                     </div>
                 );
                 break;
@@ -389,10 +402,10 @@ class Game extends React.Component<any, any> {
                 gameState: this.state.gameState,
                 editx: this.state.editx,
                 edity: this.state.edity,
-                clientId: response.getBasicProfile().getId()
+                clientId: response.getBasicProfile().getId().toString()
             });
             console.log(this.state.clientId);
-        }, response.getBasicProfile().getId());
+        }, response.getBasicProfile().getId().toString());
     }
 
     onLogOut() {

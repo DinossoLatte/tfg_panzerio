@@ -185,16 +185,67 @@ server.on('connection', function connect(ws) {
                 Store.saveState({ type: "NEXT_TURN" });
                 // Devolveremos el estado resultante, para sincronizarlo con el jugador
                 ws.send(JSON.stringify({ status: true, state: Store.store.getState() }));
-                break;   
+                break;
             case "logIn":
                 // Este caso se llamará cuando el cliente haga inicio de sesión
                 // Del cliente obtendremos su ID del perfil, suficiente para identificarlo
                 let token = message.token;
+                // TODO NO SE VA A ELIMINAR PORQUE DEBERÍA SER NECESARIO ALGUNA FORMA DE CREAR UNA CUENTA TRAS INICIAR SESIÓN Y NO TEENER CUENTA
+                let logprofile: {
+                    googleId: string
+                } = {
+                    // Incluimos el id del usuario de Google
+                    googleId: token
+                };
+                //Obtenemos el perfil
+                UtilsServer.ProfileDatabase.getProfile(logprofile, (statusCode: { status: boolean, error: string, name: string, gamesWon: number, gamesLost: number }) => {
+                    console.log("valor de error y name "+statusCode.error+", "+statusCode.name);
+                    //Sino existe entonces se crea un nuevo perfil
+                    if(statusCode.name==null){
+                        console.log("entra en el primer if");
+                        let initialprofile: {
+                            id: number,
+                            name: string,
+                            gamesWon: number,
+                            gamesLost: number,
+                            armies: Array<{ id: number, name: string, pair: Array<{ type: string, number: number }> }>,
+                            googleId: string
+                        } = {
+                            id: 0, // El id es = 0 al estar creandose el perfil
+                            name: "Jugador",
+                            gamesWon: 0, // El número de partidas jugadas en este momento será 0, por lo que ambas variables a 0.
+                            gamesLost: 0,
+                            armies: [],
+                            // Incluimos el id del usuario de Google
+                            googleId: token
+                        };
+                        UtilsServer.ProfileDatabase.saveProfile(initialprofile, (status: UtilsServer.StatusCode) => {
+                            console.log("statusCode "+status.status);
+                        });
+                    }
+                });
+                
                 ws.send(JSON.stringify({ status: true, state: "Success" }));
                 break;
-            case "logOut": 
+            case "logOut":
                 // Por ahora, emitimos un OK
                 ws.send(JSON.stringify({ status: true, state: "Success" }));
+                break;
+            case "getProfile":
+                // Extraemos el perfil
+                let getprofile = message.profile;
+                UtilsServer.ProfileDatabase.getProfile(getprofile, (statusCode: { status: boolean, error: string, name: string, gamesWon: number, gamesLost: number }) => {
+                    // Devolveremos el contenido de la petición
+                    ws.send(JSON.stringify(statusCode));
+                });
+                break;
+            case "saveProfileGame":
+                // Extraemos el perfil
+                let saveprofile = message.profile;
+                UtilsServer.ProfileDatabase.saveProfileGame(saveprofile, (statusCode: UtilsServer.StatusCode) => {
+                    // Devolveremos el contenido de la petición
+                    ws.send(JSON.stringify(statusCode));
+                });
                 break;
             default:
                 console.warn("Action sent not understood! Type is " + message.tipo);
