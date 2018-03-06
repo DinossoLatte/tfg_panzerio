@@ -103,14 +103,15 @@ export class Actions {
         };
     }
 
-    static generateAttack(defendingUnitId: number, player: boolean, selectedUnit: number): Redux.AnyAction {
+    static generateAttack(defendingUnitId: number, player: boolean, selectedUnit: number, googleId: string): Redux.AnyAction {
         //Este estado se envía la unidad a atacar (se eliminará del array) y si es del jugador o no
         return {
             tipo: "SAVE_MAP",
             type: "ATTACK",
             defendingUnitId: defendingUnitId,
             selectedUnit: selectedUnit,
-            player: player
+            player: player,
+            googleId: googleId
         }
     }
 
@@ -302,8 +303,80 @@ export const Reducer: Redux.Reducer<State> =
                 //Si no está el general del jugador entonces se considerará victoria o derrota (esto ya incluye también que no queden más unidades)
                 if (state.units.filter(x => !x.player && x.name == "General").length == 0) {
                     actualstate = 1;
+                    let profile: {
+                        googleId: string
+                    } = {
+                        // Incluimos el id del usuario de Google
+                        googleId: action.googleId
+                    };
+                    Network.receiveProfileFromServer(profile,(statusCode: { status: boolean, error: string, name: string, gamesWon: number, gamesLost: number }) => {
+                        // Vemos cómo ha salido la operación
+                        if(!statusCode.status) {
+                            // Si ha salido mal, alertamos al usuario
+                            window.alert("No se ha podido obtener correctamente el perfil");
+                        } else {
+                            // En caso contrario, indicamos el guardado correcto
+                            window.alert("Se ha obtenido correctamente el perfil");
+                            let profileupdated: {
+                                gamesWon: number,
+                                gamesLost: number,
+                                googleId: string
+                            } = {
+                                gamesWon: statusCode.gamesWon+1,
+                                gamesLost: statusCode.gamesLost,
+                                // Incluimos el id del usuario de Google
+                                googleId: action.googleId
+                            };
+                            Network.saveProfileGameToServer(profileupdated,(status: { status: boolean, error: string }) => {
+                                // Vemos cómo ha salido la operación
+                                if(!status.status) {
+                                    // Si ha salido mal, alertamos al usuario
+                                    window.alert("No se ha podido actualizar correctamente el perfil");
+                                } else {
+                                    // En caso contrario, indicamos el guardado correcto
+                                    window.alert("Se ha actualizado correctamente el perfil");
+                                }
+                            });
+                        }
+                    });
                 } else if (state.units.filter(x => x.player && x.name == "General").length == 0) {
                     actualstate = 2;
+                    let profile: {
+                        googleId: string
+                    } = {
+                        // Incluimos el id del usuario de Google
+                        googleId: action.googleId
+                    };
+                    Network.receiveProfileFromServer(profile,(statusCode: { status: boolean, error: string, name: string, gamesWon: number, gamesLost: number }) => {
+                        // Vemos cómo ha salido la operación
+                        if(!statusCode.status) {
+                            // Si ha salido mal, alertamos al usuario
+                            window.alert("No se ha podido obtener correctamente el perfil");
+                        } else {
+                            // En caso contrario, indicamos el guardado correcto
+                            window.alert("Se ha obtenido correctamente el perfil");
+                            let profileupdated: {
+                                gamesWon: number,
+                                gamesLost: number,
+                                googleId: string
+                            } = {
+                                gamesWon: statusCode.gamesWon,
+                                gamesLost: statusCode.gamesLost+1,
+                                // Incluimos el id del usuario de Google
+                                googleId: action.googleId
+                            };
+                            Network.saveProfileGameToServer(profileupdated,(status: { status: boolean, error: string }) => {
+                                // Vemos cómo ha salido la operación
+                                if(!status.status) {
+                                    // Si ha salido mal, alertamos al usuario
+                                    window.alert("No se ha podido actualizar correctamente el perfil");
+                                } else {
+                                    // En caso contrario, indicamos el guardado correcto
+                                    window.alert("Se ha actualizado correctamente el perfil");
+                                }
+                            });
+                        }
+                    });
                 }
                 return {
                     turn: state.turn,

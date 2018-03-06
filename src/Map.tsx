@@ -157,7 +157,7 @@ export class Map extends React.Component<any, any> {
                 store.getState().units.length <= selectedIndex + 1 ||
                 // Si la próxima unidad no es del jugador
                 !store.getState().units[selectedIndex + 1].player == (store.getState().turn%2 == 0)
-                
+
         )) {
             console.log("Entra en no definido");
             // Entonces debemos encontrar el índice de una unidad del jugador
@@ -323,7 +323,7 @@ export class Map extends React.Component<any, any> {
                      && store.getState().turn > 2){ // Si se ha escogido una unidad y ésta es enemiga
                     saveState(Actions.generateMove(store.getState().selectedUnit, side));
                     // Se atacará, esto incluye el movimiento si es aplicable
-                    saveState(Actions.generateAttack(unitIndex, side, null));
+                    saveState(Actions.generateAttack(unitIndex, side, null, this.props.parentObject.state.clientId));
                 } else {
                     // En caso contrario, se ejecutará el movimiento como siempre
                     // El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
@@ -334,7 +334,7 @@ export class Map extends React.Component<any, any> {
             && store.getState().turn >= 2 // O no estamos en la fase de pre juego
         ) {
             // Realizamos el ataque:
-            saveState(Actions.generateAttack(unitIndex, side, null));
+            saveState(Actions.generateAttack(unitIndex, side, null, this.props.parentObject.state.clientId));
         }
     }
 
