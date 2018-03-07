@@ -3,7 +3,8 @@ import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
 import { store, saveState } from './Store';
 import { Map } from './Map';
-import { Pair, Cubic, CUBIC_DIRECTIONS, myIndexOf, myIndexOfCubic, Pathfinding, Network } from '../src/Utils';
+import { Pair, Cubic, CUBIC_DIRECTIONS, myIndexOf, myIndexOfCubic } from '../src/Utils';
+import { Pathfinding, Network } from './Utils';
 import { Unit, Infantry, Tank, General, Paratrooper, Artillery } from '../src/Unit';
 import { Terrain, Plains, ImpassableMountain, Hills, Forest } from '../src/Terrains';
 
@@ -128,7 +129,7 @@ export const Reducer : Redux.Reducer<State> =
                 // Si la unidad actual está en fase de ataque.
                 if(state.units[action.unit_id].action == 1) {
                     // Ejecutamos el método para encontrar unidades enemigas atacables
-                    visitables_pair = Pathfinding.getAttackableUnits(state.units[action.unit_id]);
+                    visitables_pair = Pathfinding.getAttackableUnits(state.units[action.unit_id], state);
                 } else { // En caso contrario
                     // Ejecutamos el método para encontrar casillas movibles
                     // TODO problema encontrado aquí ya que se almacena el mapa sin las casillas
