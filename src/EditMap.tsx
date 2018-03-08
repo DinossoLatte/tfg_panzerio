@@ -103,7 +103,7 @@ export class EditMap extends React.Component<any, any> {
             rows: this.state.rows,
             columns: this.state.columns,
             name: name,
-            user: this.props.parentObject.state.clientId
+            googleId: Number(this.props.parentObject.state.clientId)
         };
         // Generamos el JSON que contendrán los datos del mapa,
         let result = JSON.stringify(jsonResult);

@@ -66,13 +66,14 @@ server.on('connection', function connect(ws) {
                 //Enviamos el nuevo estado
                 ws.send(JSON.stringify(StoreEdit.storeEdit.getState()));
                 break;
+            /* TODO temporalmente lo quito ya que se guardará en servidor el estado, no lo veo necesario aqui
             case "SAVE_PROFILE":
                 let actprofile = GameProfileState.parseActionMap(message);
                 //Guardamos el estado
                 StoreProfile.saveState(actprofile);
                 //Enviamos el nuevo estado
                 ws.send(JSON.stringify(StoreProfile.storeProfile.getState()));
-                break;
+                break;*/
             // - Guardado del mapa
             case "saveMap":
                 // Obtenemos los datos de la petición
@@ -124,7 +125,7 @@ server.on('connection', function connect(ws) {
                 break;
             case "getMapId":
                 // Obtenemos los id de los mapas
-                UtilsServer.MapsDatabase.getMapId((code: { status: boolean, error: string,  mapId: number[], mapName: string[] }) => {
+                UtilsServer.MapsDatabase.getMapId(message.mapclient, (code: { status: boolean, error: string,  mapId: number[], mapName: string[] }) => {
                     // Si hay error
                     console.log("server: "+code.status+","+code.error+","+code.mapId);
                     if(!code.status) {
@@ -142,6 +143,53 @@ server.on('connection', function connect(ws) {
                             error: "Got successfully",
                             mapId: code.mapId,
                             mapName: code.mapName
+                        }))
+                    }
+                });
+                break;
+            case "getArmyId":
+                // Obtenemos los id de los mapas
+                UtilsServer.ProfileDatabase.getArmyId(message.armyclient, (code: { status: boolean, error: string,  armyId: number[], armyName: string[] }) => {
+                    // Si hay error
+                    console.log("server: "+code.status+","+code.error+","+code.armyId);
+                    if(!code.status) {
+                        // Entonces indicamos al receptor que se han obtenido mal
+                        ws.send(JSON.stringify({
+                            status: false,
+                            error: "Couldn't get map. Error: "+code.error,
+                            armyId: null,
+                            armyName: null
+                        }));
+                    } else {
+                        // En caso contrario, avisamos de que se han obtenido correctamente
+                        ws.send(JSON.stringify({
+                            status: true,
+                            error: "Got successfully",
+                            armyId: code.armyId,
+                            armyName: code.armyName
+                        }))
+                    }
+                });
+                break;
+            case "getUnits":
+                // Obtenemos los id de los mapas
+                console.log("--- Valor del armyclient en servidor: "+ message.armyclient);
+                UtilsServer.ProfileDatabase.getUnits(message.armyclient, (code: { status: boolean, error: string,  units: {type: string, number: number}[] }) => {
+                    // Si hay error
+                    console.log("server: "+code.status+","+code.error+","+code.units);
+                    if(!code.status) {
+                        // Entonces indicamos al receptor que se han obtenido mal
+                        ws.send(JSON.stringify({
+                            status: false,
+                            error: "Couldn't get map. Error: "+code.error,
+                            units: null
+                        }));
+                    } else {
+                        // En caso contrario, avisamos de que se han obtenido correctamente
+                        ws.send(JSON.stringify({
+                            status: true,
+                            error: "Got successfully",
+                            units: code.units
                         }))
                     }
                 });
@@ -192,7 +240,7 @@ server.on('connection', function connect(ws) {
                 let token = message.token;
                 // TODO NO SE VA A ELIMINAR PORQUE DEBERÍA SER NECESARIO ALGUNA FORMA DE CREAR UNA CUENTA TRAS INICIAR SESIÓN Y NO TEENER CUENTA
                 let logprofile: {
-                    googleId: string
+                    googleId: number
                 } = {
                     // Incluimos el id del usuario de Google
                     googleId: token
@@ -209,7 +257,7 @@ server.on('connection', function connect(ws) {
                             gamesWon: number,
                             gamesLost: number,
                             armies: Array<{ id: number, name: string, pair: Array<{ type: string, number: number }> }>,
-                            googleId: string
+                            googleId: number
                         } = {
                             id: 0, // El id es = 0 al estar creandose el perfil
                             name: "Jugador",
@@ -224,7 +272,7 @@ server.on('connection', function connect(ws) {
                         });
                     }
                 });
-                
+
                 ws.send(JSON.stringify({ status: true, state: "Success" }));
                 break;
             case "logOut":
@@ -236,6 +284,16 @@ server.on('connection', function connect(ws) {
                 let getprofile = message.profile;
                 UtilsServer.ProfileDatabase.getProfile(getprofile, (statusCode: { status: boolean, error: string, name: string, gamesWon: number, gamesLost: number }) => {
                     // Devolveremos el contenido de la petición
+                    console.log("valor del name en server: "+statusCode.name);
+                    ws.send(JSON.stringify(statusCode));
+                });
+                break;
+            case "getProfileId":
+                // Extraemos el perfil
+                let getprofileid = message.profile;
+                UtilsServer.ProfileDatabase.getProfileId(getprofileid, (statusCode: { status: boolean, error: string, id: number }) => {
+                    // Devolveremos el contenido de la petición
+                    console.log("valor del name en server: "+statusCode.id);
                     ws.send(JSON.stringify(statusCode));
                 });
                 break;
@@ -243,6 +301,22 @@ server.on('connection', function connect(ws) {
                 // Extraemos el perfil
                 let saveprofile = message.profile;
                 UtilsServer.ProfileDatabase.saveProfileGame(saveprofile, (statusCode: UtilsServer.StatusCode) => {
+                    // Devolveremos el contenido de la petición
+                    ws.send(JSON.stringify(statusCode));
+                });
+                break;
+            case "saveProfileName":
+                // Extraemos el perfil
+                let saveprofilename = message.profile;
+                UtilsServer.ProfileDatabase.saveProfileName(saveprofilename, (statusCode: UtilsServer.StatusCode) => {
+                    // Devolveremos el contenido de la petición
+                    ws.send(JSON.stringify(statusCode));
+                });
+                break;
+            case "updateProfile":
+                // Extraemos el perfil
+                let updateprofile = message.profile;
+                UtilsServer.ProfileDatabase.updateProfile(updateprofile, (statusCode: UtilsServer.StatusCode) => {
                     // Devolveremos el contenido de la petición
                     ws.send(JSON.stringify(statusCode));
                 });

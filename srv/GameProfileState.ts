@@ -27,7 +27,7 @@ function getInitialStateProfile(): StateProfile {
 }
 
 export const InitialStateProfile: StateProfile = getInitialStateProfile();
-
+/* TODO misma razón que en server.ts (SAVE_PROFILE)
 export function parseActionMap(data: any) {
         // Definimos la salida, un mapa, y lo populamos con datos por defecto
         let result = {
@@ -72,7 +72,7 @@ export function parseActionMap(data: any) {
         // Retornamos el estado final
         return result;
 }
-
+*/
 //Se actualizan cada uno de los estados, está puesto un forceUpdate ya que no se actualizaba
 export const ReducerProfile : Redux.Reducer<StateProfile> =
     (state: StateProfile = InitialStateProfile, action: Redux.AnyAction) => {

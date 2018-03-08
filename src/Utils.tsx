@@ -493,7 +493,7 @@ export class Network {
     }
 
     // Este método se encargará de enviar los datos del mapa al servidor, para que se guarden en BD
-    public static sendMapToServer(map: { rows: number, columns: number, map: Array<Terrain>, name: string, user: string }
+    public static sendMapToServer(map: { rows: number, columns: number, map: Array<Terrain>, name: string, googleId: number }
         , callback?: (error: { status: boolean, errorCode: string }) => void) {
         // Primero, establecemos la conexión con el servidor
         let connection = Network.getConnection();
@@ -557,7 +557,7 @@ export class Network {
             gamesWon: number,
             gamesLost: number,
             armies: Array<{ id: number, name: string, pair: Array<{ type: string, number: number }> }>,
-            googleId: string
+            googleId: number
         }, callback?: (error: { status: boolean, errorCode: string }) => void) {
         // Primero, establecer la conexión con el servidor
         let connection = Network.getConnection();
@@ -592,7 +592,7 @@ export class Network {
     }
 
     public static receiveProfileFromServer(profile: {
-            googleId: string
+            googleId: number
         }, callback?: (code: { status: boolean, error: string, name: string, gamesWon: number, gamesLost: number }) => void) {
         // Primero, establecer la conexión con el servidor
         let connection = Network.getConnection();
@@ -626,10 +626,45 @@ export class Network {
         }
     }
 
+    public static receiveProfileIdFromServer(profile: {
+            googleId: number
+        }, callback?: (code: { status: boolean, error: string, id: number }) => void) {
+        // Primero, establecer la conexión con el servidor
+        let connection = Network.getConnection();
+        // Definimos el evento de recepción de mensaje
+        connection.onmessage = function(event: MessageEvent) {
+            console.log(event.data);
+            // Comprobamos cuál ha sido la respuesta
+            if(event.data == "Command not understood") {
+                // Retornamos al callback el fallo de la conexión
+                callback({ status: false, error: JSON.stringify(event.data), id: null });
+            } else {
+                // En caso contrario, el comando se entendió. Comprobamos ahora si el mensaje contiene éxito de la operación
+                let statusCode: { status: boolean, error: string, id: number } = JSON.parse(event.data);
+                if(statusCode.status) {
+                    // Se ha realizado la operación correctamente
+                    callback({ status: true, error: statusCode.error, id: statusCode.id });
+                } else {
+                    // Avisamos por pantalla y emitiremos el resultado
+                    console.warn("Ha fallado la petición de guardado del perfil al servidor!");
+                    console.warn("Error: "+statusCode.error);
+                    callback({ status: false, error: statusCode.error, id: null });
+                }
+            }
+        };
+        connection.onopen = function() {
+            // Enviamos el mensaje
+            connection.send(JSON.stringify({
+                tipo: "getProfileId",
+                profile: profile
+            }))
+        }
+    }
+
     public static saveProfileGameToServer(profile: {
             gamesWon: number,
             gamesLost: number,
-            googleId: string
+            googleId: number
         }, callback?: (error: { status: boolean, error: string }) => void) {
         // Primero, establecer la conexión con el servidor
         let connection = Network.getConnection();
@@ -663,6 +698,78 @@ export class Network {
         }
     }
 
+    public static saveProfileNameToServer(profile: {
+            name: string,
+            googleId: number
+        }, callback?: (error: { status: boolean, error: string }) => void) {
+        // Primero, establecer la conexión con el servidor
+        let connection = Network.getConnection();
+        // Definimos el evento de recepción de mensaje
+        connection.onmessage = function(event: MessageEvent) {
+            console.log(event.data);
+            // Comprobamos cuál ha sido la respuesta
+            if(event.data == "Command not understood") {
+                // Retornamos al callback el fallo de la conexión
+                callback({ status: false, error: event.data});
+            } else {
+                // En caso contrario, el comando se entendió. Comprobamos ahora si el mensaje contiene éxito de la operación
+                let statusCode: { status: boolean, error: string } = JSON.parse(event.data);
+                if(statusCode.status) {
+                    // Se ha realizado la operación correctamente
+                    callback({ status: true, error: statusCode.error });
+                } else {
+                    // Avisamos por pantalla y emitiremos el resultado
+                    console.warn("Ha fallado la petición de guardado del perfil al servidor!");
+                    console.warn("Error: "+statusCode.error);
+                    callback({ status: false, error: statusCode.error });
+                }
+            }
+        };
+        connection.onopen = function() {
+            // Enviamos el mensaje
+            connection.send(JSON.stringify({
+                tipo: "saveProfileName",
+                profile: profile
+            }))
+        }
+    }
+
+    public static saveProfileToServer(profile: {
+            armies: Array<{ id: number, name: string, pair: Array<{ type: string, number: number }> }>,
+            googleId: number
+        }, callback?: (error: { status: boolean, error: string }) => void) {
+        // Primero, establecer la conexión con el servidor
+        let connection = Network.getConnection();
+        // Definimos el evento de recepción de mensaje
+        connection.onmessage = function(event: MessageEvent) {
+            console.log(event.data);
+            // Comprobamos cuál ha sido la respuesta
+            if(event.data == "Command not understood") {
+                // Retornamos al callback el fallo de la conexión
+                callback({ status: false, error: event.data});
+            } else {
+                // En caso contrario, el comando se entendió. Comprobamos ahora si el mensaje contiene éxito de la operación
+                let statusCode: { status: boolean, error: string } = JSON.parse(event.data);
+                if(statusCode.status) {
+                    // Se ha realizado la operación correctamente
+                    callback({ status: true, error: statusCode.error });
+                } else {
+                    // Avisamos por pantalla y emitiremos el resultado
+                    console.warn("Ha fallado la petición de guardado del perfil al servidor!");
+                    console.warn("Error: "+statusCode.error);
+                    callback({ status: false, error: statusCode.error });
+                }
+            }
+        };
+        connection.onopen = function() {
+            // Enviamos el mensaje
+            connection.send(JSON.stringify({
+                tipo: "updateProfile",
+                profile: profile
+            }))
+        }
+    }
+
     public static sendWaitTurn(callback: (statusCode: { status: boolean, error: string, state: State }) => void) {
         // Como siempre, iniciamos la conexión
         let connection = Network.getConnection();
@@ -687,7 +794,7 @@ export class Network {
         }
     }
 
-    public static sendLogInInfo(callback: (statusCode: { status: boolean, error: string}) => void, logInData: string) {
+    public static sendLogInInfo(callback: (statusCode: { status: boolean, error: string}) => void, logInData: number) {
         let connection = Network.getConnection();
         connection.onopen = function() {
             connection.send(JSON.stringify({
