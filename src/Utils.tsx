@@ -830,6 +830,27 @@ export class Network {
             }
         }
     }
+
+    public static sendSyncState(state: State, callback: (statusCode: { status: boolean, state: any }) => void) {
+        let connection = Network.getConnection();
+        connection.onopen = () => {
+            let terrains = state.terrains;
+            let units = state.units;
+            connection.send(JSON.stringify({
+                tipo: "SYNC_STATE",
+                terrain: terrains,
+                units: units
+            }));
+        };
+        connection.onmessage = (message: MessageEvent) => {
+            if(message.data == "Command not understood") {
+                callback({ status: false, state: null });
+            } else {
+                let result = JSON.parse(message.data);
+                callback({ status: result.status, state: result.state });
+            }
+        }
+    }
 }
 
 export class Parsers {

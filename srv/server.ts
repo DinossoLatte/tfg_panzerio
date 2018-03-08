@@ -45,7 +45,8 @@ server.on('connection', function connect(ws) {
                 // Asumimos que lo que nos venga del cliente es correcto, sustituimos el estado
                 Store.saveState({
                     type: "SYNC_STATE",
-                    state: message.state
+                    terrains: message.terrains,
+                    units: message.units
                 });
                 ws.send(JSON.stringify({
                     status: true,

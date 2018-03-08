@@ -344,6 +344,9 @@ class PreGameMenu extends React.Component<any, any> {
                     rows: data.rows,
                     columns: data.columns
                 });
+                if(callback) {
+                    callback({ status: true, errorCode: "Success", map: null});
+                }
             }
         };
         connection.onopen = () => {
@@ -421,8 +424,17 @@ class PreGameMenu extends React.Component<any, any> {
             //Por ahora se hará este triple callback pero si hubiera multijugador no sería necesario, solo uno
             let game = this;
             game.getPlayerFromServer(game.state.selectedPlayer,(errorplayer: { status: boolean, errorCode: string, units: Array<Unit> })=>{
+                console.log("Entra en primero");                
                 game.getEnemyFromServer(game.state.selectedEnemy,(errorenemy: { status: boolean, errorCode: string, units: Array<Unit> })=>{
-                    game.getMapFromServer(game.state.selected, errorplayer.units, errorenemy.units);
+                    console.log("Entra en segundo");
+                    game.getMapFromServer(game.state.selected, errorplayer.units, errorenemy.units, (error: any) => {
+                        console.log("Entra en tercero");
+                        Network.sendSyncState(store.getState(), (statusCode) => {
+                            if(statusCode.status == false) {
+                                console.error("Ha fallado la sincronización con el servidor");
+                            }
+                        }); 
+                    });
                 })
             });
         }else{
