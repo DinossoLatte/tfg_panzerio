@@ -42,7 +42,100 @@ export class Profile extends React.Component<any, any> {
                 });
             }
         });
+        let prof = this;
+        prof.getUserIdFromServer((error: { status: boolean, errorCode: string, userId: number })=>{
+            prof.getArmyIdFromServer(error, (errorarmy: { status: boolean, errorCode: string, armyId: number[], armyName: string[] }) =>{
+                for(var i=0; i<errorarmy.armyId.length; i++){
+                    let arm = null;
+                    let armies = storeProfile.getState().armies;
+                    let name = errorarmy.armyName[i];
+                    prof.getUnitsFromServer(errorarmy.armyId[i],(errorunits: { status: boolean, errorCode: string, units: Array<{type: string, number: number}> }) =>{
+                        arm = new Army(errorunits.units,name);
+                        armies.push(arm);
+                        saveState(ProfileActions.save(prof, armies, storeProfile.getState().selectedArmy, storeProfile.getState().selected, storeProfile.getState().type));
+                    });
+                }
+            });
+        });
         this.forceUpdate();
+    }
+
+    getUnitsFromServer(army: number
+        , callback?: (error: { status: boolean, errorCode: string, units: Array<{type: string, number: number}> }) => void) {
+        // Primero, establecemos la conexión con el servidor
+        let game = this;
+        let connection = new WebSocket("ws://localhost:8080/");
+        connection.onmessage = function(event: MessageEvent) {
+            // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
+            // el comando se haya entendido
+            console.log("Datos "+JSON.stringify(event.data));
+            if(event.data == "Command not understood") {
+                // Lanzamos un error
+                console.log("Error when attempting to save, server didn't understood request");
+            } else {
+                let data = JSON.parse(event.data);
+                callback({status: data.status, errorCode: data.error, units: data.units});
+            }
+        };
+        connection.onopen = () => {
+            // Al abrirse la conexión, informamos al servidor del mapa
+            connection.send(JSON.stringify({
+                tipo: "getUnits",
+                armyclient: army
+            }));
+        }
+    }
+
+    getUserIdFromServer(callback?: (error: { status: boolean, errorCode: string, userId: number }) => void) {
+        // Primero, establecemos la conexión con el servidor
+        let connection = new WebSocket("ws://localhost:8080/");
+        let armyprofileclient: {
+            googleId: number
+        } = {
+            // Incluimos el id del usuario de Google
+            googleId: this.props.parentObject.state.clientId
+        };
+        Network.receiveProfileIdFromServer(armyprofileclient,(statusCode: { status: boolean, error: string, id: number }) => {
+            if(!statusCode.status) {
+                // Si ha salido mal, alertamos al usuario
+                console.log("No se ha podido obtener correctamente el perfil");
+            } else {
+                callback({status: statusCode.status, errorCode: statusCode.error, userId: statusCode.id});
+            }
+        });
+    }
+
+    getArmyIdFromServer(errorCode: { status: boolean, errorCode: string, userId: number }, callback?: (error: { status: boolean, errorCode: string, armyId: number[], armyName: string[] }) => void) {
+        // Primero, establecemos la conexión con el servidor
+        let connection = new WebSocket("ws://localhost:8080/");
+        let armyclient: {
+            userId: number
+        } = {
+            // Incluimos el id del usuario de Google
+            userId: errorCode.userId
+        };
+        connection.onmessage = function(event: MessageEvent) {
+            // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
+            // el comando se haya entendido
+            console.log("recepción de la información del servidor "+JSON.stringify(event));
+            if(event.data == "Command not understood") {
+                // Lanzamos un error
+                console.log("Error when attempting to save, server didn't understood request");
+                //No es necesario llamar al callback porque este ya es el nivel final (cliente)
+            } else {
+                console.log(event.data);
+                let data = JSON.parse(event.data);
+                callback({status: errorCode.status, errorCode: errorCode.errorCode, armyId: data.armyId, armyName: data.armyName});
+            }
+        };
+        connection.onopen = () => {
+            // Al abrirse la conexión, informamos al servidor del mapa
+            connection.send(JSON.stringify({
+                tipo: "getArmyId",
+                armyclient: armyclient
+            }));
+        }
+
     }
 
     // Este método cambiará el título
@@ -209,7 +302,7 @@ export class Profile extends React.Component<any, any> {
         let armies = [];
         // Iteramos por cada ejército
         for (var index = 0; index < storeProfile.getState().armies.length; index++) {
-            armies.push(<div id="army">{storeProfile.getState().armies[index].name}</div>);
+            armies.push(<div id="bold">{storeProfile.getState().armies[index].name}</div>);
             // Por cada ejército mostraremos también las unidades que lo contienen
             var unitLists = this.renderArmyContent(index)
             // Y los introducimos a la lista
@@ -512,7 +605,7 @@ export class Profile extends React.Component<any, any> {
             <div>
                 <img className="avatar" src="imgs/avatar.png" />
                 <p>Nombre: {this.state.username}</p>
-                <label> Modifique aquí su nombre: <input type="text" value={this.state.username} onChange={evt => this.updateUserName(evt.target.value)} />
+                <label id="bold">Modifique aquí su nombre: <input type="text" value={this.state.username} onChange={evt => this.updateUserName(evt.target.value)} />
                 <button id="saveProfile" name="saveProfile" className="saveProfileButton" onClick={this.onClickSaveProfileName.bind(this)}>Editar nombre</button>
                 </label>
                 <p>Partidas ganadas: {this.state.gameswon}</p>

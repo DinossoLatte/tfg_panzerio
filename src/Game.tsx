@@ -235,7 +235,6 @@ class PreGameMenu extends React.Component<any, any> {
 
     getUserIdFromServer(callback?: (error: { status: boolean, errorCode: string, userId: number }) => void) {
         // Primero, establecemos la conexión con el servidor
-        let game = this;
         let connection = new WebSocket("ws://localhost:8080/");
         let armyprofileclient: {
             googleId: number
