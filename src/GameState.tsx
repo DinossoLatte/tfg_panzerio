@@ -103,7 +103,7 @@ export class Actions {
         };
     }
 
-    static generateAttack(defendingUnitId: number, player: boolean, selectedUnit: number, googleId: string): Redux.AnyAction {
+    static generateAttack(defendingUnitId: number, player: boolean, selectedUnit: number, googleId: number): Redux.AnyAction {
         //Este estado se envía la unidad a atacar (se eliminará del array) y si es del jugador o no
         return {
             tipo: "SAVE_MAP",
@@ -304,7 +304,7 @@ export const Reducer: Redux.Reducer<State> =
                 if (state.units.filter(x => !x.player && x.name == "General").length == 0) {
                     actualstate = 1;
                     let profile: {
-                        googleId: string
+                        googleId: number
                     } = {
                         // Incluimos el id del usuario de Google
                         googleId: action.googleId
@@ -313,14 +313,14 @@ export const Reducer: Redux.Reducer<State> =
                         // Vemos cómo ha salido la operación
                         if(!statusCode.status) {
                             // Si ha salido mal, alertamos al usuario
-                            window.alert("No se ha podido obtener correctamente el perfil");
+                            console.log("No se ha podido obtener correctamente el perfil");
                         } else {
                             // En caso contrario, indicamos el guardado correcto
-                            window.alert("Se ha obtenido correctamente el perfil");
+                            console.log("Se ha obtenido correctamente el perfil, valor de lost: "+statusCode.gamesLost);
                             let profileupdated: {
                                 gamesWon: number,
                                 gamesLost: number,
-                                googleId: string
+                                googleId: number
                             } = {
                                 gamesWon: statusCode.gamesWon+1,
                                 gamesLost: statusCode.gamesLost,
@@ -331,10 +331,10 @@ export const Reducer: Redux.Reducer<State> =
                                 // Vemos cómo ha salido la operación
                                 if(!status.status) {
                                     // Si ha salido mal, alertamos al usuario
-                                    window.alert("No se ha podido actualizar correctamente el perfil");
+                                    console.log("No se ha podido actualizar correctamente el perfil");
                                 } else {
                                     // En caso contrario, indicamos el guardado correcto
-                                    window.alert("Se ha actualizado correctamente el perfil");
+                                    console.log("Se ha actualizado correctamente el perfil");
                                 }
                             });
                         }
@@ -342,7 +342,7 @@ export const Reducer: Redux.Reducer<State> =
                 } else if (state.units.filter(x => x.player && x.name == "General").length == 0) {
                     actualstate = 2;
                     let profile: {
-                        googleId: string
+                        googleId: number
                     } = {
                         // Incluimos el id del usuario de Google
                         googleId: action.googleId
@@ -351,14 +351,14 @@ export const Reducer: Redux.Reducer<State> =
                         // Vemos cómo ha salido la operación
                         if(!statusCode.status) {
                             // Si ha salido mal, alertamos al usuario
-                            window.alert("No se ha podido obtener correctamente el perfil");
+                            console.log("No se ha podido obtener correctamente el perfil");
                         } else {
                             // En caso contrario, indicamos el guardado correcto
-                            window.alert("Se ha obtenido correctamente el perfil");
+                            console.log("Se ha obtenido correctamente el perfil");
                             let profileupdated: {
                                 gamesWon: number,
                                 gamesLost: number,
-                                googleId: string
+                                googleId: number
                             } = {
                                 gamesWon: statusCode.gamesWon,
                                 gamesLost: statusCode.gamesLost+1,
@@ -369,10 +369,10 @@ export const Reducer: Redux.Reducer<State> =
                                 // Vemos cómo ha salido la operación
                                 if(!status.status) {
                                     // Si ha salido mal, alertamos al usuario
-                                    window.alert("No se ha podido actualizar correctamente el perfil");
+                                    console.log("No se ha podido actualizar correctamente el perfil");
                                 } else {
                                     // En caso contrario, indicamos el guardado correcto
-                                    window.alert("Se ha actualizado correctamente el perfil");
+                                    console.log("Se ha actualizado correctamente el perfil");
                                 }
                             });
                         }

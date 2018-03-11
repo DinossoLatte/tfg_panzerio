@@ -556,7 +556,7 @@ export class Network {
             gamesWon: number,
             gamesLost: number,
             armies: Array<{ id: number, name: string, pair: Array<{ type: string, number: number }> }>,
-            googleId: string
+            googleId: number
         }, callback?: (error: { status: boolean, errorCode: string }) => void) {
         // Primero, establecer la conexión con el servidor
         let connection = Network.getConnection();

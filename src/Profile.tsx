@@ -13,12 +13,132 @@ export class Profile extends React.Component<any, any> {
     constructor(props: any) {
         super(props);
         this.state = {
-            name: "Jugador",
-            googleId: this.props.parentObject.clientId
+            username: "Jugador",
+            gameswon: 0,
+            gameslost: 0,
+            name: "Nuevo batallón",
+            googleId: this.props.parentObject.state.clientId
         };
+        let getprofile: {
+            googleId: number
+        } = {
+            // Incluimos el id del usuario de Google
+            googleId: this.props.parentObject.state.clientId
+        };
+        console.log("en profile"+this.props.parentObject.state.clientId);
+        Network.receiveProfileFromServer(getprofile,(statusCode: { status: boolean, error: string, name: string, gamesWon: number, gamesLost: number }) => {
+            // Vemos cómo ha salido la operación
+            if(!statusCode.status) {
+                // Si ha salido mal, alertamos al usuario
+                console.log("No se ha podido obtener correctamente el perfil");
+            } else {
+                console.log("name="+statusCode.name+" ,gameswon="+statusCode.gamesWon);
+                this.setState({
+                    username: statusCode.name,
+                    gameswon: statusCode.gamesWon,
+                    gameslost: statusCode.gamesLost,
+                    name: "Nuevo batallón",
+                    googleId: this.props.parentObject.state.clientId
+                });
+            }
+        });
+        let prof = this;
+        prof.getUserIdFromServer((error: { status: boolean, errorCode: string, userId: number })=>{
+            prof.getArmyIdFromServer(error, (errorarmy: { status: boolean, errorCode: string, armyId: number[], armyName: string[] }) =>{
+                for(var i=0; i<errorarmy.armyId.length; i++){
+                    let arm = null;
+                    let armies = storeProfile.getState().armies;
+                    let name = errorarmy.armyName[i];
+                    prof.getUnitsFromServer(errorarmy.armyId[i],(errorunits: { status: boolean, errorCode: string, units: Array<{type: string, number: number}> }) =>{
+                        arm = new Army(errorunits.units,name);
+                        armies.push(arm);
+                        saveState(ProfileActions.save(prof, armies, storeProfile.getState().selectedArmy, storeProfile.getState().selected, storeProfile.getState().type));
+                    });
+                }
+            });
+        });
+        this.forceUpdate();
     }
 
-    /// Este método cambiará el título
+    getUnitsFromServer(army: number
+        , callback?: (error: { status: boolean, errorCode: string, units: Array<{type: string, number: number}> }) => void) {
+        // Primero, establecemos la conexión con el servidor
+        let game = this;
+        let connection = new WebSocket("ws://localhost:8080/");
+        connection.onmessage = function(event: MessageEvent) {
+            // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
+            // el comando se haya entendido
+            console.log("Datos "+JSON.stringify(event.data));
+            if(event.data == "Command not understood") {
+                // Lanzamos un error
+                console.log("Error when attempting to save, server didn't understood request");
+            } else {
+                let data = JSON.parse(event.data);
+                callback({status: data.status, errorCode: data.error, units: data.units});
+            }
+        };
+        connection.onopen = () => {
+            // Al abrirse la conexión, informamos al servidor del mapa
+            connection.send(JSON.stringify({
+                tipo: "getUnits",
+                armyclient: army
+            }));
+        }
+    }
+
+    getUserIdFromServer(callback?: (error: { status: boolean, errorCode: string, userId: number }) => void) {
+        // Primero, establecemos la conexión con el servidor
+        let connection = new WebSocket("ws://localhost:8080/");
+        let armyprofileclient: {
+            googleId: number
+        } = {
+            // Incluimos el id del usuario de Google
+            googleId: this.props.parentObject.state.clientId
+        };
+        Network.receiveProfileIdFromServer(armyprofileclient,(statusCode: { status: boolean, error: string, id: number }) => {
+            if(!statusCode.status) {
+                // Si ha salido mal, alertamos al usuario
+                console.log("No se ha podido obtener correctamente el perfil");
+            } else {
+                callback({status: statusCode.status, errorCode: statusCode.error, userId: statusCode.id});
+            }
+        });
+    }
+
+    getArmyIdFromServer(errorCode: { status: boolean, errorCode: string, userId: number }, callback?: (error: { status: boolean, errorCode: string, armyId: number[], armyName: string[] }) => void) {
+        // Primero, establecemos la conexión con el servidor
+        let connection = new WebSocket("ws://localhost:8080/");
+        let armyclient: {
+            userId: number
+        } = {
+            // Incluimos el id del usuario de Google
+            userId: errorCode.userId
+        };
+        connection.onmessage = function(event: MessageEvent) {
+            // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
+            // el comando se haya entendido
+            console.log("recepción de la información del servidor "+JSON.stringify(event));
+            if(event.data == "Command not understood") {
+                // Lanzamos un error
+                console.log("Error when attempting to save, server didn't understood request");
+                //No es necesario llamar al callback porque este ya es el nivel final (cliente)
+            } else {
+                console.log(event.data);
+                let data = JSON.parse(event.data);
+                callback({status: errorCode.status, errorCode: errorCode.errorCode, armyId: data.armyId, armyName: data.armyName});
+            }
+        };
+        connection.onopen = () => {
+            // Al abrirse la conexión, informamos al servidor del mapa
+            connection.send(JSON.stringify({
+                tipo: "getArmyId",
+                armyclient: armyclient
+            }));
+        }
+
+    }
+
+    // Este método cambiará el título
     updateInput(title: string) {
         if (title.trim() == "") {
             // Si nos viene el TODO (objeto), indicamos el batallón seleccionado
@@ -47,6 +167,55 @@ export class Profile extends React.Component<any, any> {
         }
         return army;
     }
+
+    /// Este listener se encarga de añadir a los ejércitos unidades
+    onClickAddUnit(event: React.MouseEvent<HTMLElement>) {
+        let army: Army;
+        // Comprobamos si la lista de ejércitos coinciden con el ejército seleccionado
+        if (storeProfile.getState().armies.length == storeProfile.getState().selectedArmy) {
+            // Si el índice es igual, se estará creando el ejército
+            // Definimos el ejército por defecto
+            army = new Army([{ type: "General", number: 1 }],
+                // Si el nombre no está definido, ponemos uno por defecto
+                this.state.name == null ? "Batallón " + storeProfile.getState().selectedArmy :
+                    // Si ya nos viene, le ponemos el que tengamos
+                    this.state.name);
+            // Si tenemos un ejército seleccionado
+            if (storeProfile.getState().selected != null) {
+                army.unitList.push({ type: storeProfile.getState().selected, number: 1 });
+            }
+            storeProfile.getState().armies.push(army);
+        } else {
+            // En otro caso, tenemos ya uno seleccionado
+            army = storeProfile.getState().armies[storeProfile.getState().selectedArmy];
+            // Si tenemos un ejército seleccionado
+            if (storeProfile.getState().selected != null) {
+                // Primero, comprobamos que exista el par tipo y número de unidades
+                let pairTypeNumberOfSelected = army.unitList.find(unitType => unitType.type == storeProfile.getState().selected);
+                // Comprobamos si el par existe
+                if(pairTypeNumberOfSelected) {
+                    // En el caso de que exista, cambiaremos el valor del número en el índice del seleccionado
+                    army.unitList[army.unitList.indexOf(pairTypeNumberOfSelected)].number = pairTypeNumberOfSelected.number + 1;
+                } else {
+                    // En otro caso, estamos iniciando el par tipo y número
+                    army.unitList.push({ type: storeProfile.getState().selected, number: 1});
+                }
+            }
+            // Si estamos en la fase 1 o edición de nombre del ejército
+            if (storeProfile.getState().type == "1" || storeProfile.getState().type == "3") {
+                // Entonces cambiamos el nombre del ejército
+                army.name =
+                    // Si el nombre no está definido, le asignamos uno por defecto
+                    this.state.name == null ? "Batallón " + storeProfile.getState().selectedArmy :
+                        // Si lo tenemos, ponemos el que está definido
+                        this.state.name;
+            }
+            // Finalmente ponemos el ejército, TODO de nuevo no es esta la forma de hacerlo
+            storeProfile.getState().armies[storeProfile.getState().selectedArmy] = army;
+        }
+        saveState(ProfileActions.save(this, storeProfile.getState().armies, storeProfile.getState().selectedArmy, storeProfile.getState().selected, storeProfile.getState().type));
+    }
+
     /// Este listener se encargará de cambiar a la edición del batallón
     onClickAddEdit(event: React.MouseEvent<HTMLElement>) {
         // Si está definido el nombre
@@ -133,7 +302,7 @@ export class Profile extends React.Component<any, any> {
         let armies = [];
         // Iteramos por cada ejército
         for (var index = 0; index < storeProfile.getState().armies.length; index++) {
-            armies.push(<div id="army">{storeProfile.getState().armies[index].name}</div>);
+            armies.push(<div id="bold">{storeProfile.getState().armies[index].name}</div>);
             // Por cada ejército mostraremos también las unidades que lo contienen
             var unitLists = this.renderArmyContent(index)
             // Y los introducimos a la lista
@@ -198,7 +367,7 @@ export class Profile extends React.Component<any, any> {
     }
 
     /// Este listener se encarga de añadir a los ejércitos unidades
-    onClickAddUnit(event: React.MouseEvent<HTMLElement>) {
+    onClickSetName(event: React.MouseEvent<HTMLElement>) {
         let army: Army;
         // Comprobamos si la lista de ejércitos coinciden con el ejército seleccionado
         if (storeProfile.getState().armies.length == storeProfile.getState().selectedArmy) {
@@ -209,27 +378,10 @@ export class Profile extends React.Component<any, any> {
                 this.state.name == null ? "Batallón " + storeProfile.getState().selectedArmy :
                     // Si ya nos viene, le ponemos el que tengamos
                     this.state.name);
-            // Si tenemos un ejército seleccionado
-            if (storeProfile.getState().selected != null) {
-                army.unitList.push({ type: storeProfile.getState().selected, number: 1 });
-            }
             storeProfile.getState().armies.push(army);
         } else {
             // En otro caso, tenemos ya uno seleccionado
             army = storeProfile.getState().armies[storeProfile.getState().selectedArmy];
-            // Si tenemos un ejército seleccionado
-            if (storeProfile.getState().selected != null) {
-                // Primero, comprobamos que exista el par tipo y número de unidades
-                let pairTypeNumberOfSelected = army.unitList.find(unitType => unitType.type == storeProfile.getState().selected);
-                // Comprobamos si el par existe
-                if(pairTypeNumberOfSelected) {
-                    // En el caso de que exista, cambiaremos el valor del número en el índice del seleccionado
-                    army.unitList[army.unitList.indexOf(pairTypeNumberOfSelected)].number = pairTypeNumberOfSelected.number + 1;
-                } else {
-                    // En otro caso, estamos iniciando el par tipo y número
-                    army.unitList.push({ type: storeProfile.getState().selected, number: 1});
-                }
-            }
             // Si estamos en la fase 1 o edición de nombre del ejército
             if (storeProfile.getState().type == "1" || storeProfile.getState().type == "3") {
                 // Entonces cambiamos el nombre del ejército
@@ -338,21 +490,69 @@ export class Profile extends React.Component<any, any> {
         window.alert("El siguiente texto le permitirá usar este ejército en el juego: \n"+exportedArmy);
     }
 
-    /// Este método se encargará de guardar el perfil en la BD
+    updateUserName(title: string) {
+        if (title.trim() == "") {
+            // Si nos viene el TODO (objeto), indicamos el batallón seleccionado
+            this.setState({ username: "Jugador"});
+        } else {
+            // En otro caso, mostraremos el elemento de entrada TODO ???
+            this.setState({ username: title });
+        }
+    }
+
+    // Este método se encargará de guardar el perfil en la BD
+    onClickSaveProfileName() {
+        // Primero, obtenemos el perfil en su totalidad
+        let profile: {
+            name: string,
+            googleId: number
+        } = {
+            name: this.state.username,
+            googleId: this.props.parentObject.state.clientId
+        };
+        console.log(profile.googleId);
+        // Una vez tengamos el perfil convertido, procedemos a guardarlo
+        Network.saveProfileNameToServer(profile, (statusCode: { status: boolean, error: string }) => {
+            // Vemos cómo ha salido la operación
+            if(!statusCode.status) {
+                // Si ha salido mal, alertamos al usuario
+                window.alert("No se ha podido guardar correctamente el perfil");
+            } else {
+                // En caso contrario, indicamos el guardado correcto
+                window.alert("Se ha guardado correctamente el perfil");
+                let getprofile: {
+                    googleId: number
+                } = {
+                    // Incluimos el id del usuario de Google
+                    googleId: profile.googleId
+                };
+                Network.receiveProfileFromServer(getprofile,(status: { status: boolean, error: string, name: string, gamesWon: number, gamesLost: number }) => {
+                    // Vemos cómo ha salido la operación
+                    if(!status.status) {
+                        // Si ha salido mal, alertamos al usuario
+                        console.log("No se ha podido obtener correctamente el perfil");
+                    } else {
+                        this.setState({
+                            username: status.name,
+                            gameswon: status.gamesWon,
+                            gameslost: status.gamesLost,
+                            name: "Nuevo batallón",
+                            googleId: getprofile.googleId
+                        });
+                    }
+                });
+            }
+        })
+        this.forceUpdate();
+    }
+
+    // Este método se encargará de guardar el perfil en la BD
     onClickSaveProfile() {
         // Primero, obtenemos el perfil en su totalidad
         let profile: {
-            id: number,
-            name: string,
-            gamesWon: number,
-            gamesLost: number,
             armies: Array<{ id: number, name: string, pair: Array<{ type: string, number: number }> }>,
-            googleId: string
+            googleId: number
         } = {
-            id: 0, // El id es = 0 al estar creandose el perfil
-            name: "Jugador",
-            gamesWon: 0, // El número de partidas jugadas en este momento será 0, por lo que ambas variables a 0.
-            gamesLost: 0,
             armies: storeProfile.getState().armies // Iteramos por los ejércitos
                 .map(army => { // Lo convertiremos en un map que almacena los datos
                     return {
@@ -366,31 +566,55 @@ export class Profile extends React.Component<any, any> {
         };
         console.log(profile.googleId);
         // Una vez tengamos el perfil convertido, procedemos a guardarlo
-        Network.sendProfileToServer(profile, (statusCode: { status: boolean, errorCode: string }) => {
+        Network.saveProfileToServer(profile, (error: { status: boolean, error: string }) => {
             // Vemos cómo ha salido la operación
-            if(!statusCode.status) {
+            if(!error.status) {
                 // Si ha salido mal, alertamos al usuario
                 window.alert("No se ha podido guardar correctamente el perfil");
             } else {
                 // En caso contrario, indicamos el guardado correcto
                 window.alert("Se ha guardado correctamente el perfil");
+                let getprofile: {
+                    googleId: number
+                } = {
+                    // Incluimos el id del usuario de Google
+                    googleId: profile.googleId
+                };
+                Network.receiveProfileFromServer(getprofile,(status: { status: boolean, error: string, name: string, gamesWon: number, gamesLost: number }) => {
+                    // Vemos cómo ha salido la operación
+                    if(!status.status) {
+                        // Si ha salido mal, alertamos al usuario
+                        console.log("No se ha podido obtener correctamente el perfil");
+                    } else {
+                        this.setState({
+                            username: status.name,
+                            gameswon: status.gamesWon,
+                            gameslost: status.gamesLost,
+                            name: "Nuevo batallón",
+                            googleId: getprofile.googleId
+                        });
+                    }
+                });
             }
         })
+        this.forceUpdate();
     }
 
     render() {
         return (
             <div>
                 <img className="avatar" src="imgs/avatar.png" />
-                <p>Nombre: Jugador</p>
-                <p>Partidas ganadas: x</p>
-                <p>Partidas perdidas: y</p>
-                <p>Nivel: z</p>
+                <p>Nombre: {this.state.username}</p>
+                <label id="bold">Modifique aquí su nombre: <input type="text" value={this.state.username} onChange={evt => this.updateUserName(evt.target.value)} />
+                <button id="saveProfile" name="saveProfile" className="saveProfileButton" onClick={this.onClickSaveProfileName.bind(this)}>Editar nombre</button>
+                </label>
+                <p>Partidas ganadas: {this.state.gameswon}</p>
+                <p>Partidas perdidas: {this.state.gameslost}</p>
                 {storeProfile.getState().type != "0" ? <button id="listArmy" name="listArmy" className="listArmyButton" onClick={this.onClickList.bind(this)}>Mostrar batallones</button> : ""}
                 {storeProfile.getState().type != "1" ? <button id="createArmy" name="createArmy" className="createArmyButton" onClick={this.onClickCreateArmy.bind(this)}>Crear un nuevo ejército</button> : ""}
                 {storeProfile.getState().type != "2" ? <button id="editArmy" name="editArmy" className="editArmyButton" onClick={this.onClickEditArmy.bind(this)}>Editar un ejército</button> : ""}
                 {storeProfile.getState().type > "2" ? <button id="exportArmy" name="exportArmy" className="exportArmyButton" onClick={this.onClickExportArmy.bind(this)}>Exportar ejército</button> : ""}
-                <button id="saveProfile" name="saveProfile" className="saveProfileButton" onClick={this.onClickSaveProfile.bind(this)}>Guardar perfil</button>
+                <button id="saveProfile" name="saveProfile" className="saveProfileButton" onClick={this.onClickSaveProfile.bind(this)}>Guardar batallones</button>
                 <button id="exitButton" name="exitButton" onClick={this.onClickExitMenu.bind(this)}>Volver al menú</button>
                 {storeProfile.getState().type >= "2" && storeProfile.getState().armies.length > 0 ? <div>
                     <label> Selecciona el batallón:
@@ -413,7 +637,7 @@ export class Profile extends React.Component<any, any> {
                 </div> : ""}
                 {(storeProfile.getState().type == "1" || storeProfile.getState().type == "3") && storeProfile.getState().selectedArmy != null ? <div>
                     Nombre: <input type="text" value={this.state.name} onChange={evt => this.updateInput(evt.target.value)} />
-                    <button id="setName" name="setName" className="setNameButton" onClick={this.onClickAddUnit.bind(this)}>Establecer nombre</button>
+                    <button id="setName" name="setName" className="setNameButton" onClick={this.onClickSetName.bind(this)}>Establecer nombre</button>
                 </div> : ""}
                 {storeProfile.getState().type == "5" && storeProfile.getState().armies[storeProfile.getState().selectedArmy].unitList.length > 1 ? <div>
                     <label> Selecciona el tipo de unidad:

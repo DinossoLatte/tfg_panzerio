@@ -24,14 +24,13 @@ export type State = {
 export var InitialState: State = {
     turn: 0,
     actualState: 0,
-    units: [General.create(new Pair(-1, -1), true), Infantry.create(new Pair(-1, -1), true), Tank.create(new Pair(-1, -1), true),Paratrooper.create(new Pair(-1, -1), true),
-        Artillery.create(new Pair(-1, -1), true), General.create(new Pair(-1, -1), false), Infantry.create(new Pair(-1, -1), false), Tank.create(new Pair(-1, -1), false)],
-    visitables: null,
-    terrains: [ImpassableMountain.create(new Pair(2, 2)), ImpassableMountain.create(new Pair(3, 2)), Hills.create(new Pair(2, 3)), Forest.create(new Pair(3, 3))],
-    cursorPosition: new Pair(0, 0),
-    map: null,
-    selectedUnit: null,
-    type: "SET_LISTENER"
+    units: [],
+    visitables: [],
+    terrains: [],
+    cursorPosition: undefined,
+    map: undefined,
+    selectedUnit: undefined,
+    type: undefined
 }
 
 export function parseActionMap(data: any) {
@@ -298,15 +297,15 @@ export const Reducer : Redux.Reducer<State> =
             case "SYNC_STATE":
                 // Retornamos como estado el dado por la acción
                 return {
-                    turn: action.state.turn,
-                    actualState: action.state.actualState,
-                    units: action.state.units,
-                    visitables: action.state.visitables,
-                    terrains: action.state.terrains,
-                    map: action.state.map,
-                    cursorPosition: action.state.cursorPosition,
-                    selectedUnit: action.state.selectedUnit,
-                    type: action.state.type
+                    turn: state.turn,
+                    actualState: state.actualState,
+                    units: action.units,
+                    visitables: state.visitables,
+                    terrains: action.terrains,
+                    map: state.map,
+                    cursorPosition: state.cursorPosition,
+                    selectedUnit: state.selectedUnit,
+                    type: state.type
                 };
             default:
                 return state;

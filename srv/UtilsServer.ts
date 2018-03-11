@@ -28,7 +28,7 @@ export class MapsDatabase {
     /// al terminar ejecutará el callback introducido con el código.
     /// code.status indicará si ha habido un error
     /// code.error indicará el error o en su defecto, "Success"
-    public static saveMap(mapData: { rows: number, columns: number, map: any[], name: string, user: string }, callback: (error: Error) => void) {
+    public static saveMap(mapData: { rows: number, columns: number, map: any[], name: string, googleId: number }, callback: (error: Error) => void) {
         // Inicializamos o no la BD
         MapsDatabase.initOrCallDatabase((err: Error) => {
             // Comprobamos el mensaje de error
@@ -39,13 +39,13 @@ export class MapsDatabase {
             } else {
                 console.log(mapData);
                 // Preparamos el guardado del mapa
-                let statement = MapsDatabase.connection.prepare("INSERT INTO map(rows, cols, name, user) VALUES ($rows, $cols, $name, $user)");
+                let statement = MapsDatabase.connection.prepare("INSERT INTO map(rows, cols, name, googleId) VALUES ($rows, $cols, $name, $googleId)");
                 // Y lo ejecutamos con los valores obtenidos del mapa
                 statement.run({
                     $rows: mapData.rows,
                     $cols: mapData.columns,
                     $name: mapData.name,
-                    $user: mapData.user
+                    $googleId: mapData.googleId
                 }, (runResult: sqlite.RunResult, error: Error) => {
                     // Comprobamos si hay error:
                     if(err) {
@@ -149,7 +149,7 @@ export class MapsDatabase {
         });
     }
 
-    public static getMapId(callback: (code: { status: boolean, error: string, mapId: number[], mapName: string[] }) => void) {
+    public static getMapId(mapclient: {googleId: number}, callback: (code: { status: boolean, error: string, mapId: number[], mapName: string[] }) => void) {
         // Inicializamos o no la BD
         MapsDatabase.initOrCallDatabase((err: Error) => {
             // Comprobamos el mensaje de error
@@ -161,15 +161,17 @@ export class MapsDatabase {
                 var i = 0;
                 let mapId : number[] = [];
                 let mapName : string[] = [];
-                MapsDatabase.connection.each("SELECT id, name FROM map;", (err: Error, rows: any) => {
+                MapsDatabase.connection.each("SELECT id, name, googleId FROM map;", (err: Error, rows: any) => {
                     // Si hay error
                     if(err) {
                         console.log("Error trying to get the ID");
                         callback({ status: false, error: "Error trying to get the ID", mapId: null, mapName: null });
                     } else {
                         // En este caso, tendremos los datos
-                        mapId.push(Number(rows['id']));
-                        mapName.push(rows['name']);
+                        if(Number(mapclient.googleId)==Number(rows['googleId'])){
+                            mapId.push(Number(rows['id']));
+                            mapName.push(rows['name']);
+                        }
                     }
                 }, () => {
 			callback({ status: true, error: "Success", mapId: mapId, mapName: mapName });
@@ -191,7 +193,98 @@ export class ProfileDatabase {
         }
     }
 
-    public static getProfile(profile: {googleId: string}, callback: (code: { status: boolean, error: string, name: string, gamesWon: number, gamesLost: number }) => void) {
+    public static getArmyId(armyclient: {userId: number}, callback: (code: { status: boolean, error: string, armyId: number[], armyName: string[] }) => void) {
+        // Inicializamos o no la BD
+        ProfileDatabase.initOrCallDatabase((err: Error) => {
+            // Comprobamos el mensaje de error
+            if(err) {
+                // Si hay error, lo mostramos en pantalla
+                console.error("Se ha producido un error intentando abrir la BD!");
+                callback({ status: false, error: "Can't connect to DB", armyId: null, armyName: null });
+            } else {
+                var i = 0;
+                let armyId : number[] = [];
+                let armyName : string[] = [];
+                console.log("valor del armyclient: "+armyclient.userId);
+                ProfileDatabase.connection.each("SELECT id, name FROM army WHERE id_profile = $userId", {$userId: armyclient.userId}, (err: Error, rows: any) => {
+                    // Si hay error
+                    if(err) {
+                        console.log("Error trying to get the ID");
+                        callback({ status: false, error: "Error trying to get the ID", armyId: null, armyName: null });
+                    } else {
+                        // En este caso, tendremos los datos
+                        armyId.push(Number(rows['id']));
+                        armyName.push(rows['name']);
+                    }
+                }, () => {
+			callback({ status: true, error: "Success", armyId: armyId, armyName: armyName });
+		});
+            }
+        });
+    }
+
+    public static getUnits(armyId: number, callback: (code: { status: boolean, error: string, units: {type: string, number: number}[] }) => void) {
+        // Inicializamos o no la BD
+        ProfileDatabase.initOrCallDatabase((err: Error) => {
+            // Comprobamos el mensaje de error
+            if(err) {
+                // Si hay error, lo mostramos en pantalla
+                console.error("Se ha producido un error intentando abrir la BD!");
+                callback({ status: false, error: "Can't connect to DB", units: null });
+            } else {
+                var i = 0;
+                let units : {type: string, number: number}[] = [];
+                console.log("valor del armyclient: "+armyId);
+                ProfileDatabase.connection.each("SELECT type, number FROM unit_pair WHERE id_army = $armyId", {$armyId: armyId}, (err: Error, rows: any) => {
+                    // Si hay error
+                    if(err) {
+                        console.log("Error trying to get the ID");
+                        callback({ status: false, error: "Error trying to get the ID", units: null });
+                    } else {
+                        // En este caso, tendremos los datos
+                        units.push({type: rows['type'].toString(), number: Number(rows['number'])});
+                    }
+                }, () => {
+			callback({ status: true, error: "Success", units: units });
+		});
+            }
+        });
+    }
+
+    public static getProfileId(profile: {googleId: number}, callback: (code: { status: boolean, error: string, id: number }) => void) {
+        // Inicializamos o no la BD
+        ProfileDatabase.initOrCallDatabase((err: Error) => {
+            // Comprobamos el mensaje de error
+            if(err) {
+                // Si hay error, lo mostramos en pantalla
+                console.error("Se ha producido un error intentando abrir la BD!");
+                callback({ status: false, error: "Can't connect to DB", id: null });
+            } else {
+                let id: number = null;
+                console.log("antes de la query");
+                //ProfileDatabase.connection.get("SELECT name, games_won, games_lost FROM profile WHERE googleId = '$googleId';", {$googleId: profile.googleId}, (err: Error, rows: any) => {
+                ProfileDatabase.connection.each("SELECT id, googleId FROM profile;", (err: Error, rows: any) => {
+                    // Si hay error
+                    if(err) {
+                        console.log("Error trying to get the ID");
+                        callback({ status: false, error: "Error trying to get the ID", id: null });
+                    } else {
+                        // En este caso, tendremos los datos
+                        console.log("valor 1 = "+Number(rows['googleId'])+" , valor 2 = "+profile.googleId);
+                        if(Number(rows['googleId'])==Number(profile.googleId)){
+                            console.log("entra en este if");
+                            id = Number(rows['id']);
+                        }
+                    }
+                }, () => {
+                        console.log("valor del id en el callback profileId "+id);
+			            callback({ status: true, error: "Success", id: id });
+		        });
+            }
+        });
+    }
+
+    public static getProfile(profile: {googleId: number}, callback: (code: { status: boolean, error: string, name: string, gamesWon: number, gamesLost: number }) => void) {
         // Inicializamos o no la BD
         ProfileDatabase.initOrCallDatabase((err: Error) => {
             // Comprobamos el mensaje de error
@@ -212,14 +305,16 @@ export class ProfileDatabase {
                         callback({ status: false, error: "Error trying to get the ID", name: null, gamesWon: null, gamesLost: null });
                     } else {
                         // En este caso, tendremos los datos
-                        if(rows['googleId'].toString()==profile.googleId){
+                        console.log("valor 1 = "+Number(rows['googleId'])+" , valor 2 = "+profile.googleId);
+                        if(Number(rows['googleId'])==Number(profile.googleId)){
+                            console.log("entra en este if");
                             name = rows['name'].toString();
                             gamesWon = Number(rows['games_won']);
                             gamesLost = Number(rows['games_lost']);
                         }
                     }
                 }, () => {
-                        console.log("valor del name en el callback "+name);
+                        console.log("valor del  en el callback "+name);
 			            callback({ status: true, error: "Success", name: name, gamesWon: gamesWon, gamesLost: gamesLost });
 		        });
             }
@@ -229,7 +324,7 @@ export class ProfileDatabase {
     //TODO tampoco funciona por la misma razón del método anterior ya que no filtra correctamente por googleId, en caso de que no funcionara se podría hacer
     //un bucle recorriendo para obtener todos los id y con un if se obtiene el id que corresponde a la fila del usuario y editar los valores de ese id,
     //ya que no debería haber problemas raros con el where indicando a un id ya que se ha hecho muchas veces
-    public static saveProfileGame(profile: { gamesWon: number, gamesLost: number, googleId: string}, callback: (statusCode: StatusCode) => void) {
+    public static saveProfileGame(profile: { gamesWon: number, gamesLost: number, googleId: number}, callback: (statusCode: StatusCode) => void) {
         // Definimos el resultado de la transacción
         let result = { status: true, error: "Success" };
         // Primero, establecemos la conexión con la BD
@@ -242,24 +337,60 @@ export class ProfileDatabase {
                 // En el caso de poder establecer la conexión, primero insertamos el perfil del usuario
                 // Iniciamos el bloque serializado
                 ProfileDatabase.connection.serialize(() => {
-                    // Iniciamos la transacción
-                    ProfileDatabase.connection.run("BEGIN TRANSACTION");
                     // Iniciamos el statement con los datos del perfil
                     let statement = ProfileDatabase.connection.prepare(
-                        "UPDATE profile SET games_won = $gamesWon, games_lost = $gamesLost WHERE googleId = \'$googleId\';");
+                        "UPDATE profile SET games_won = $gamesWon, games_lost = $gamesLost WHERE googleId = $googleId;");
                     // Habiendo preparado el comando, introducimos los datos
                     statement.run({
                         $gamesWon: profile.gamesWon,
                         $gamesLost: profile.gamesLost,
                         $googleId: profile.googleId
-                    });
-                    // Finalmente, cerramos la transacción
-                    ProfileDatabase.connection.run("END TRANSACTION", (runResult: sqlite.RunResult, err: Error) => {
+                    }, (runResult: sqlite.RunResult, error: Error) => {
+                        console.log(error);
+                        // Comprobamos si hay error
                         if(err) {
-                            // De nuevo, cambiamos el result
+                            // En el caso de que haya, cambiamos result
                             result = { status: false, error: err.message };
                         }
-                        // y en ambos casos, llamaremos a callback
+                        // En cualquier otro caso, no hacemos nada al guardarse correctamente el contenido
+                        // Una vez terminada la ejecución, avisamos al callback
+                        callback(result);
+                    });
+                });
+            }
+        });
+    }
+
+    //Este método sirve para actualizar el nombre del jugador
+    public static saveProfileName(profile: { name: number, googleId: number }, callback: (statusCode: StatusCode) => void) {
+        // Definimos el resultado de la transacción
+        let result = { status: true, error: "Success" };
+        // Primero, establecemos la conexión con la BD
+        ProfileDatabase.initOrCallDatabase((err: Error) => {
+            // En el caso de existir un error, lo interpretamos
+            if(err) {
+                // Retornamos un código de error para el callback
+                result = { status: false, error: "Couldn't establish connection with DB" };
+            } else {
+                // En el caso de poder establecer la conexión, primero insertamos el perfil del usuario
+                // Iniciamos el bloque serializado
+                ProfileDatabase.connection.serialize(() => {
+                    // Iniciamos el statement con los datos del perfil
+                    let statement = ProfileDatabase.connection.prepare(
+                        "UPDATE profile SET name = $name WHERE googleId = $googleId;");
+                    // Habiendo preparado el comando, introducimos los datos
+                    statement.run({
+                        $name: profile.name,
+                        $googleId: profile.googleId
+                    }, (runResult: sqlite.RunResult, error: Error) => {
+                        console.log(error);
+                        // Comprobamos si hay error
+                        if(err) {
+                            // En el caso de que haya, cambiamos result
+                            result = { status: false, error: err.message };
+                        }
+                        // En cualquier otro caso, no hacemos nada al guardarse correctamente el contenido
+                        // Una vez terminada la ejecución, avisamos al callback
                         callback(result);
                     });
                 });
@@ -372,7 +503,7 @@ export class ProfileDatabase {
 
     /// Este método se encargará de guardar el perfil en la BD.
     /// ATENCIÓN: ¡Este método sólo se realizará de forma transaccional!
-    public static saveProfile(profile: { id: number, name: string, gamesWon: number, gamesLost: number, armies: Array<{ id: number, name: string, pair: Array<{ type: string, number: number }>}>, googleId: string}, callback: (statusCode: StatusCode) => void) {
+    public static saveProfile(profile: { id: number, name: string, gamesWon: number, gamesLost: number, armies: Array<{ id: number, name: string, pair: Array<{ type: string, number: number }>}>, googleId: number}, callback: (statusCode: StatusCode) => void) {
         // Definimos el resultado de la transacción
         let result = { status: true, error: "Success" };
         // Primero, establecemos la conexión con la BD
@@ -417,6 +548,59 @@ export class ProfileDatabase {
                                 });
                             }
                             // Una vez se termine la operación, emitiremos un mensaje de éxito
+                        }
+                    });
+                    // Finalmente, cerramos la transacción
+                    ProfileDatabase.connection.run("END TRANSACTION", (runResult: sqlite.RunResult, err: Error) => {
+                        if(err) {
+                            // De nuevo, cambiamos el result
+                            result = { status: false, error: err.message };
+                        }
+                        // y en ambos casos, llamaremos a callback
+                        callback(result);
+                    });
+                });
+            }
+        });
+    }
+
+    public static updateProfile(profile: { armies: Array<{ id: number, name: string, pair: Array<{ type: string, number: number }>}>, googleId: number}, callback: (statusCode: StatusCode) => void) {
+        // Definimos el resultado de la transacción
+        let result = { status: true, error: "Success" };
+        // Primero, establecemos la conexión con la BD
+        ProfileDatabase.initOrCallDatabase((err: Error) => {
+            // En el caso de existir un error, lo interpretamos
+            if(err) {
+                // Retornamos un código de error para el callback
+                result = { status: false, error: "Couldn't establish connection with DB" };
+            } else {
+                // En el caso de poder establecer la conexión, primero insertamos el perfil del usuario
+                // Iniciamos el bloque serializado
+                ProfileDatabase.connection.serialize(() => {
+                    // Iniciamos la transacción
+                    ProfileDatabase.connection.run("BEGIN TRANSACTION");
+                    // Ahora, para crear los objetos hijos, necesitamos obtener el id del perfil
+                    ProfileDatabase.connection.each("SELECT id, googleId FROM profile", (stmt: sqlite.Statement, row: any, err: Error) => {
+                        // Comprobamos el error
+                        if (err) {
+                            result = { status: false, error: err.message };
+                        } else {
+                            if(Number(profile.googleId)==Number(row['googleId'])){
+                                // Teniendo el id, podremos crear los ejércitos del perfil
+                                let profileIndex = row['id'] as number;
+                                for (let armyIndex = 0; armyIndex < profile.armies.length; armyIndex++) {
+                                    // Obtenemos el ejército
+                                    let army = profile.armies[armyIndex];
+                                    // Y lo guardamos
+                                    ProfileDatabase.saveArmy(profileIndex, army, (statusCode: StatusCode) => {
+                                        // En el caso de encontrar un problema, cambiaremos result
+                                        if (statusCode.status) {
+                                            result = statusCode;
+                                        }
+                                    });
+                                }
+                                // Una vez se termine la operación, emitiremos un mensaje de éxito
+                            }
                         }
                     });
                     // Finalmente, cerramos la transacción
