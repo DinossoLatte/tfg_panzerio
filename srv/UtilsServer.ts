@@ -40,8 +40,14 @@ export class MapsDatabase {
                 statement.run({
                     $id: mapData.id
                 });
+                let terrstatement = MapsDatabase.connection.prepare("DELETE FROM terrain WHERE id_map=$id_map");
+                // Y lo ejecutamos con los valores obtenidos del mapa
+                terrstatement.run({
+                    $id_map: mapData.id
+                });
                 // Indicamos que hemos terminado de añadir elementos
                 statement.finalize();
+                terrstatement.finalize();
             }
         });
     }
@@ -59,7 +65,7 @@ export class MapsDatabase {
                 console.error("Se ha producido un error intentando abrir la BD!");
                 callback(err);
             } else {
-                if(mapData.id==null){
+                if(mapData.id==null||mapData.id==0){
                     console.log(mapData);
                     // Preparamos el guardado del mapa
                     let statement = MapsDatabase.connection.prepare("INSERT INTO map(rows, cols, name, googleId) VALUES ($rows, $cols, $name, $googleId)");
@@ -168,7 +174,7 @@ export class MapsDatabase {
     // obtenemos el mapa
     /**/
 
-    public static getMap(mapData: number, callback: (code: { status: boolean, error: string, map: { rows: number, columns: number, name: string,
+    public static getMap(mapData: {id: number}, callback: (code: { status: boolean, error: string, map: { rows: number, columns: number, mapName: string,
         terrains: {name: string, image: string, movement_penalty: number, position_row: number, position_cols: number,
              defense_weak: number, defense_strong: number, attack_weak: number, attack_strong: number}[] }}) => void) {
         // Inicializamos o no la BD
@@ -184,35 +190,36 @@ export class MapsDatabase {
                 console.error("Se ha producido un error intentando abrir la BD!");
                 callback({ status: false, error: "Can't connect to DB", map: null });
             } else {
-                MapsDatabase.connection.get("SELECT rows, cols, name FROM map where id = $mapId;", {$mapId: Number(mapData)}, (err: Error, rows: any) => {
+                MapsDatabase.connection.each("SELECT rows, cols, name, id FROM map", (err: Error, rows1: any) => {
                     // Si hay error
                     if(err) {
                         console.log("Error trying to get rows and cols");
                         callback({ status: false, error: "Error trying to get rows and cols", map: null });
                     } else {
-                        // En este caso, tendremos los datos
-                        console.log(JSON.stringify(mapData));
-                        console.log(JSON.stringify(rows));
-                        row = rows['rows'];
-                        columns = rows['cols'];
-                        name = rows['name'];
-                        MapsDatabase.connection.each("SELECT name, image, movement_penalty, position_row, position_cols, defense_weak, defense_strong, attack_weak, attack_strong FROM terrain where id_map = $mapId;", {$mapId: mapData}, (err: Error, rows2: any) => {
-                            // Si hay error
-                            console.log(JSON.stringify(err));
-                            if(err) {
-                                console.log("Error trying to get the map");
-                                callback({ status: false, error: "Error trying to get the map", map: null });
-                            } else {
-                                // En este caso, tendremos los datos
-                                console.log("Aqui "+rows2['name']);
-                                console.log(rows2['image']);
-                                terrains.push({name: rows2['name'].toString(), image: rows2['image'].toString(), movement_penalty: Number(rows2['movement_penalty']), position_row: Number(rows2['position_row']),
-                                    position_cols: Number(rows2['position_cols']), defense_weak: Number(rows2['defense_weak']), defense_strong: Number(rows2['defense_strong']), attack_weak: Number(rows2['attack_weak']),
-                                    attack_strong: Number(rows2['attack_strong'])});
-                            }
-                        }, () => {
-                            callback({status: true, error: "Success", map:{rows: row, columns: columns, name: name, terrains: terrains}});
-                        });
+                        if(Number(rows1['id'])===Number(mapData)){
+                            console.log("entra en el if");
+                            // En este caso, tendremos los datos
+                            row = rows1['rows'];
+                            columns = rows1['cols'];
+                            name = rows1['name'];
+                            MapsDatabase.connection.each("SELECT name, image, movement_penalty, position_row, position_cols, defense_weak, defense_strong, attack_weak, attack_strong FROM terrain where id_map = $mapId;", {$mapId: mapData}, (err: Error, rows2: any) => {
+                                // Si hay error
+                                console.log(JSON.stringify(err));
+                                if(err) {
+                                    console.log("Error trying to get the map");
+                                    callback({ status: false, error: "Error trying to get the map", map: null });
+                                } else {
+                                    // En este caso, tendremos los datos
+                                    console.log("Aqui "+rows2['name']);
+                                    console.log(rows2['image']);
+                                    terrains.push({name: rows2['name'].toString(), image: rows2['image'].toString(), movement_penalty: Number(rows2['movement_penalty']), position_row: Number(rows2['position_row']),
+                                        position_cols: Number(rows2['position_cols']), defense_weak: Number(rows2['defense_weak']), defense_strong: Number(rows2['defense_strong']), attack_weak: Number(rows2['attack_weak']),
+                                        attack_strong: Number(rows2['attack_strong'])});
+                                }
+                            }, () => {
+                                callback({status: true, error: "Success", map:{rows: row, columns: columns, mapName: name, terrains: terrains}});
+                            });
+                        }
                     }
                 });
             }
