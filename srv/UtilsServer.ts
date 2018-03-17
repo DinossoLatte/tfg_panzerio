@@ -193,6 +193,41 @@ export class ProfileDatabase {
         }
     }
 
+    public static deleteArmy(userId: number, callback: (code: { status: boolean, error: string }) => void) {
+        // Inicializamos o no la BD
+        ProfileDatabase.initOrCallDatabase((err: Error) => {
+            // Comprobamos el mensaje de error
+            if(err) {
+                // Si hay error, lo mostramos en pantalla
+                console.error("Se ha producido un error intentando abrir la BD!");
+                callback({ status: false, error: "Can't connect to DB" });
+            } else {
+                var i = 0;
+                console.log("valor del armyclient: "+userId);
+                let result = { status: true, error: "Success" };
+                ProfileDatabase.connection.serialize(() => {
+                    // Iniciamos el statement con los datos del perfil
+                    let statement = ProfileDatabase.connection.prepare(
+                        "DELETE FROM army WHERE id_profile = $userId;");
+                    // Habiendo preparado el comando, introducimos los datos
+                    statement.run({
+                        $userId: userId
+                    }, (runResult: sqlite.RunResult, error: Error) => {
+                        console.log(error);
+                        // Comprobamos si hay error
+                        if(err) {
+                            // En el caso de que haya, cambiamos result
+                            result = { status: false, error: err.message };
+                        }
+                        // En cualquier otro caso, no hacemos nada al guardarse correctamente el contenido
+                        // Una vez terminada la ejecución, avisamos al callback
+                        callback(result);
+                    });
+                });
+            }
+        });
+    }
+
     public static getArmyId(armyclient: {userId: number}, callback: (code: { status: boolean, error: string, armyId: number[], armyName: string[] }) => void) {
         // Inicializamos o no la BD
         ProfileDatabase.initOrCallDatabase((err: Error) => {
@@ -218,7 +253,7 @@ export class ProfileDatabase {
                     }
                 }, () => {
 			callback({ status: true, error: "Success", armyId: armyId, armyName: armyName });
-		});
+		});103227525887982030000
             }
         });
     }
@@ -576,6 +611,7 @@ export class ProfileDatabase {
             } else {
                 // En el caso de poder establecer la conexión, primero insertamos el perfil del usuario
                 // Iniciamos el bloque serializado
+                console.log("no hay primer error en updateProfile");
                 ProfileDatabase.connection.serialize(() => {
                     // Iniciamos la transacción
                     ProfileDatabase.connection.run("BEGIN TRANSACTION");
@@ -586,16 +622,26 @@ export class ProfileDatabase {
                             result = { status: false, error: err.message };
                         } else {
                             if(Number(profile.googleId)==Number(row['googleId'])){
+                                console.log("entra en el if de googleid");
                                 // Teniendo el id, podremos crear los ejércitos del perfil
                                 let profileIndex = row['id'] as number;
                                 for (let armyIndex = 0; armyIndex < profile.armies.length; armyIndex++) {
                                     // Obtenemos el ejército
                                     let army = profile.armies[armyIndex];
                                     // Y lo guardamos
-                                    ProfileDatabase.saveArmy(profileIndex, army, (statusCode: StatusCode) => {
+                                    ProfileDatabase.deleteArmy(profileIndex,(statusCode: StatusCode) => {
                                         // En el caso de encontrar un problema, cambiaremos result
                                         if (statusCode.status) {
+                                            console.log("Hay fallo "+statusCode);
                                             result = statusCode;
+                                        }else{
+                                            console.log("Entra en el else");
+                                            ProfileDatabase.saveArmy(profileIndex, army, (statusCode: StatusCode) => {
+                                                // En el caso de encontrar un problema, cambiaremos result
+                                                if (statusCode.status) {
+                                                    result = statusCode;
+                                                }
+                                            });
                                         }
                                     });
                                 }

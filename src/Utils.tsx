@@ -742,12 +742,13 @@ export class Network {
         let connection = Network.getConnection();
         // Definimos el evento de recepción de mensaje
         connection.onmessage = function(event: MessageEvent) {
-            console.log(event.data);
+            console.log("Entra en el onmessage");
             // Comprobamos cuál ha sido la respuesta
             if(event.data == "Command not understood") {
                 // Retornamos al callback el fallo de la conexión
                 callback({ status: false, error: event.data});
             } else {
+                console.log("Se ha entendido el mensaje");
                 // En caso contrario, el comando se entendió. Comprobamos ahora si el mensaje contiene éxito de la operación
                 let statusCode: { status: boolean, error: string } = JSON.parse(event.data);
                 if(statusCode.status) {

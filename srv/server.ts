@@ -317,7 +317,9 @@ server.on('connection', function connect(ws) {
             case "updateProfile":
                 // Extraemos el perfil
                 let updateprofile = message.profile;
+                console.log("llega a updateprofile");
                 UtilsServer.ProfileDatabase.updateProfile(updateprofile, (statusCode: UtilsServer.StatusCode) => {
+                    console.log("ejecuta el updateprofile");
                     // Devolveremos el contenido de la petición
                     ws.send(JSON.stringify(statusCode));
                 });
