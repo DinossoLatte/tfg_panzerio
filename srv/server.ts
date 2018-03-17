@@ -75,6 +75,28 @@ server.on('connection', function connect(ws) {
                 //Enviamos el nuevo estado
                 ws.send(JSON.stringify(StoreProfile.storeProfile.getState()));
                 break;*/
+            //Borrado del mapa
+            case "deleteMap":
+                // Obtenemos los datos de la petición
+                let delmap = message.map;
+                // Ejecutamos el almacenado en la BD
+                UtilsServer.MapsDatabase.deleteMap(delmap, (error: Error) => {
+                    // Si hay error
+                    if(error) {
+                        // Entonces indicamos al receptor el borrado incorrecto del mapa
+                        ws.send(JSON.stringify({
+                            status: false,
+                            error: "Couldn't delete map. Error: " + error.message
+                        }));
+                    } else {
+                        // En caso contrario, avisamos del borrado correcto
+                        ws.send(JSON.stringify({
+                            status: true,
+                            error: "Deleted successfully"
+                        }))
+                    }
+                });
+                break;
             // - Guardado del mapa
             case "saveMap":
                 // Obtenemos los datos de la petición

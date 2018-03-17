@@ -21,8 +21,10 @@ export class EditMap extends React.Component<any, any> {
             cells: new Array<Array<EditCell>>(this.props.horizontal),
             rows: this.props.vertical,
             columns: this.props.horizontal,
-            name: "",
-            json: null
+            name: this.props.name,
+            selected: Number(this.props.selected),
+            mapId: [] as Array<number>,
+            mapName: [] as Array<string>
         };
         storeEdit.dispatch(EditActions.generateSetListener(this));
     }
@@ -31,6 +33,41 @@ export class EditMap extends React.Component<any, any> {
     constructor(props: any) {
         super(props);
         this.restartState();
+        this.getMapIdFromServer();
+        this.forceUpdate();
+    }
+
+    getMapIdFromServer(callback?: (error: { status: boolean, errorCode: string, mapId: number[], mapName: string[] }) => void) {
+        // Primero, establecemos la conexión con el servidor
+        let game = this;
+        let connection = new WebSocket("ws://localhost:8080/");
+        let mapclient: {
+            googleId: number
+        } = {
+            // Incluimos el id del usuario de Google
+            googleId: this.props.parentObject.state.clientId
+        };
+        connection.onmessage = function(event: MessageEvent) {
+            // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
+            // el comando se haya entendido
+            console.log("recepción de la información del servidor "+JSON.stringify(event));
+            if(event.data == "Command not understood") {
+                // Lanzamos un error
+                console.log("Error when attempting to save, server didn't understood request");
+                //No es necesario llamar al callback porque este ya es el nivel final (cliente)
+            } else {
+                console.log(event.data);
+                let data = JSON.parse(event.data);
+                game.setState({mapId: data.mapId, mapName: data.mapName});
+            }
+        };
+        connection.onopen = () => {
+            // Al abrirse la conexión, informamos al servidor del mapa
+            connection.send(JSON.stringify({
+                tipo: "getMapId",
+                mapclient: mapclient
+            }));
+        }
     }
 
     /** Renderiza el mapa **/
@@ -47,10 +84,17 @@ export class EditMap extends React.Component<any, any> {
                             </select>
                         </label>
                     </div>:""}
+                <div className="mapMenu">
+                    <label> Seleccione el mapa:
+                    <select id="map" defaultValue={null} value={this.state.selected} onChange={evt => this.updateMap(evt.target.value)}>
+                        {this.selectMaps()}
+                    </select>
+                    </label>
+                </div>
                 Nombre: <input type="text" value={this.state.name} onChange={evt => this.updateInput(evt.target.value)} />
                 <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
                 <button id="generateButton" name="generateButton" onClick={this.onClickGenerateMap.bind(this)}>Guardar mapa</button>
-                {this.state.json?<textarea>{this.state.json}</textarea>:""}
+                <button id="deleteButton" name="deleteButton" onClick={this.onClickDeleteMap.bind(this)}>Borrar mapa</button>
                 <div>
                     <EditStats map={this}/>
                     <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)} onContextMenu={this.onRightClick.bind(this)}>
@@ -61,6 +105,69 @@ export class EditMap extends React.Component<any, any> {
                 </div>
             </div>
         );
+    }
+
+    // Actualiza el componente de poder introducir el mapa, en el caso de seleccionar
+    // la opción de 'Personalizado'.
+    updateMap(evt: string) {
+        // Comprobamos que el select tenga seleccionado el 'custom'
+        let game = this;
+        game.setState({ selected: Number(evt) });
+        if(game.state.selected!=null){
+            game.getMapFromServer(game.state.selected, (error: any) => {
+                console.log("Entra en tercero");
+                if(error.status == false) {
+                    console.error("Ha fallado la sincronización con el servidor");
+                }
+            });
+        }else{
+            saveState(EditActions.saveState(game, [], storeEdit.getState().cursorPosition, storeEdit.getState().selected, "0"));
+        }
+        this.forceUpdate();
+    }
+
+    //Get map
+    getMapFromServer(map: { id: number }, callback?: (error: { status: boolean, errorCode: string, map: string }) => void) {
+        // Primero, establecemos la conexión con el servidor
+        let game = this;
+        let connection = new WebSocket("ws://localhost:8080/");
+        connection.onmessage = function(event: MessageEvent) {
+            // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
+            // el comando se haya entendido
+            console.log("Datos "+JSON.stringify(event.data));
+            let data = Network.parseMapServer(event.data);
+            if(event.data == "Command not understood") {
+                // Lanzamos un error
+                console.log("Error when attempting to save, server didn't understood request");
+            } else {
+                // En caso contrario, ejecutamos el callback sin errores
+                saveState(EditActions.saveState(game, data.terrains, storeEdit.getState().cursorPosition, storeEdit.getState().selected, "0"));
+                game.setState({
+                    rows: data.rows,
+                    columns: data.columns,
+                    name: data.name
+                });
+                if(callback) {
+                    callback({ status: true, errorCode: "Success", map: null});
+                }
+            }
+        };
+        connection.onopen = () => {
+            // Al abrirse la conexión, informamos al servidor del mapa
+            connection.send(JSON.stringify({
+                tipo: "getMap",
+                map: map
+            }));
+        }
+        this.forceUpdate();
+    }
+
+    selectMaps(){
+        let map = [<option selected value={null}>--Selecciona--</option>];
+        for(var i = 0; i < this.state.mapId.length; i++){
+            map.push(<option value={this.state.mapId[i]}>{this.state.mapName[i]}</option>);
+        }
+        return map;
     }
 
     //Actualiza el valor del nombre del mapa
@@ -97,6 +204,7 @@ export class EditMap extends React.Component<any, any> {
             name = "Mapa sin nombre";
         }
         let jsonResult = {
+            id: this.state.selected,
             // Este elemento contiene los terrenos
             map: terrains,
             // También debemos definir las filas y columnas
@@ -115,7 +223,21 @@ export class EditMap extends React.Component<any, any> {
             rows: this.state.rows,
             columns: this.state.columns,
             name: name,
-            json: result
+            selected: this.state.selected
+        });
+    }
+
+    onClickDeleteMap(event: React.MouseEvent<HTMLElement>) {
+        let jsonResult = {
+            id: this.state.selected
+        };
+        if(this.state.selected!=null){
+            // Enviaremos al servidor el contenido del mapa
+            Network.deleteMapToServer(jsonResult);
+        }
+        // Finalmente, mostramos en el textarea el resultado
+        this.setState({
+            selected: null
         });
     }
 

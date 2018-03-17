@@ -493,7 +493,7 @@ export class Network {
     }
 
     // Este método se encargará de enviar los datos del mapa al servidor, para que se guarden en BD
-    public static sendMapToServer(map: { rows: number, columns: number, map: Array<Terrain>, name: string, googleId: number }
+    public static sendMapToServer(map: { id: number, rows: number, columns: number, map: Array<Terrain>, name: string, googleId: number }
         , callback?: (error: { status: boolean, errorCode: string }) => void) {
         // Primero, establecemos la conexión con el servidor
         let connection = Network.getConnection();
@@ -522,8 +522,38 @@ export class Network {
         }
     }
 
+    // Este método se encargará de enviar los datos del mapa al servidor, para que se borren en BD
+    public static deleteMapToServer(map: { id: number }
+        , callback?: (error: { status: boolean, errorCode: string }) => void) {
+        // Primero, establecemos la conexión con el servidor
+        let connection = Network.getConnection();
+        connection.onmessage = function(event: MessageEvent) {
+            // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
+            // el comando se haya entendido
+            if(event.data == "Command not understood") {
+                // Lanzamos un error
+                console.log("Error when attempting to save, server didn't understood request");
+                if(callback) {
+                    callback({ status: false, errorCode: event.data });
+                }
+            } else {
+                // En caso contrario, ejecutamos el callback sin errores
+                if(callback) {
+                    callback({ status: true, errorCode: "Success" });
+                }
+            }
+        };
+        connection.onopen = () => {
+            // Al abrirse la conexión, informamos al servidor del mapa
+            connection.send(JSON.stringify({
+                tipo: "deleteMap",
+                map: map
+            }));
+        }
+    }
+
     public static parseMapServer(data: string): {terrains: {name: string, image: string, movement_penalty: number,
-            position: Pair, defenseWeak: number, defenseStrong: number, attackWeak: number, attackStrong: number}[], rows: number, columns: number} {
+            position: Pair, defenseWeak: number, defenseStrong: number, attackWeak: number, attackStrong: number}[], rows: number, columns: number, name: string} {
         // Definimos la salida, un mapa, y lo populamos con datos por defecto
         let result = {
             terrains: [] as Array<Terrain>,

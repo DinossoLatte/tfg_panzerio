@@ -24,11 +24,7 @@ export class MapsDatabase {
         }
     }
 
-    /// Esta función se encargará de guardar el mapa y los terrenos del mapa,
-    /// al terminar ejecutará el callback introducido con el código.
-    /// code.status indicará si ha habido un error
-    /// code.error indicará el error o en su defecto, "Success"
-    public static saveMap(mapData: { rows: number, columns: number, map: any[], name: string, googleId: number }, callback: (error: Error) => void) {
+    public static deleteMap(mapData: { id: number }, callback: (error: Error) => void) {
         // Inicializamos o no la BD
         MapsDatabase.initOrCallDatabase((err: Error) => {
             // Comprobamos el mensaje de error
@@ -39,57 +35,132 @@ export class MapsDatabase {
             } else {
                 console.log(mapData);
                 // Preparamos el guardado del mapa
-                let statement = MapsDatabase.connection.prepare("INSERT INTO map(rows, cols, name, googleId) VALUES ($rows, $cols, $name, $googleId)");
+                let statement = MapsDatabase.connection.prepare("DELETE FROM map WHERE id=$id");
                 // Y lo ejecutamos con los valores obtenidos del mapa
                 statement.run({
-                    $rows: mapData.rows,
-                    $cols: mapData.columns,
-                    $name: mapData.name,
-                    $googleId: mapData.googleId
-                }, (runResult: sqlite.RunResult, error: Error) => {
-                    // Comprobamos si hay error:
-                    if(err) {
-                        // Se ha producido un error
-                        console.error("Se ha producido un error creando el mapa");
-                        callback(err);
-                    } else {
-                        // Trás ejecutar la creación del mapa, obtenemos el último ID para poder crear los terrenos
-                        MapsDatabase.connection.get("SELECT last_insert_rowid() FROM map", (err: Error, rows: any) => {
-                            // Si hay error
-                            if(err) {
-                                console.log("Error trying to get the ID of the last map created");
-                                callback(err);
-                            } else {
-                                // En este caso, tendremos el ID
-                                let mapId = rows['last_insert_rowid()'];
-                                // Primero, creamos el statement con el comando de creación del terreno
-                                let statement = MapsDatabase.connection.prepare("INSERT INTO terrain(id_map, name, image, movement_penalty," +
-                                     "position_row, position_cols, defense_weak, defense_strong, attack_weak, attack_strong)" +
-                                     " VALUES ($id_map, $name, $image, $movement_penalty, $position_row, $position_cols,"+
-                                     " $defense_weak, $defense_strong, $attack_weak, $attack_strong)");
-                                // Ahora empezamos a crear los mapas
-                                for(let index = 0; index < mapData.map.length; index++) {
-                                    let terrain = mapData.map[index];
-                                    // Por cada uno, asignamos los valores del comando antes creado y lo ejecutamos
-                                    statement.run({
-                                        $id_map: mapId,
-                                        $name: terrain.name,
-                                        $image: terrain.image,
-                                        $movement_penalty: terrain.movement_penalty,
-                                        $position_row: terrain.position.row,
-                                        $position_cols: terrain.position.column,
-                                        $defense_weak: terrain.defenseWeak,
-                                        $defense_strong: terrain.defenseStrong,
-                                        $attack_weak: terrain.attackWeak,
-                                        $attack_strong: terrain.attackStrong
-                                    });
-                                }
-                            }
-                        });
-                    }
+                    $id: mapData.id
                 });
                 // Indicamos que hemos terminado de añadir elementos
                 statement.finalize();
+            }
+        });
+    }
+
+    /// Esta función se encargará de guardar el mapa y los terrenos del mapa,
+    /// al terminar ejecutará el callback introducido con el código.
+    /// code.status indicará si ha habido un error
+    /// code.error indicará el error o en su defecto, "Success"
+    public static saveMap(mapData: { id: number, rows: number, columns: number, map: any[], name: string, googleId: number }, callback: (error: Error) => void) {
+        // Inicializamos o no la BD
+        MapsDatabase.initOrCallDatabase((err: Error) => {
+            // Comprobamos el mensaje de error
+            if(err) {
+                // Si hay error, lo mostramos en pantalla
+                console.error("Se ha producido un error intentando abrir la BD!");
+                callback(err);
+            } else {
+                if(mapData.id==null){
+                    console.log(mapData);
+                    // Preparamos el guardado del mapa
+                    let statement = MapsDatabase.connection.prepare("INSERT INTO map(rows, cols, name, googleId) VALUES ($rows, $cols, $name, $googleId)");
+                    // Y lo ejecutamos con los valores obtenidos del mapa
+                    statement.run({
+                        $rows: mapData.rows,
+                        $cols: mapData.columns,
+                        $name: mapData.name,
+                        $googleId: mapData.googleId
+                    }, (runResult: sqlite.RunResult, error: Error) => {
+                        // Comprobamos si hay error:
+                        if(err) {
+                            // Se ha producido un error
+                            console.error("Se ha producido un error creando el mapa");
+                            callback(err);
+                        } else {
+                            // Trás ejecutar la creación del mapa, obtenemos el último ID para poder crear los terrenos
+                            MapsDatabase.connection.get("SELECT last_insert_rowid() FROM map", (err: Error, rows: any) => {
+                                // Si hay error
+                                if(err) {
+                                    console.log("Error trying to get the ID of the last map created");
+                                    callback(err);
+                                } else {
+                                    // En este caso, tendremos el ID
+                                    let mapId = rows['last_insert_rowid()'];
+                                    // Primero, creamos el statement con el comando de creación del terreno
+                                    let statement = MapsDatabase.connection.prepare("INSERT INTO terrain(id_map, name, image, movement_penalty," +
+                                         "position_row, position_cols, defense_weak, defense_strong, attack_weak, attack_strong)" +
+                                         " VALUES ($id_map, $name, $image, $movement_penalty, $position_row, $position_cols,"+
+                                         " $defense_weak, $defense_strong, $attack_weak, $attack_strong)");
+                                    // Ahora empezamos a crear los mapas
+                                    for(let index = 0; index < mapData.map.length; index++) {
+                                        let terrain = mapData.map[index];
+                                        // Por cada uno, asignamos los valores del comando antes creado y lo ejecutamos
+                                        statement.run({
+                                            $id_map: mapId,
+                                            $name: terrain.name,
+                                            $image: terrain.image,
+                                            $movement_penalty: terrain.movement_penalty,
+                                            $position_row: terrain.position.row,
+                                            $position_cols: terrain.position.column,
+                                            $defense_weak: terrain.defenseWeak,
+                                            $defense_strong: terrain.defenseStrong,
+                                            $attack_weak: terrain.attackWeak,
+                                            $attack_strong: terrain.attackStrong
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    });
+                    // Indicamos que hemos terminado de añadir elementos
+                    statement.finalize();
+                }else{
+                    console.log(mapData);
+                    // Preparamos el guardado del mapa
+                    let statement = MapsDatabase.connection.prepare("UPDATE map SET name = $name WHERE id = $id;");
+                    // Y lo ejecutamos con los valores obtenidos del mapa
+                    statement.run({
+                        $name: mapData.name,
+                        $id: mapData.id
+                    }, (runResult: sqlite.RunResult, error: Error) => {
+                        // Comprobamos si hay error:
+                        if(err) {
+                            // Se ha producido un error
+                            console.error("Se ha producido un error creando el mapa");
+                            callback(err);
+                        } else {
+                            // Primero, se eliminan
+                            let delstatement = MapsDatabase.connection.prepare("DELETE FROM terrain WHERE id_map=$id_map");
+                            // Y ahora se eliminan
+                            delstatement.run({
+                                $id_map: mapData.id
+                            });
+                            // Primero, creamos el statement con el comando de creación del terreno
+                            let createstatement = MapsDatabase.connection.prepare("INSERT INTO terrain(id_map, name, image, movement_penalty," +
+                                 "position_row, position_cols, defense_weak, defense_strong, attack_weak, attack_strong)" +
+                                 " VALUES ($id_map, $name, $image, $movement_penalty, $position_row, $position_cols,"+
+                                 " $defense_weak, $defense_strong, $attack_weak, $attack_strong)");
+                            // Ahora empezamos a crear los mapas
+                            for(let index = 0; index < mapData.map.length; index++) {
+                                let terrain = mapData.map[index];
+                                // Por cada uno, asignamos los valores del comando antes creado y lo ejecutamos
+                                createstatement.run({
+                                    $id_map: mapData.id,
+                                    $name: terrain.name,
+                                    $image: terrain.image,
+                                    $movement_penalty: terrain.movement_penalty,
+                                    $position_row: terrain.position.row,
+                                    $position_cols: terrain.position.column,
+                                    $defense_weak: terrain.defenseWeak,
+                                    $defense_strong: terrain.defenseStrong,
+                                    $attack_weak: terrain.attackWeak,
+                                    $attack_strong: terrain.attackStrong
+                                });
+                            }
+                        }
+                    });
+                    // Indicamos que hemos terminado de añadir elementos
+                    statement.finalize();
+                }
             }
         });
     }
@@ -253,7 +324,7 @@ export class ProfileDatabase {
                     }
                 }, () => {
 			callback({ status: true, error: "Success", armyId: armyId, armyName: armyName });
-		});103227525887982030000
+		});
             }
         });
     }
@@ -625,23 +696,21 @@ export class ProfileDatabase {
                                 console.log("entra en el if de googleid");
                                 // Teniendo el id, podremos crear los ejércitos del perfil
                                 let profileIndex = row['id'] as number;
+                                ProfileDatabase.deleteArmy(profileIndex,(statusCode: StatusCode) => {
+                                    // En el caso de encontrar un problema, cambiaremos result
+                                    if (statusCode.status) {
+                                        result = statusCode;
+                                    }
+                                });
                                 for (let armyIndex = 0; armyIndex < profile.armies.length; armyIndex++) {
                                     // Obtenemos el ejército
                                     let army = profile.armies[armyIndex];
                                     // Y lo guardamos
-                                    ProfileDatabase.deleteArmy(profileIndex,(statusCode: StatusCode) => {
+
+                                    ProfileDatabase.saveArmy(profileIndex, army, (statusCode: StatusCode) => {
                                         // En el caso de encontrar un problema, cambiaremos result
                                         if (statusCode.status) {
-                                            console.log("Hay fallo "+statusCode);
                                             result = statusCode;
-                                        }else{
-                                            console.log("Entra en el else");
-                                            ProfileDatabase.saveArmy(profileIndex, army, (statusCode: StatusCode) => {
-                                                // En el caso de encontrar un problema, cambiaremos result
-                                                if (statusCode.status) {
-                                                    result = statusCode;
-                                                }
-                                            });
                                         }
                                     });
                                 }
