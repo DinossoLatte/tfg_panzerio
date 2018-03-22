@@ -355,7 +355,9 @@ export class Network {
             cursorPosition: new Pair(0, 0),
             map: undefined as Map,
             selectedUnit: 0,
-            type: ""
+            type: "",
+            height: 5,
+            width: 5
         };
         // Primero, convertimos el objeto en un mapa
         let json = JSON.parse(data);
@@ -382,6 +384,8 @@ export class Network {
         }
         // Finalmente, nos quedan los terrenos, mismo proceso
         result.terrains = this.parseMap(json.terrains);
+        result.height = json.height;
+        result.width = json.width;
         // Retornamos el estado final
         return result;
     }

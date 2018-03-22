@@ -64,7 +64,7 @@ export class Profile extends React.Component<any, any> {
         , callback?: (error: { status: boolean, errorCode: string, units: Array<{type: string, number: number}> }) => void) {
         // Primero, establecemos la conexión con el servidor
         let game = this;
-        let connection = new WebSocket("ws://localhost:8080/");
+        let connection = Network.getConnection();
         connection.onmessage = function(event: MessageEvent) {
             // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
             // el comando se haya entendido
@@ -77,18 +77,16 @@ export class Profile extends React.Component<any, any> {
                 callback({status: data.status, errorCode: data.error, units: data.units});
             }
         };
-        connection.onopen = () => {
-            // Al abrirse la conexión, informamos al servidor del mapa
-            connection.send(JSON.stringify({
-                tipo: "getUnits",
-                armyclient: army
-            }));
-        }
+        // Al abrirse la conexión, informamos al servidor del mapa
+        connection.send(JSON.stringify({
+            tipo: "getUnits",
+            armyclient: army
+        }));
     }
 
     getUserIdFromServer(callback?: (error: { status: boolean, errorCode: string, userId: number }) => void) {
         // Primero, establecemos la conexión con el servidor
-        let connection = new WebSocket("ws://localhost:8080/");
+        let connection = Network.getConnection();
         let armyprofileclient: {
             googleId: number
         } = {
@@ -107,7 +105,7 @@ export class Profile extends React.Component<any, any> {
 
     getArmyIdFromServer(errorCode: { status: boolean, errorCode: string, userId: number }, callback?: (error: { status: boolean, errorCode: string, armyId: number[], armyName: string[] }) => void) {
         // Primero, establecemos la conexión con el servidor
-        let connection = new WebSocket("ws://localhost:8080/");
+        let connection = Network.getConnection();
         let armyclient: {
             userId: number
         } = {
@@ -128,14 +126,11 @@ export class Profile extends React.Component<any, any> {
                 callback({status: errorCode.status, errorCode: errorCode.errorCode, armyId: data.armyId, armyName: data.armyName});
             }
         };
-        connection.onopen = () => {
-            // Al abrirse la conexión, informamos al servidor del mapa
-            connection.send(JSON.stringify({
-                tipo: "getArmyId",
-                armyclient: armyclient
-            }));
-        }
-
+        // Al abrirse la conexión, informamos al servidor del mapa
+        connection.send(JSON.stringify({
+            tipo: "getArmyId",
+            armyclient: armyclient
+        }));
     }
 
     // Este método cambiará el título

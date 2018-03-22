@@ -4,7 +4,7 @@ import * as Redux from 'redux';
 
 import { EditMap } from './EditMap';
 import { ReducerEdit, StateEdit } from './GameEditState';
-import { Pair, Network } from './Utils';
+import { Pair, Network, Parsers } from './Utils';
 import { Terrain } from './Terrains';
 
 //Igual que Store pero con el estado de edición
@@ -29,7 +29,7 @@ export function saveState(act: Redux.AnyAction) {
 export var actualState: StateEdit = undefined;
 
 export function saveStateServer(callback: () => void, act: Redux.AnyAction){
-    var connection = new WebSocket("ws://localhost:8080/");
+    var connection = Network.getConnection();
     console.log("Connection established with server");
     // Establecemos la conexión
     connection.onmessage = function(event: MessageEvent) {
@@ -44,10 +44,9 @@ export function saveStateServer(callback: () => void, act: Redux.AnyAction){
         // Una vez tengamos el estado, llamamos al callback aportado, que permitirá saber con certeza que el estado está disponible
         callback();
     };
-    connection.onopen = function() {
-        console.log("Connection available for sending action");
-        // Enviamos la solicitud
-        connection.send(JSON.stringify(act));
-        console.log("Action sent.");
-    }
+
+    console.log("Connection available for sending action");
+    // Enviamos la solicitud
+    connection.send(Parsers.stringifyCyclicObject(act));
+    console.log("Action sent.");
 }

@@ -16,28 +16,48 @@ import * as StoreProfile from './StoreProfile';
 import * as UtilsServer from './UtilsServer';
 
 var server = new webSocket.Server({ port: 8080 });
+var player1URL, player2URL = undefined;
 
 server.on('connection', function connect(ws) {
     // Este será el inicio del servidor, por ahora nos encargaremos de mostrarle el estado
     console.log("Conected with client");
+    // Inicialización del servidor
+    if(player1URL == undefined) {
+        console.log("Conecta user 1");
+        player1URL = ws;
+    } else if(player2URL == undefined) {
+        console.log("Conecta user 2");
+        player2URL = ws;
+    } else {
+        console.log(ws != player1URL);
+        console.log(ws != player2URL);
+    }
     ws.on("message", function getInitialState(data) {
         console.log("Got following action: " + data);
         // Dependiendo del estado, retornaremos una cosa u otra
         let message = JSON.parse(data as string);
         switch (message.tipo) {
             case "getInitialState":
-                // Retornaremos el estado inicial
-                var state = {
-                    turn: 0,
-                    actualState: 0,
-                    units: [],
-                    visitables: null,
-                    terrains: [Terrains.ImpassableMountain.create(new Utils.Pair(2, 2)), Terrains.ImpassableMountain.create(new Utils.Pair(3, 2)), Terrains.Hills.create(new Utils.Pair(2, 3)), Terrains.Forest.create(new Utils.Pair(3, 3))],
-                    cursorPosition: new Utils.Pair(0, 0),
-                    map: null,
-                    selectedUnit: null,
-                    type: "SET_LISTENER"
-                };
+                var state;
+                if(Store.store.getState().turn == -1) {
+                    // Retornaremos el estado inicial
+                    state = {
+                        turn: 0,
+                        actualState: 0,
+                        units: [],
+                        visitables: null,
+                        terrains: [Terrains.ImpassableMountain.create(new Utils.Pair(2, 2)), Terrains.ImpassableMountain.create(new Utils.Pair(3, 2)), Terrains.Hills.create(new Utils.Pair(2, 3)), Terrains.Forest.create(new Utils.Pair(3, 3))],
+                        cursorPosition: new Utils.Pair(0, 0),
+                        map: null,
+                        selectedUnit: null,
+                        width: 0,
+                        heigth: 0,
+                        type: "SET_LISTENER"
+                    };
+                } else {
+                    // Retorna el estado de la partida
+                    state = Store.store.getState();
+                }
                 ws.send(JSON.stringify(state));
                 break;
             // Este se llamará cuando se quiera sincronizar el estado del cliente con el servidor
@@ -46,6 +66,8 @@ server.on('connection', function connect(ws) {
                 Store.saveState({
                     type: "SYNC_STATE",
                     terrains: message.terrains,
+                    width: message.width,
+                    height: message.height,
                     units: message.units
                 });
                 ws.send(JSON.stringify({
@@ -125,6 +147,7 @@ server.on('connection', function connect(ws) {
                 });
                 break;
             case "getMapId":
+                console.log("mapclient: "+JSON.stringify(message.mapclient));
                 // Obtenemos los id de los mapas
                 UtilsServer.MapsDatabase.getMapId(message.mapclient, (code: { status: boolean, error: string,  mapId: number[], mapName: string[] }) => {
                     // Si hay error
@@ -204,36 +227,18 @@ server.on('connection', function connect(ws) {
                 });
                 break;
             case "waitTurn":
-                // En este caso, se espera a que el servidor realice el cambio en el estado, que lo haría el otro jugador
-                // Primero, comprobamos que estemos en la fase de pre juego
-                if(Store.store.getState().turn <= 2) {
-                    // Si es el caso, tenemos que posicionar nuestras unidades
-                    Store.saveState({
-                        type: "CHANGE_UNIT_POS",
-                        unit_id: 3,
-                        new_position: { row: 1, column: 4 },
-                        selectedUnit: null,
-                        player: false
-                    });
-                    Store.saveState({
-                        type: "CHANGE_UNIT_POS",
-                        unit_id: 4,
-                        new_position: { row: 0, column: 3 },
-                        selectedUnit: null,
-                        player: false
-                    });
-                    Store.saveState({
-                        type: "CHANGE_UNIT_POS",
-                        unit_id: 5,
-                        new_position: { row: 1, column: 3 },
-                        selectedUnit: null,
-                        player: false
-                    });
+                // Confirma que el jugador ha terminado su turno.
+                // Devolveremos el estado final, para sincronizarlo con el jugador
+                // Primero, comprobamos la conexión actual
+                if(player1URL == ws) {
+                    // Entonces, esperamos al jugador 2
+                    // Avisamoa al usuario 2
+                    player2URL.send(JSON.stringify({ status: true, state: Store.store.getState() }));
+                } else {
+                    // Es el jugador 2, le enviamos al 1 el estado
+                    player1URL.send(JSON.stringify({ status: true, state: Store.store.getState() }));
                 }
-                // En cualquiera de los casos, saltaremos el turno del jugador enemigo
-                Store.saveState({ type: "NEXT_TURN" });
-                // Devolveremos el estado resultante, para sincronizarlo con el jugador
-                ws.send(JSON.stringify({ status: true, state: Store.store.getState() }));
+
                 break;
             case "logIn":
                 // Este caso se llamará cuando el cliente haga inicio de sesión
