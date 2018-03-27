@@ -615,7 +615,8 @@ class Game extends React.Component<any, any> {
             editx: "5",// 0 es el menu del juego, 1 será el menú de opciones, 2 el juego, 3 edición de map y 5 el pre juego
             edity: "5",
             clientId: null, // Id del cliente loggeado
-            selected: null
+            selected: null,
+            clientAvatar: null
         };
     }
 
@@ -697,7 +698,8 @@ class Game extends React.Component<any, any> {
                 gameState: this.state.gameState,
                 editx: this.state.editx,
                 edity: this.state.edity,
-                clientId: Number(response.getBasicProfile().getId())
+                clientId: Number(response.getBasicProfile().getId()),
+                clientAvatar: response.getBasicProfile().getImageUrl()
             });
             console.log(this.state.clientId);
         }, Number(response.getBasicProfile().getId()));

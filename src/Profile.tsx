@@ -17,7 +17,9 @@ export class Profile extends React.Component<any, any> {
             gameswon: 0,
             gameslost: 0,
             name: "Nuevo batallón",
-            googleId: this.props.parentObject.state.clientId
+            googleId: this.props.parentObject.state.clientId,
+            avatar: this.props.parentObject.state.clientAvatar,
+            units: new Array<Army>()
         };
         let getprofile: {
             googleId: number
@@ -47,16 +49,17 @@ export class Profile extends React.Component<any, any> {
             prof.getArmyIdFromServer(error, (errorarmy: { status: boolean, errorCode: string, armyId: number[], armyName: string[] }) =>{
                 for(var i=0; i<errorarmy.armyId.length; i++){
                     let arm = null;
-                    let armies = storeProfile.getState().armies;
+                    let unit = prof.state.units;
                     let name = errorarmy.armyName[i];
                     prof.getUnitsFromServer(errorarmy.armyId[i],(errorunits: { status: boolean, errorCode: string, units: Array<{type: string, number: number}> }) =>{
                         arm = new Army(errorunits.units,name);
-                        armies.push(arm);
-                        saveState(ProfileActions.save(prof, armies, storeProfile.getState().selectedArmy, storeProfile.getState().selected, storeProfile.getState().type));
+                        unit.push(arm);
+                        this.setState({units: unit});
                     });
                 }
             });
         });
+        saveState(ProfileActions.save(prof, this.state.units, storeProfile.getState().selectedArmy, storeProfile.getState().selected, storeProfile.getState().type));
         this.forceUpdate();
     }
 
@@ -593,7 +596,7 @@ export class Profile extends React.Component<any, any> {
     render() {
         return (
             <div>
-                <img className="avatar" src="imgs/avatar.png" />
+                <img className="avatar" src={this.state.avatar} />
                 <p>Nombre: {this.state.username}</p>
                 <label id="bold">Modifique aquí su nombre: <input type="text" value={this.state.username} onChange={evt => this.updateUserName(evt.target.value)} />
                 <button id="saveProfile" name="saveProfile" className="saveProfileButton" onClick={this.onClickSaveProfileName.bind(this)}>Editar nombre</button>
