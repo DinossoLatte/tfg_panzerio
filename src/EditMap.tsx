@@ -21,8 +21,9 @@ export class EditMap extends React.Component<any, any> {
             cells: new Array<Array<EditCell>>(this.props.horizontal),
             rows: this.props.vertical,
             columns: this.props.horizontal,
-            name: "",
-            json: null
+            name: "Mapa sin nombre",
+            selected: Number(this.props.selected),
+            request: 0
         };
         storeEdit.dispatch(EditActions.generateSetListener(this));
     }
@@ -35,6 +36,14 @@ export class EditMap extends React.Component<any, any> {
 
     /** Renderiza el mapa **/
     render() {
+        if(this.props.selected!=null){
+            console.log("Entra en el else: valor del selected: "+this.props.selected);
+            //Solo se ejecutara una vez
+            if(this.state.request<2){
+                this.getMapFromServer({id: Number(this.props.selected)},(error: { status: boolean, errorCode: string, retmap: Array<Terrain> })=>{});
+                this.state.request++;
+            }
+        }
         // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
         return (
             <div>
@@ -48,9 +57,8 @@ export class EditMap extends React.Component<any, any> {
                         </label>
                     </div>:""}
                 Nombre: <input type="text" value={this.state.name} onChange={evt => this.updateInput(evt.target.value)} />
-                <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
                 <button id="generateButton" name="generateButton" onClick={this.onClickGenerateMap.bind(this)}>Guardar mapa</button>
-                {this.state.json?<textarea>{this.state.json}</textarea>:""}
+                <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Volver atrás</button>
                 <div>
                     <EditStats map={this}/>
                     <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)} onContextMenu={this.onRightClick.bind(this)}>
@@ -61,6 +69,43 @@ export class EditMap extends React.Component<any, any> {
                 </div>
             </div>
         );
+    }
+
+    //Get map
+    getMapFromServer(mapData: {id: number} , callback?: (error: { status: boolean, errorCode: string, retmap: Array<Terrain> }) => void) {
+        // Primero, establecemos la conexión con el servidor
+        let game = this;
+        let connection = new WebSocket("ws://localhost:8080/");
+        connection.onmessage = function(event: MessageEvent) {
+            // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
+            // el comando se haya entendido
+            console.log("Datos "+JSON.stringify(event.data));
+            let data = Network.parseMapServer(event.data);
+            if(event.data == "Command not understood") {
+                // Lanzamos un error
+                console.log("Error when attempting to save, server didn't understood request");
+            } else {
+                // En caso contrario, ejecutamos el callback sin errores
+                game.setState({
+                    cells: new Array<Array<EditCell>>(data.columns),
+                    rows: data.rows,
+                    columns: data.columns,
+                    name: data.mapName,
+                    selected: mapData.id
+                });
+                saveState(EditActions.saveState(game, data.terrains, storeEdit.getState().cursorPosition, storeEdit.getState().selected, "SAVE"));
+                if(callback) {
+                    callback({ status: true, errorCode: "Success", retmap: data.terrains});
+                }
+            }
+        };
+        connection.onopen = () => {
+            // Al abrirse la conexión, informamos al servidor del mapa
+            connection.send(JSON.stringify({
+                tipo: "getMap",
+                mapData: mapData.id
+            }));
+        }
     }
 
     //Actualiza el valor del nombre del mapa
@@ -86,7 +131,9 @@ export class EditMap extends React.Component<any, any> {
     }
 
     onClickExit(event : React.MouseEvent<HTMLElement>) {
-        this.props.parentObject.changeGameState(0); // Salir de la partida.
+        saveState(EditActions.saveState(this, [], storeEdit.getState().cursorPosition, storeEdit.getState().selected, "SAVE"));
+        this.setState({request: 0});
+        this.props.parentObject.changeGameState(3); // Salir de la partida.
     }
 
     onClickGenerateMap(event: React.MouseEvent<HTMLElement>) {
@@ -97,6 +144,7 @@ export class EditMap extends React.Component<any, any> {
             name = "Mapa sin nombre";
         }
         let jsonResult = {
+            id: this.state.selected,
             // Este elemento contiene los terrenos
             map: terrains,
             // También debemos definir las filas y columnas
@@ -115,8 +163,9 @@ export class EditMap extends React.Component<any, any> {
             rows: this.state.rows,
             columns: this.state.columns,
             name: name,
-            json: result
+            selected: this.state.selected
         });
+        window.alert("Se ha guardado correctamente el perfil");
     }
 
     //Igual que en Map solo que se actualiza el cursor del estado de edición
