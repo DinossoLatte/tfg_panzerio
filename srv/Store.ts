@@ -25,4 +25,6 @@ export function saveState(act: Redux.AnyAction) {
     var selectedUnit: number = store.getState().selectedUnit;
     var cursorPosition: Pair = store.getState().cursorPosition;
     var type: string = store.getState().type;
+    var width: number = store.getState().width;
+    var height: number = store.getState().height;
 }

@@ -338,11 +338,16 @@ export class Pathfinding {
 
 // Esta clase contendrán métodos auxiliares con respecto a la conexión entre cliente y servidor
 export class Network {
+    private static connection: WebSocket = undefined;
 
     /// Esta función permitirá crear la conexión, con la idea de cambiar los parametros en el caso de cambio
     public static getConnection() {
         // Retornamos la conexión
-        return new WebSocket("ws://localhost:8080/");
+        if(this.connection == undefined) {
+            console.log("Nueva conexión");
+            this.connection = new WebSocket("ws://localhost:8080");
+        }
+        return this.connection;
     }
 
     public static parseStateFromServer(data: string): State {
@@ -356,10 +361,18 @@ export class Network {
             cursorPosition: new Pair(0, 0),
             map: undefined as Map,
             selectedUnit: 0,
-            type: ""
+            type: "",
+            height: 5,
+            width: 5,
+            isTurn: true,
+            isPlayer: true
         };
         // Primero, convertimos el objeto en un mapa
         let json = JSON.parse(data);
+        result.isTurn = json.isTurn;
+        result.isPlayer = json.isPlayer;
+        result.height = json.height;
+        result.width = json.width;
         // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
         // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
         result.turn = json.turn;
@@ -367,7 +380,9 @@ export class Network {
         result.selectedUnit = json.selectedUnit;
         result.type = json.type;
         // Después, creamos un Pair con los datos introducidos
-        result.cursorPosition = new Pair(json.cursorPosition.row, json.cursorPosition.column);
+        if(json.cursorPosition) {
+            result.cursorPosition = new Pair(json.cursorPosition.row, json.cursorPosition.column);
+        }
         // Ahora nos encargamos de visitables
         // Inicializamos una lista con los datos de las casillas visitables
         let visitables: Array<{row: number, column:number}> = json.visitables;
@@ -442,11 +457,12 @@ export class Network {
 
     public static parseMap(terrains:
         Array<{ name: string, image: string, movement_penalty: number,
-             position:{ row: number, column: number},
+             position: { row: number, column: number} ,
              defenseWeak: number, defenseStrong: number
              attackWeak: number, attackStrong: number }
         >): Terrain[] {
         let result: Terrain[] = [];
+        console.dir(terrains);
         if(terrains) {
             result = terrains.map(terrain => new Terrain(terrain.name, terrain.image, terrain.movement_penalty,
                 new Pair(terrain.position.row, terrain.position.column), terrain.defenseWeak ,terrain.defenseStrong,
@@ -513,13 +529,11 @@ export class Network {
                 }
             }
         };
-        connection.onopen = () => {
-            // Al abrirse la conexión, informamos al servidor del mapa
-            connection.send(JSON.stringify({
-                tipo: "saveMap",
-                map: map
-            }));
-        }
+        // Al abrirse la conexión, informamos al servidor del mapa
+        connection.send(JSON.stringify({
+            tipo: "saveMap",
+            map: map
+        }));
     }
 
     // Este método se encargará de enviar los datos del mapa al servidor, para que se borren en BD
@@ -570,7 +584,7 @@ export class Network {
         result.columns = json.map.columns;
         result.mapName = json.map.mapName;
         // Finalmente, nos quedan los terrenos, mismo proceso
-        for(var i = 0; i<json.map.terrains.length; i++){
+        for(var i = 0; i < json.map.terrains.length; i++){
             let terrain = json.map.terrains[i];
             result.terrains.push(new Terrain(terrain.name, terrain.image, terrain.movement_penalty,
                 new Pair(terrain.position_row, terrain.position_cols), terrain.defenseWeak ,terrain.defenseStrong,
@@ -612,13 +626,11 @@ export class Network {
                 }
             }
         };
-        connection.onopen = function() {
-            // Enviamos el mensaje
-            connection.send(JSON.stringify({
-                tipo: "saveProfile",
-                profile: profile
-            }))
-        }
+        // Enviamos el mensaje
+        connection.send(JSON.stringify({
+            tipo: "saveProfile",
+            profile: profile
+        }));
     }
 
     public static receiveProfileFromServer(profile: {
@@ -647,13 +659,11 @@ export class Network {
                 }
             }
         };
-        connection.onopen = function() {
-            // Enviamos el mensaje
-            connection.send(JSON.stringify({
-                tipo: "getProfile",
-                profile: profile
-            }))
-        }
+        // Enviamos el mensaje
+        connection.send(JSON.stringify({
+            tipo: "getProfile",
+            profile: profile
+        }));
     }
 
     public static receiveProfileIdFromServer(profile: {
@@ -682,13 +692,11 @@ export class Network {
                 }
             }
         };
-        connection.onopen = function() {
-            // Enviamos el mensaje
-            connection.send(JSON.stringify({
-                tipo: "getProfileId",
-                profile: profile
-            }))
-        }
+        // Enviamos el mensaje
+        connection.send(JSON.stringify({
+            tipo: "getProfileId",
+            profile: profile
+        }));
     }
 
     public static saveProfileGameToServer(profile: {
@@ -719,13 +727,11 @@ export class Network {
                 }
             }
         };
-        connection.onopen = function() {
-            // Enviamos el mensaje
-            connection.send(JSON.stringify({
-                tipo: "saveProfileGame",
-                profile: profile
-            }))
-        }
+        // Enviamos el mensaje
+        connection.send(JSON.stringify({
+            tipo: "saveProfileGame",
+            profile: profile
+        }));
     }
 
     public static saveProfileNameToServer(profile: {
@@ -755,13 +761,11 @@ export class Network {
                 }
             }
         };
-        connection.onopen = function() {
-            // Enviamos el mensaje
-            connection.send(JSON.stringify({
-                tipo: "saveProfileName",
-                profile: profile
-            }))
-        }
+        // Enviamos el mensaje
+        connection.send(JSON.stringify({
+            tipo: "saveProfileName",
+            profile: profile
+        }));
     }
 
     public static saveProfileToServer(profile: {
@@ -792,23 +796,21 @@ export class Network {
                 }
             }
         };
-        connection.onopen = function() {
-            // Enviamos el mensaje
-            connection.send(JSON.stringify({
-                tipo: "updateProfile",
-                profile: profile
-            }))
-        }
+        // Enviamos el mensaje
+        connection.send(JSON.stringify({
+            tipo: "updateProfile",
+            profile: profile
+        }));
     }
 
     public static sendWaitTurn(callback: (statusCode: { status: boolean, error: string, state: State }) => void) {
         // Como siempre, iniciamos la conexión
         let connection = Network.getConnection();
-        connection.onopen = function() {
-            connection.send(JSON.stringify({
-                tipo: "waitTurn"
-            }));
-        }
+        
+        connection.send(JSON.stringify({
+            tipo: "waitTurn"
+        }));
+        
         connection.onmessage = function(message: MessageEvent) {
             if(message.data == "Command not understood") {
                 callback({ status: false, error: message.data, state: null });
@@ -827,7 +829,8 @@ export class Network {
 
     public static sendLogInInfo(callback: (statusCode: { status: boolean, error: string}) => void, logInData: number) {
         let connection = Network.getConnection();
-        connection.onopen = function() {
+        // Como es la primera conexión del cliente, necesitamos espera las respuesta.
+        connection.onopen = () => {
             connection.send(JSON.stringify({
                 tipo: "logIn",
                 token: logInData
@@ -847,11 +850,9 @@ export class Network {
 
     public static sendLogOut(callback: (statusCode: { status: boolean , error: string }) => void) {
         let connection = Network.getConnection();
-        connection.onopen = function() {
-            connection.send(JSON.stringify({
-                tipo: "logOut"
-            }));
-        };
+        connection.send(JSON.stringify({
+            tipo: "logOut"
+        }));
         connection.onmessage = function(message: MessageEvent) {
             if(message.data == "Command not understood") {
                 callback({ status: false, error: message.data });
@@ -862,25 +863,45 @@ export class Network {
         }
     }
 
-    public static sendSyncState(state: State, callback: (statusCode: { status: boolean, state: any }) => void) {
+    public static sendSyncState(state: State, height: number, width: number,
+         callback: (statusCode: { status: boolean, state: any }) => void) {
+        
         let connection = Network.getConnection();
-        connection.onopen = () => {
-            let terrains = state.terrains;
-            let units = state.units;
-            connection.send(JSON.stringify({
-                tipo: "SYNC_STATE",
-                terrain: terrains,
-                units: units
-            }));
-        };
+
+        let terrains = state.terrains;
+        let units = state.units;
+        connection.send(JSON.stringify({
+            tipo: "SYNC_STATE"
+        }));
         connection.onmessage = (message: MessageEvent) => {
+            console.dir(JSON.parse(message.data));
             if(message.data == "Command not understood") {
                 callback({ status: false, state: null });
             } else {
                 let result = JSON.parse(message.data);
-                callback({ status: result.status, state: result.state });
+                // Para facilitar el traspaso de los datos de servidor, necesitamos realizar una conversión a string y pasarlo a estado compatible
+                let stateString = JSON.stringify(result.state);
+                let state = Network.parseStateFromServer(stateString);
+                callback({ status: result.status, state: state });
             }
         }
+    }
+
+    public static sendExitPreGame(callback: (statusCode: { status: boolean, message: string}) => void) {
+        let connection = Network.getConnection();
+        connection.onmessage = (message: MessageEvent) => {
+            // Comprobamos el tipo de mensaje
+            let data = message.data;
+            if(data == "Command not understood") {
+                callback({ status: false, message: data });
+            } else {
+                // Asumimos que ha salido bien
+                callback({ status: true, message: "Success" });
+            }
+        }
+        connection.send(JSON.stringify({
+            tipo: "exitPreGame"
+        }));
     }
 }
 

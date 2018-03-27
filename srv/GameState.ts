@@ -18,72 +18,85 @@ export type State = {
     readonly cursorPosition: Pair,
     readonly map: Map,
     readonly selectedUnit: number,
-    readonly type: string
+    readonly type: string,
+    readonly width: number
+    readonly height: number
 }
 
-export var InitialState: State = {
-    turn: 0,
-    actualState: 0,
-    units: [],
-    visitables: [],
-    terrains: [],
-    cursorPosition: undefined,
-    map: undefined,
-    selectedUnit: undefined,
-    type: undefined
+export function resetInitialState() {
+    return {
+        turn: 0,
+        actualState: 0,
+        units: [],
+        visitables: [],
+        terrains: [],
+        cursorPosition: undefined,
+        map: undefined,
+        selectedUnit: undefined,
+        width: 0,
+        height: 0,
+        type: "NEW_STATE"
+    };
 }
+
+export var InitialState: State = resetInitialState();
 
 export function parseActionMap(data: any) {
-        // Definimos la salida, un mapa, y lo populamos con datos por defecto
-        let result = {
-            selectedUnit: 0,
-            type: "",
-            unit_id: 0,
-            new_position: new Pair(0,0),
-            player: true,
-            position: new Pair(0,0),
-            map: undefined as Map,
-            defendingUnitId: 0,
-            terrains: [] as Array<Terrain>
-        };
-        // Primero, convertimos el objeto en un mapa
-        let json = data;
-        // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
-        // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
-        if(json.unit_id){
-            result.unit_id = json.unit_id;
-        }
-        if(json.player){
-            result.player = json.player;
-        }
-        if(json.selectedUnit){
-            result.selectedUnit = json.selectedUnit;
-        }
-        if(json.defendingUnitId){
-            result.defendingUnitId = json.defendingUnitId;
-        }
-        if(json.type){
-            result.type = json.type;
-        }
-        // Después, creamos un Pair con los datos introducidos
-        if(json.new_position){
-            result.new_position = new Pair(json.new_position.row, json.new_position.column);
-        }
-        if(json.position){
-            result.position = new Pair(json.position.row, json.position.column);
-        }
-        // Ahora vamos con los terrenos:
-        let terrains: Array<{name: string, image: string, movement_penalty: number, position:{row: number, column: number}, defenseWeak: number, defenseStrong: number, attackWeak: number, attackStrong: number}> = json.terrains;
-        // Para cada uno, crearemos una unidad con esos datos.
-        if(terrains) {
-            result.terrains = terrains.map(terrain => new Terrain(terrain.name, terrain.image, terrain.movement_penalty, new Pair(terrain.position.row, terrain.position.column),
-                terrain.defenseWeak, terrain.defenseStrong, terrain.attackWeak, terrain.attackStrong));
-        }
-        if(json.map){
-            result.map = new Map(json.map.rows, json.map.columns);
-        }
-        // Retornamos el estado final
-        return result;
+    // Definimos la salida, un mapa, y lo populamos con datos por defecto
+    let result = {
+        selectedUnit: 0,
+        type: "",
+        unit_id: 0,
+        new_position: new Pair(0, 0),
+        player: true,
+        position: new Pair(0, 0),
+        map: undefined as Map,
+        defendingUnitId: 0,
+        terrains: [] as Array<Terrain>,
+        width: 0,
+        height: 0
+    };
+    // Primero, convertimos el objeto en un mapa
+    let json = data;
+    result.width = json.width;
+    result.height = json.height;
+    // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
+    // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
+    if (json.unit_id) {
+        result.unit_id = json.unit_id;
+    }
+    if (json.player) {
+        result.player = json.player;
+    }
+    if (json.selectedUnit) {
+        result.selectedUnit = json.selectedUnit;
+    }
+    if (json.defendingUnitId) {
+        result.defendingUnitId = json.defendingUnitId;
+    }
+    if (json.type) {
+        result.type = json.type;
+    }
+    // Después, creamos un Pair con los datos introducidos
+    if (json.new_position) {
+        result.new_position = new Pair(json.new_position.row, json.new_position.column);
+    }
+    if (json.position) {
+        result.position = new Pair(json.position.row, json.position.column);
+    }
+    // Ahora vamos con los terrenos:
+    let terrains: Array<{ name: string, image: string, movement_penalty: number, position: { row: number, column: number }, defenseWeak: number, defenseStrong: number, attackWeak: number, attackStrong: number }> = json.terrains;
+    console.log("Terrenos: "+terrains);
+    // Para cada uno, crearemos una unidad con esos datos.
+    if (terrains) {
+        result.terrains = terrains.map(terrain => new Terrain(terrain.name, terrain.image, terrain.movement_penalty, new Pair(terrain.position.row, terrain.position.column),
+            terrain.defenseWeak, terrain.defenseStrong, terrain.attackWeak, terrain.attackStrong));
+    }
+    if (json.map) {
+        result.map = new Map(json.map.rows, json.map.columns);
+    }
+    // Retornamos el estado final
+    return result;
 }
 
 //Y aquí se producirá el cambio
@@ -94,22 +107,19 @@ export const Reducer : Redux.Reducer<State> =
             case "CHANGE_UNIT_POS":
                 let visitables = state.visitables;
                 // Si la unidad la tiene el jugador
-                if(action.player==state.units[action.unit_id].player){
-                    let lastPosition = state.units[action.unit_id].position;
-                    // Actualiza la posición
-                    state.units[action.unit_id].position = action.new_position;
-                    // En el caso de estar fuera de la fase de pre juego, donde posicionamos las unidades sin causar turnos
-                    if(state.turn >= 2) {
-                        //Si es paracaidista pasa directamente a estado usado
-                        if(state.units[action.unit_id].name=="Paratrooper" && !lastPosition.equals(action.new_position)){
-                            state.units[action.unit_id].used = true;
-                            state.units[action.unit_id].hasAttacked = true;
-                            state.units[action.unit_id].action = 2;
-                        }else{
-                            state.units[action.unit_id].action = 1;
-                        }
+                let lastPosition = state.units[action.unit_id].position;
+                // Actualiza la posición
+                state.units[action.unit_id].position = action.new_position;
+                // En el caso de estar fuera de la fase de pre juego, donde posicionamos las unidades sin causar turnos
+                if (state.turn >= 2) {
+                    //Si es paracaidista pasa directamente a estado usado
+                    if (state.units[action.unit_id].name == "Paratrooper" && !lastPosition.equals(action.new_position)) {
+                        state.units[action.unit_id].used = true;
+                        state.units[action.unit_id].hasAttacked = true;
+                        state.units[action.unit_id].action = 2;
+                    } else {
+                        state.units[action.unit_id].action = 1;
                     }
-
                 }
                 return {
                     turn: state.turn,
@@ -120,7 +130,9 @@ export const Reducer : Redux.Reducer<State> =
                     map: state.map,
                     selectedUnit: action.selectedUnit,
                     cursorPosition: state.cursorPosition,
-                    type: "SET_LISTENER"
+                    width: state.width,
+                    height: state.height,
+                    type: "SET_LISTENER"                    
                 };
             case "MOVE":
                 // Casillas disponibles
@@ -144,6 +156,8 @@ export const Reducer : Redux.Reducer<State> =
                     map: state.map,
                     selectedUnit: action.unit_id,
                     cursorPosition: state.cursorPosition,
+                    width: state.width,
+                    height: state.height,
                     type: "MOVE"
                 };
             case "SET_LISTENER":
@@ -156,6 +170,8 @@ export const Reducer : Redux.Reducer<State> =
                     map: action.map,
                     selectedUnit: null,
                     cursorPosition: state.cursorPosition,
+                    width: state.width,
+                    height: state.height,
                     type: "SET_LISTENER"
                 };
             case "CURSOR_MOVE":
@@ -168,6 +184,8 @@ export const Reducer : Redux.Reducer<State> =
                     map: state.map,
                     cursorPosition: action.position,
                     selectedUnit: state.selectedUnit,
+                    width: state.width,
+                    height: state.height,
                     type: state.type
                 };
             case "ATTACK":
@@ -227,6 +245,8 @@ export const Reducer : Redux.Reducer<State> =
                     map: state.map,
                     cursorPosition: state.cursorPosition,
                     selectedUnit: selectedUnit,
+                    width: state.width,
+                    height: state.height,
                     type: "SET_LISTENER"
                 }
             case "FINISH":
@@ -249,6 +269,8 @@ export const Reducer : Redux.Reducer<State> =
                     map: state.map,
                     cursorPosition: state.cursorPosition,
                     selectedUnit: null,
+                    width: state.width,
+                    height: state.height,
                     type: "SET_LISTENER"
                 }
             case "NEXT_ACTION":
@@ -266,6 +288,8 @@ export const Reducer : Redux.Reducer<State> =
                     map: state.map,
                     cursorPosition: state.cursorPosition,
                     selectedUnit: null,
+                    width: state.width,
+                    height: state.height,
                     type: "SET_LISTENER"
                 }
             case "CUSTOM_MAP_INIT":
@@ -279,6 +303,8 @@ export const Reducer : Redux.Reducer<State> =
                     map: state.map,
                     cursorPosition: state.cursorPosition,
                     selectedUnit: state.selectedUnit,
+                    width: action.width,
+                    height: action.height,
                     type: state.type
                 }
             case "SELECT":
@@ -292,6 +318,8 @@ export const Reducer : Redux.Reducer<State> =
                     map: state.map,
                     cursorPosition: state.cursorPosition,
                     selectedUnit: action.selectedUnit,
+                    width: state.width,
+                    height: state.height,
                     type: "SET_LISTENER"
                 }
             case "SYNC_STATE":
@@ -305,8 +333,40 @@ export const Reducer : Redux.Reducer<State> =
                     map: state.map,
                     cursorPosition: state.cursorPosition,
                     selectedUnit: state.selectedUnit,
-                    type: state.type
+                    width: action.width,
+                    height: action.height,
+                    type: action.type
                 };
+            case "UPDATE_UNITS":
+                return {
+                    turn: state.turn,
+                    actualState: state.actualState,
+                    units: action.units,
+                    visitables: state.visitables,
+                    terrains: state.terrains,
+                    map: state.map,
+                    cursorPosition: state.cursorPosition,
+                    selectedUnit: state.selectedUnit,
+                    width: state.width,
+                    height: state.width,
+                    type: state.type
+                }
+            case "UPDATE_MAP":
+                return {
+                    turn: state.turn,
+                    actualState: state.actualState,
+                    units: state.units,
+                    visitables: state.visitables,
+                    terrains: action.terrains,
+                    map: state.map,
+                    cursorPosition: state.cursorPosition,
+                    selectedUnit: state.selectedUnit,
+                    width: action.width,
+                    height: action.width,
+                    type: state.type
+                }
+            case "resetState":
+                return resetInitialState();
             default:
                 return state;
         }

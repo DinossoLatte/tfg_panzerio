@@ -19,7 +19,6 @@ export function saveState(act: Redux.AnyAction) {
     var actualState: number = store.getState().actualState;
     var map: Map = store.getState().map;
     var units: Array<Unit> = store.getState().units;
-    console.log(JSON.stringify(units));
     var terrains: Array<Terrain> = store.getState().terrains;
     var selectedUnit: number = store.getState().selectedUnit;
     var cursorPosition: Pair = store.getState().cursorPosition;
@@ -41,7 +40,7 @@ export var store = Redux.createStore<State>(Reducer);
 export var actualState: State = undefined;
 
 export function saveStateServer(callback: () => void, act: Redux.AnyAction){
-    var connection = new WebSocket("ws://localhost:8080/");
+    var connection = Network.getConnection();
     console.log("Connection established with server");
     // Establecemos la conexión
     connection.onmessage = function(event: MessageEvent) {
@@ -56,10 +55,8 @@ export function saveStateServer(callback: () => void, act: Redux.AnyAction){
         // Una vez tengamos el estado, llamamos al callback aportado, que permitirá saber con certeza que el estado está disponible
         callback();
     };
-    connection.onopen = function() {
-        console.log("Connection available for sending action");
-        // Enviamos la solicitud
-        connection.send(JSON.stringify(act));
-        console.log("Action sent.");
-    }
+    console.log("Connection available for sending action");
+    // Enviamos la solicitud
+    connection.send(JSON.stringify(act));
+    console.log("Action sent.");
 }
