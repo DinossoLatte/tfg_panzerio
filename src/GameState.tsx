@@ -18,7 +18,8 @@ export type State = {
     readonly map: Map,
     readonly selectedUnit: number,
     readonly type: string,
-    readonly isTurn: boolean
+    readonly isTurn: boolean,
+    readonly isPlayer: boolean
 }
 
 //El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
@@ -139,7 +140,7 @@ export class Actions {
         }
     }
 
-    static generatePreGameConfiguration(terrains: Terrain[], units: Unit[], width: number, height: number): Redux.AnyAction {
+    static generatePreGameConfiguration(terrains: Terrain[], width: number, height: number): Redux.AnyAction {
         return {
             // Como es pre juego, el estado debe sincronizarse con el servidor
             tipo: "SYNC_STATE",
@@ -152,8 +153,7 @@ export class Actions {
                 map: store.getState().map,
                 selectedUnit: store.getState().selectedUnit,
                 type: store.getState().type,
-                terrains: terrains,
-                units: units,
+                terrains: terrains
             },
             type: "PRE_GAME_CONFIGURATION"
         };
@@ -164,6 +164,13 @@ export class Actions {
             type: "NEW_STATE_FROM_SERVER",
             state: state
         };
+    }
+
+    static generateUpdateUnits(newUnits: Array<Unit>) : Redux.AnyAction {
+        return {
+            type: "UPDATE_UNITS",
+            newUnits: newUnits
+        }
     }
 }
 
@@ -211,7 +218,8 @@ export const Reducer: Redux.Reducer<State> =
                     selectedUnit: action.selectedUnit,
                     cursorPosition: state.cursorPosition,
                     type: "SET_LISTENER",
-                    isTurn: state.isTurn
+                    isTurn: state.isTurn,
+                    isPlayer: state.isPlayer
                 };
             case "MOVE":
                 // Casillas disponibles
@@ -235,7 +243,8 @@ export const Reducer: Redux.Reducer<State> =
                     selectedUnit: action.unit_id,
                     cursorPosition: state.cursorPosition,
                     type: "MOVE",
-                    isTurn: state.isTurn
+                    isTurn: state.isTurn,
+                    isPlayer: state.isPlayer
                 };
             case "SET_LISTENER":
                 return {
@@ -248,7 +257,8 @@ export const Reducer: Redux.Reducer<State> =
                     selectedUnit: null,
                     cursorPosition: state.cursorPosition,
                     type: "SET_LISTENER",
-                    isTurn: state.isTurn
+                    isTurn: state.isTurn,
+                    isPlayer: state.isPlayer
                 };
             case "CURSOR_MOVE":
                 return {
@@ -261,7 +271,8 @@ export const Reducer: Redux.Reducer<State> =
                     cursorPosition: action.position,
                     selectedUnit: state.selectedUnit,
                     type: state.type,
-                    isTurn: state.isTurn
+                    isTurn: state.isTurn,
+                    isPlayer: state.isPlayer
                 };
             case "ATTACK":
                 // Lógica de ataque
@@ -305,7 +316,21 @@ export const Reducer: Redux.Reducer<State> =
                 attackingUnit.action = 2;
                 var actualstate = state.actualState;
                 //Si no está el general del jugador entonces se considerará victoria o derrota (esto ya incluye también que no queden más unidades)
-                if (state.units.filter(x => !x.player && x.name == "General").length == 0) {
+                if (state.units.filter(x => !state.isPlayer == x.player && x.name == "General").length == 0) {
+                    Network.sendWaitTurn((statusCode) => {
+                        console.log(JSON.stringify(statusCode));
+                        // Comprobamos el resultado
+                        if (statusCode.status) {
+                            // Si ha salido bien, llamaremos al nuevo estado
+                            saveState(Actions.generateNewStateFromServer(statusCode.state));
+                            // TODO Comprobación del estado
+                        } else {
+                            // En caso contrario avisaremos al cliente
+                            console.log(statusCode.error);
+                            // Y indicaremos que la conexión ha fallado y que debe reiniciar la pestaña
+                            window.alert("No se ha podido enviar la información al servidor, por favor, recargue esta pestaña para continuar");
+                        }
+                    })
                     actualstate = 1;
                     let profile: {
                         googleId: number
@@ -343,7 +368,21 @@ export const Reducer: Redux.Reducer<State> =
                             });
                         }
                     });
-                } else if (state.units.filter(x => x.player && x.name == "General").length == 0) {
+                } else if (state.units.filter(x => state.isPlayer == x.player && x.name == "General").length == 0) {
+                    Network.sendWaitTurn((statusCode) => {
+                        console.log(JSON.stringify(statusCode));
+                        // Comprobamos el resultado
+                        if (statusCode.status) {
+                            // Si ha salido bien, llamaremos al nuevo estado
+                            saveState(Actions.generateNewStateFromServer(statusCode.state));
+                            // TODO Comprobación del estado
+                        } else {
+                            // En caso contrario avisaremos al cliente
+                            console.log(statusCode.error);
+                            // Y indicaremos que la conexión ha fallado y que debe reiniciar la pestaña
+                            window.alert("No se ha podido enviar la información al servidor, por favor, recargue esta pestaña para continuar");
+                        }
+                    })
                     actualstate = 2;
                     let profile: {
                         googleId: number
@@ -392,7 +431,8 @@ export const Reducer: Redux.Reducer<State> =
                     cursorPosition: state.cursorPosition,
                     selectedUnit: selectedUnit,
                     type: "SET_LISTENER",
-                    isTurn: state.isTurn
+                    isTurn: state.isTurn,
+                    isPlayer: state.isPlayer
                 }
             case "FINISH":
                 // En este caso retornamos el objeto inicial InitialState.
@@ -429,7 +469,8 @@ export const Reducer: Redux.Reducer<State> =
                     cursorPosition: state.cursorPosition,
                     selectedUnit: null,
                     type: "SET_LISTENER",
-                    isTurn: state.isTurn
+                    isTurn: state.isTurn,
+                    isPlayer: state.isPlayer
                 }
             case "NEXT_ACTION":
                 state.units[action.selectedUnit].action++;
@@ -447,7 +488,8 @@ export const Reducer: Redux.Reducer<State> =
                     cursorPosition: state.cursorPosition,
                     selectedUnit: null,
                     type: "SET_LISTENER",
-                    isTurn: state.isTurn
+                    isTurn: state.isTurn,
+                    isPlayer: state.isPlayer
                 }
             case "PRE_GAME_CONFIGURATION":
                 // Si se quiere importar un mapa, se cambiará los terrenos y las unidades
@@ -461,7 +503,8 @@ export const Reducer: Redux.Reducer<State> =
                     cursorPosition: state.cursorPosition,
                     selectedUnit: state.selectedUnit,
                     type: state.type,
-                    isTurn: state.isTurn
+                    isTurn: state.isTurn,
+                    isPlayer: action.state.isPlayer
                 }
             case "SELECT":
                 state.units[action.selectedUnit].action = 0;
@@ -478,14 +521,20 @@ export const Reducer: Redux.Reducer<State> =
                     cursorPosition: state.cursorPosition,
                     selectedUnit: action.selectedUnit,
                     type: "SET_LISTENER",
-                    isTurn: state.isTurn
+                    isTurn: state.isTurn,
+                    isPlayer: state.isPlayer
                 }
             case "NEW_STATE_FROM_SERVER":
                 // Retornamos el estado de la acción
                 console.log(JSON.stringify(action.state.units));
+                let newActualState = state.actualState;
+                if(action.state.units.filter((unit: any) => state.isPlayer == unit.player && unit.name == "General").length == 0) {
+                    // Hemos perdido la partida, avisamos al jugador
+                    newActualState = 2;
+                }
                 return {
                     turn: action.state.turn,
-                    actualState: action.state.actualState,
+                    actualState: newActualState,
                     units: action.state.units,
                     visitables: action.state.visitables,
                     terrains: action.state.terrains,
@@ -493,7 +542,38 @@ export const Reducer: Redux.Reducer<State> =
                     cursorPosition: action.state.cursorPosition,
                     selectedUnit: action.state.selectedUnit,
                     type: action.state.type,
-                    isTurn: state.isTurn
+                    isTurn: state.isTurn,
+                    isPlayer: state.isPlayer
+                }
+            case "UPDATE_UNITS":
+                let units = state.units;
+                units.push(action.units);
+                return {
+                    turn: state.turn,
+                    actualState: state.actualState,
+                    units: units,
+                    visitables: state.visitables,
+                    terrains: state.terrains,
+                    map: state.map,
+                    cursorPosition: state.cursorPosition,
+                    selectedUnit: state.selectedUnit,
+                    type: state.type,
+                    isTurn: state.isTurn,
+                    isPlayer: state.isPlayer
+                }
+            case "NEW_STATE":
+                return {
+                    turn: state.turn,
+                    actualState: state.actualState,
+                    units: action.units,
+                    visitables: state.visitables,
+                    terrains: action.terrains,
+                    map: state.map,
+                    cursorPosition: state.cursorPosition,
+                    selectedUnit: state.selectedUnit,
+                    type: state.type,
+                    isTurn: state.isTurn,
+                    isPlayer: state.isPlayer
                 }
             default:
                 return state;

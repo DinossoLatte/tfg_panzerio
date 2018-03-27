@@ -47,8 +47,8 @@ export class Pair {
         return this.row == pair.row && this.column == pair.column;
     }
 
-    public toString = () : string => {
-        return "("+this.row+", "+this.column+")";
+    public toString(): string {
+        return JSON.stringify(this);
     }
 }
 

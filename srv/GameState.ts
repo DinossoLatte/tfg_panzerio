@@ -23,19 +23,23 @@ export type State = {
     readonly height: number
 }
 
-export var InitialState: State = {
-    turn: 0,
-    actualState: 0,
-    units: [],
-    visitables: [],
-    terrains: [],
-    cursorPosition: undefined,
-    map: undefined,
-    selectedUnit: undefined,
-    width: 0,
-    height: 0,
-    type: undefined
+export function resetInitialState() {
+    return {
+        turn: 0,
+        actualState: 0,
+        units: [],
+        visitables: [],
+        terrains: [],
+        cursorPosition: undefined,
+        map: undefined,
+        selectedUnit: undefined,
+        width: 0,
+        height: 0,
+        type: "NEW_STATE"
+    };
 }
+
+export var InitialState: State = resetInitialState();
 
 export function parseActionMap(data: any) {
     // Definimos la salida, un mapa, y lo populamos con datos por defecto
@@ -333,6 +337,36 @@ export const Reducer : Redux.Reducer<State> =
                     height: action.height,
                     type: action.type
                 };
+            case "UPDATE_UNITS":
+                return {
+                    turn: state.turn,
+                    actualState: state.actualState,
+                    units: action.units,
+                    visitables: state.visitables,
+                    terrains: state.terrains,
+                    map: state.map,
+                    cursorPosition: state.cursorPosition,
+                    selectedUnit: state.selectedUnit,
+                    width: state.width,
+                    height: state.width,
+                    type: state.type
+                }
+            case "UPDATE_MAP":
+                return {
+                    turn: state.turn,
+                    actualState: state.actualState,
+                    units: state.units,
+                    visitables: state.visitables,
+                    terrains: action.terrains,
+                    map: state.map,
+                    cursorPosition: state.cursorPosition,
+                    selectedUnit: state.selectedUnit,
+                    width: action.width,
+                    height: action.width,
+                    type: state.type
+                }
+            case "resetState":
+                return resetInitialState();
             default:
                 return state;
         }
