@@ -467,7 +467,7 @@ class PreGameMenu extends React.Component<any, any> {
                 })
             }
 
-            
+
         }else{
             window.alert("Debe seleccionar los batallones y el mapa para continuar");
         }
@@ -504,7 +504,7 @@ class CreateMenu extends React.Component<any, any> {
     getMapIdFromServer(callback?: (error: { status: boolean, errorCode: string, mapId: number[], mapName: string[] }) => void) {
         // Primero, establecemos la conexión con el servidor
         let game = this;
-        let connection = new WebSocket("ws://localhost:8080/");
+        let connection = Network.getConnection();
         let mapclient: {
             googleId: number
         } = {
@@ -525,13 +525,10 @@ class CreateMenu extends React.Component<any, any> {
                 game.setState({mapId: data.mapId, mapName: data.mapName});
             }
         };
-        connection.onopen = () => {
-            // Al abrirse la conexión, informamos al servidor del mapa
-            connection.send(JSON.stringify({
-                tipo: "getMapId",
-                mapclient: mapclient
-            }));
-        }
+        connection.send(JSON.stringify({
+            tipo: "getMapId",
+            mapclient: mapclient
+        }));
     }
 
     render() {
@@ -606,7 +603,7 @@ class CreateMenu extends React.Component<any, any> {
             this.setState({ error: false });
             //Es necesario porque rows y columns no se actualizan
             let game = this;
-            let connection = new WebSocket("ws://localhost:8080/");
+            let connection = Network.getConnection();
             connection.onmessage = function(event: MessageEvent) {
                 // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
                 // el comando se haya entendido
@@ -620,13 +617,11 @@ class CreateMenu extends React.Component<any, any> {
                     game.props.parentObject.setMapSize(data.rows, data.columns);
                 }
             };
-            connection.onopen = () => {
-                // Al abrirse la conexión, informamos al servidor del mapa
-                connection.send(JSON.stringify({
-                    tipo: "getMap",
-                    mapData: Number(this.props.parentObject.state.selected)
-                }));
-            }
+            connection.send(JSON.stringify({
+                tipo: "getMap",
+                mapData: Number(this.props.parentObject.state.selected)
+            }));
+            
             this.props.parentObject.changeGameState(4);
         }else{
             window.alert("Se debe seleccionar un mapa");

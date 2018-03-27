@@ -75,7 +75,7 @@ export class EditMap extends React.Component<any, any> {
     getMapFromServer(mapData: {id: number} , callback?: (error: { status: boolean, errorCode: string, retmap: Array<Terrain> }) => void) {
         // Primero, establecemos la conexión con el servidor
         let game = this;
-        let connection = new WebSocket("ws://localhost:8080/");
+        let connection = Network.getConnection();
         connection.onmessage = function(event: MessageEvent) {
             // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
             // el comando se haya entendido
@@ -99,13 +99,10 @@ export class EditMap extends React.Component<any, any> {
                 }
             }
         };
-        connection.onopen = () => {
-            // Al abrirse la conexión, informamos al servidor del mapa
-            connection.send(JSON.stringify({
-                tipo: "getMap",
-                mapData: mapData.id
-            }));
-        }
+        connection.send(JSON.stringify({
+            tipo: "getMap",
+            mapData: mapData.id
+        }));
     }
 
     //Actualiza el valor del nombre del mapa
