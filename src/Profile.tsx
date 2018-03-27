@@ -17,7 +17,9 @@ export class Profile extends React.Component<any, any> {
             gameswon: 0,
             gameslost: 0,
             name: "Nuevo batallón",
-            googleId: this.props.parentObject.state.clientId
+            googleId: this.props.parentObject.state.clientId,
+            avatar: this.props.parentObject.state.clientAvatar,
+            units: new Array<Army>()
         };
         let getprofile: {
             googleId: number
@@ -47,16 +49,17 @@ export class Profile extends React.Component<any, any> {
             prof.getArmyIdFromServer(error, (errorarmy: { status: boolean, errorCode: string, armyId: number[], armyName: string[] }) =>{
                 for(var i=0; i<errorarmy.armyId.length; i++){
                     let arm = null;
-                    let armies = storeProfile.getState().armies;
+                    let unit = prof.state.units;
                     let name = errorarmy.armyName[i];
                     prof.getUnitsFromServer(errorarmy.armyId[i],(errorunits: { status: boolean, errorCode: string, units: Array<{type: string, number: number}> }) =>{
                         arm = new Army(errorunits.units,name);
-                        armies.push(arm);
-                        saveState(ProfileActions.save(prof, armies, storeProfile.getState().selectedArmy, storeProfile.getState().selected, storeProfile.getState().type));
+                        unit.push(arm);
+                        this.setState({units: unit});
                     });
                 }
             });
         });
+        saveState(ProfileActions.save(prof, this.state.units, storeProfile.getState().selectedArmy, storeProfile.getState().selected, storeProfile.getState().type));
         this.forceUpdate();
     }
 
@@ -480,16 +483,6 @@ export class Profile extends React.Component<any, any> {
         this.props.parentObject.changeGameState(0);
     }
 
-    /// Este listener se encargará de exportar el ejército seleccionado para que pueda ser usado en el juego
-    onClickExportArmy() {
-        // Primero, obtendremos el ejército seleccionado
-        let selectedArmy = storeProfile.getState().armies[storeProfile.getState().selectedArmy].unitList;
-        // Lo convertimos a una cadena de texto de JSON
-        let exportedArmy = JSON.stringify(selectedArmy);
-        // Y lo mostraremos en pantalla
-        window.alert("El siguiente texto le permitirá usar este ejército en el juego: \n"+exportedArmy);
-    }
-
     updateUserName(title: string) {
         if (title.trim() == "") {
             // Si nos viene el TODO (objeto), indicamos el batallón seleccionado
@@ -603,7 +596,7 @@ export class Profile extends React.Component<any, any> {
     render() {
         return (
             <div>
-                <img className="avatar" src="imgs/avatar.png" />
+                <img className="avatar" src={this.state.avatar} />
                 <p>Nombre: {this.state.username}</p>
                 <label id="bold">Modifique aquí su nombre: <input type="text" value={this.state.username} onChange={evt => this.updateUserName(evt.target.value)} />
                 <button id="saveProfile" name="saveProfile" className="saveProfileButton" onClick={this.onClickSaveProfileName.bind(this)}>Editar nombre</button>
@@ -611,9 +604,8 @@ export class Profile extends React.Component<any, any> {
                 <p>Partidas ganadas: {this.state.gameswon}</p>
                 <p>Partidas perdidas: {this.state.gameslost}</p>
                 {storeProfile.getState().type != "0" ? <button id="listArmy" name="listArmy" className="listArmyButton" onClick={this.onClickList.bind(this)}>Mostrar batallones</button> : ""}
-                {storeProfile.getState().type != "1" ? <button id="createArmy" name="createArmy" className="createArmyButton" onClick={this.onClickCreateArmy.bind(this)}>Crear un nuevo ejército</button> : ""}
-                {storeProfile.getState().type != "2" ? <button id="editArmy" name="editArmy" className="editArmyButton" onClick={this.onClickEditArmy.bind(this)}>Editar un ejército</button> : ""}
-                {storeProfile.getState().type > "2" ? <button id="exportArmy" name="exportArmy" className="exportArmyButton" onClick={this.onClickExportArmy.bind(this)}>Exportar ejército</button> : ""}
+                {storeProfile.getState().type != "1" ? <button id="createArmy" name="createArmy" className="createArmyButton" onClick={this.onClickCreateArmy.bind(this)}>Crear un nuevo batallón</button> : ""}
+                {storeProfile.getState().type != "2" ? <button id="editArmy" name="editArmy" className="editArmyButton" onClick={this.onClickEditArmy.bind(this)}>Editar un batallón</button> : ""}
                 <button id="saveProfile" name="saveProfile" className="saveProfileButton" onClick={this.onClickSaveProfile.bind(this)}>Guardar batallones</button>
                 <button id="exitButton" name="exitButton" onClick={this.onClickExitMenu.bind(this)}>Volver al menú</button>
                 {storeProfile.getState().type >= "2" && storeProfile.getState().armies.length > 0 ? <div>

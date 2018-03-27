@@ -15,7 +15,7 @@ export interface StoreEdit extends Redux.Store<StateEdit> {
 export var storeEdit = Redux.createStore<StateEdit>(ReducerEdit);
 
 export function saveState(act: Redux.AnyAction) {
-    saveStateServer(()=>{}, act);
+    //saveStateServer(()=>{}, act);
     storeEdit.dispatch(act);
     // Refresca el mapa y el resto de variables del estado
     var map: EditMap = storeEdit.getState().map;

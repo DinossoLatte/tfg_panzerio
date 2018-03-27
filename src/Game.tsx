@@ -9,6 +9,8 @@ import { store, saveState } from './Store';
 import { Network, Pair } from './Utils';
 import { Profile } from './Profile'
 import { Infantry, Tank, General, Unit } from './Unit';
+import * as StoreEdit from './StoreEdit';
+import * as GameEditState from './GameEditState';
 
 class EnterGameButton extends React.Component<any, any> {
     constructor(props: any) {
@@ -320,7 +322,7 @@ class PreGameMenu extends React.Component<any, any> {
     }
 
     //Get map
-    getMapFromServer(map: { id: number }, player: Array<Unit>, enemy: Array<Unit>
+    getMapFromServer(mapData: { id: number }, player: Array<Unit>, enemy: Array<Unit>
         , callback?: (error: { status: boolean, errorCode: string, map: string }) => void) {
         // Primero, establecemos la conexión con el servidor
         let game = this;
@@ -353,7 +355,7 @@ class PreGameMenu extends React.Component<any, any> {
             // Al abrirse la conexión, informamos al servidor del mapa
             connection.send(JSON.stringify({
                 tipo: "getMap",
-                map: map
+                mapData: mapData.id
             }));
         }
     }
@@ -424,16 +426,16 @@ class PreGameMenu extends React.Component<any, any> {
             //Por ahora se hará este triple callback pero si hubiera multijugador no sería necesario, solo uno
             let game = this;
             game.getPlayerFromServer(game.state.selectedPlayer,(errorplayer: { status: boolean, errorCode: string, units: Array<Unit> })=>{
-                console.log("Entra en primero");                
+                console.log("Entra en primero");
                 game.getEnemyFromServer(game.state.selectedEnemy,(errorenemy: { status: boolean, errorCode: string, units: Array<Unit> })=>{
                     console.log("Entra en segundo");
-                    game.getMapFromServer(game.state.selected, errorplayer.units, errorenemy.units, (error: any) => {
+                    game.getMapFromServer({id: game.state.selected}, errorplayer.units, errorenemy.units, (error: any) => {
                         console.log("Entra en tercero");
                         Network.sendSyncState(store.getState(), (statusCode) => {
                             if(statusCode.status == false) {
                                 console.error("Ha fallado la sincronización con el servidor");
                             }
-                        }); 
+                        });
                     });
                 })
             });
@@ -460,7 +462,43 @@ class PreGameMenu extends React.Component<any, any> {
 class CreateMenu extends React.Component<any, any> {
     constructor(props : any) {
         super(props);
-        this.state = { error: false };
+        this.state = { error: false,
+            mapId: [] as Array<number>,
+            mapName: [] as Array<string>};
+        this.getMapIdFromServer();
+    }
+
+    getMapIdFromServer(callback?: (error: { status: boolean, errorCode: string, mapId: number[], mapName: string[] }) => void) {
+        // Primero, establecemos la conexión con el servidor
+        let game = this;
+        let connection = new WebSocket("ws://localhost:8080/");
+        let mapclient: {
+            googleId: number
+        } = {
+            // Incluimos el id del usuario de Google
+            googleId: this.props.parentObject.state.clientId
+        };
+        connection.onmessage = function(event: MessageEvent) {
+            // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
+            // el comando se haya entendido
+            console.log("recepción de la información del servidor "+JSON.stringify(event));
+            if(event.data == "Command not understood") {
+                // Lanzamos un error
+                console.log("Error when attempting to save, server didn't understood request");
+                //No es necesario llamar al callback porque este ya es el nivel final (cliente)
+            } else {
+                console.log(event.data);
+                let data = JSON.parse(event.data);
+                game.setState({mapId: data.mapId, mapName: data.mapName});
+            }
+        };
+        connection.onopen = () => {
+            // Al abrirse la conexión, informamos al servidor del mapa
+            connection.send(JSON.stringify({
+                tipo: "getMapId",
+                mapclient: mapclient
+            }));
+        }
     }
 
     render() {
@@ -472,21 +510,93 @@ class CreateMenu extends React.Component<any, any> {
                 Altura: <input type="text" value={this.props.parentObject.state.edity} onChange={evt => this.updateInput(this.props.parentObject.state.editx,evt.target.value)} />
             </div>
             {this.state.error?<div id="error">Deben introducirse valores numéricos</div>:""}
-            <button id="createButton" name="createButton" onClick={this.onClick.bind(this)}>Crear mapa</button>
+            <button id="createButton" name="createButton" onClick={this.onClickCreate.bind(this)}>Crear mapa</button>
+            <div className="mapMenu">
+                <label> Seleccione el mapa:
+                <select id="map" defaultValue={null} value={this.state.selected} onChange={evt => this.updateMap(evt.target.value)}>
+                    {this.selectMaps()}
+                </select>
+                </label>
+            </div>
+            <button id="createButton" name="createButton" onClick={this.onClick.bind(this)}>Modificar mapa</button>
+            <button id="createButton" name="createButton" onClick={this.onClickDelete.bind(this)}>Eliminar mapa</button>
             <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Volver al menu</button>
         </div>
+    }
+
+    onClickDelete(event: React.MouseEvent<HTMLElement>) {
+        let jsonResult = {
+            id: this.props.parentObject.state.selected
+        };
+        if(this.props.parentObject.state.selected!=null){
+            // Enviaremos al servidor el contenido del mapa
+            Network.deleteMapToServer(jsonResult);
+            // Finalmente, mostramos en el textarea el resultado
+            this.getMapIdFromServer();
+            this.props.parentObject.changeSelected(null);
+            window.alert("Se ha eliminado correctamente el perfil");
+        }
+    }
+
+    // Actualiza el componente de poder introducir el mapa, en el caso de seleccionar
+    // la opción de 'Personalizado'.
+    updateMap(evt: string) {
+        // Comprobamos que el select tenga seleccionado el 'custom'
+        this.props.parentObject.changeSelected(evt);
+    }
+
+    selectMaps(){
+        let map = [<option selected value={null}>--Selecciona--</option>];
+        for(var i = 0; i < this.state.mapId.length; i++){
+            map.push(<option value={this.state.mapId[i]}>{this.state.mapName[i]}</option>);
+        }
+        return map;
     }
 
     updateInput(x: string, y: string) {
         this.props.parentObject.setMapSize(x,y);
     }
 
-    onClick(clickEvent : React.MouseEvent<HTMLElement>) {
-        if(this.props.parentObject.state.editx.match(/^\d+$/g) && this.props.parentObject.state.edity.match(/^\d+$/g)){
+    onClickCreate(clickEvent : React.MouseEvent<HTMLElement>) {
+        this.props.parentObject.changeSelected(null);
+        if(this.props.parentObject.state.editx.match(/^[1-9][0-9]*$/g) && this.props.parentObject.state.edity.match(/^[1-9][0-9]*$/g)){
             this.setState({ error: false });
             this.props.parentObject.changeGameState(4);
         }else{
             this.setState({ error: true });
+            this.props.parentObject.changeGameState(3);
+        }
+    }
+
+    onClick(clickEvent : React.MouseEvent<HTMLElement>) {
+        if(this.props.parentObject.state.selected!=null){
+            this.setState({ error: false });
+            //Es necesario porque rows y columns no se actualizan
+            let game = this;
+            let connection = new WebSocket("ws://localhost:8080/");
+            connection.onmessage = function(event: MessageEvent) {
+                // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
+                // el comando se haya entendido
+                console.log("Datos "+JSON.stringify(event.data));
+                let data = Network.parseMapServer(event.data);
+                if(event.data == "Command not understood") {
+                    // Lanzamos un error
+                    console.log("Error when attempting to save, server didn't understood request");
+                } else {
+                    // En caso contrario, ejecutamos el callback sin errores
+                    game.props.parentObject.setMapSize(data.rows, data.columns);
+                }
+            };
+            connection.onopen = () => {
+                // Al abrirse la conexión, informamos al servidor del mapa
+                connection.send(JSON.stringify({
+                    tipo: "getMap",
+                    mapData: Number(this.props.parentObject.state.selected)
+                }));
+            }
+            this.props.parentObject.changeGameState(4);
+        }else{
+            window.alert("Se debe seleccionar un mapa");
             this.props.parentObject.changeGameState(3);
         }
     }
@@ -504,7 +614,9 @@ class Game extends React.Component<any, any> {
             gameState: 0,
             editx: "5",// 0 es el menu del juego, 1 será el menú de opciones, 2 el juego, 3 edición de map y 5 el pre juego
             edity: "5",
-            clientId: null // Id del cliente loggeado
+            clientId: null, // Id del cliente loggeado
+            selected: null,
+            clientAvatar: null
         };
     }
 
@@ -521,7 +633,7 @@ class Game extends React.Component<any, any> {
                 result = <CreateMenu parentObject={this} />;
                 break;
             case 4:
-                result = <EditMap horizontal={this.state.editx} vertical={this.state.edity} parentObject={this} />;
+                result = <EditMap horizontal={this.state.editx} vertical={this.state.edity} selected={this.state.selected} parentObject={this} />;
                 break;
             case 5:
                 result = <PreGameMenu parentObject={this} />;
@@ -558,6 +670,12 @@ class Game extends React.Component<any, any> {
         return result;
     }
 
+    changeSelected(selected: string) {
+        this.setState({
+            selected: selected
+        });
+    }
+
     changeGameState(stateNumber: number) {
         this.setState({
             gameState: stateNumber,
@@ -580,7 +698,8 @@ class Game extends React.Component<any, any> {
                 gameState: this.state.gameState,
                 editx: this.state.editx,
                 edity: this.state.edity,
-                clientId: Number(response.getBasicProfile().getId())
+                clientId: Number(response.getBasicProfile().getId()),
+                clientAvatar: response.getBasicProfile().getImageUrl()
             });
             console.log(this.state.clientId);
         }, Number(response.getBasicProfile().getId()));

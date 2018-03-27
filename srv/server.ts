@@ -60,6 +60,7 @@ server.on('connection', function connect(ws) {
                 //Enviamos el nuevo estado
                 ws.send(JSON.stringify(Store.store.getState()));
                 break;
+            /* TODO temporalmente lo quito ya que se guardará en servidor el estado, no lo veo necesario aqui
             case "SAVE_EDIT":
                 let actedit = GameEditState.parseActionMap(message);
                 //Guardamos el estado
@@ -67,7 +68,7 @@ server.on('connection', function connect(ws) {
                 //Enviamos el nuevo estado
                 ws.send(JSON.stringify(StoreEdit.storeEdit.getState()));
                 break;
-            /* TODO temporalmente lo quito ya que se guardará en servidor el estado, no lo veo necesario aqui
+
             case "SAVE_PROFILE":
                 let actprofile = GameProfileState.parseActionMap(message);
                 //Guardamos el estado
@@ -75,6 +76,28 @@ server.on('connection', function connect(ws) {
                 //Enviamos el nuevo estado
                 ws.send(JSON.stringify(StoreProfile.storeProfile.getState()));
                 break;*/
+            //Borrado del mapa
+            case "deleteMap":
+                // Obtenemos los datos de la petición
+                let delmap = message.map;
+                // Ejecutamos el almacenado en la BD
+                UtilsServer.MapsDatabase.deleteMap(delmap, (error: Error) => {
+                    // Si hay error
+                    if(error) {
+                        // Entonces indicamos al receptor el borrado incorrecto del mapa
+                        ws.send(JSON.stringify({
+                            status: false,
+                            error: "Couldn't delete map. Error: " + error.message
+                        }));
+                    } else {
+                        // En caso contrario, avisamos del borrado correcto
+                        ws.send(JSON.stringify({
+                            status: true,
+                            error: "Deleted successfully"
+                        }))
+                    }
+                });
+                break;
             // - Guardado del mapa
             case "saveMap":
                 // Obtenemos los datos de la petición
@@ -99,10 +122,10 @@ server.on('connection', function connect(ws) {
                 break;
             case "getMap":
                 // Obtenemos los datos de la petición
-                let getMapvar = message.map;
+                let getMapvar = message.mapData;
                 // Obtenemos el mapa
                 console.log(JSON.stringify(getMapvar));
-                UtilsServer.MapsDatabase.getMap(Number(getMapvar), (code: { status: boolean, error: string,  map: { rows: number, columns: number, name: string,
+                UtilsServer.MapsDatabase.getMap(getMapvar, (code: { status: boolean, error: string,  map: { rows: number, columns: number, mapName: string,
                     terrains: {name: string, image: string, movement_penalty: number, position_row: number, position_cols: number,
                          defense_weak: number, defense_strong: number, attack_weak: number, attack_strong: number}[]} }) => {
                     // Si hay error
@@ -317,7 +340,9 @@ server.on('connection', function connect(ws) {
             case "updateProfile":
                 // Extraemos el perfil
                 let updateprofile = message.profile;
+                console.log("llega a updateprofile");
                 UtilsServer.ProfileDatabase.updateProfile(updateprofile, (statusCode: UtilsServer.StatusCode) => {
+                    console.log("ejecuta el updateprofile");
                     // Devolveremos el contenido de la petición
                     ws.send(JSON.stringify(statusCode));
                 });
