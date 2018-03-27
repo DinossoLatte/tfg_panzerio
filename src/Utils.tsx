@@ -557,13 +557,10 @@ export class Network {
                 }
             }
         };
-        connection.onopen = () => {
-            // Al abrirse la conexión, informamos al servidor del mapa
-            connection.send(JSON.stringify({
-                tipo: "deleteMap",
-                map: map
-            }));
-        }
+        connection.send(JSON.stringify({
+            tipo: "deleteMap",
+            map: map
+        }));
     }
 
     public static parseMapServer(data: string): {terrains: {name: string, image: string, movement_penalty: number,
@@ -806,11 +803,11 @@ export class Network {
     public static sendWaitTurn(callback: (statusCode: { status: boolean, error: string, state: State }) => void) {
         // Como siempre, iniciamos la conexión
         let connection = Network.getConnection();
-        
+
         connection.send(JSON.stringify({
             tipo: "waitTurn"
         }));
-        
+
         connection.onmessage = function(message: MessageEvent) {
             if(message.data == "Command not understood") {
                 callback({ status: false, error: message.data, state: null });
@@ -830,12 +827,11 @@ export class Network {
     public static sendLogInInfo(callback: (statusCode: { status: boolean, error: string}) => void, logInData: number) {
         let connection = Network.getConnection();
         // Como es la primera conexión del cliente, necesitamos espera las respuesta.
-        connection.onopen = () => {
-            connection.send(JSON.stringify({
-                tipo: "logIn",
-                token: logInData
-            }));
-        };
+        connection.send(JSON.stringify({
+            tipo: "logIn",
+            token: logInData
+        }));
+        
         connection.onmessage = function(message: MessageEvent) {
             // Si el comando enviado es correcto
             if(message.data == "Command not understoood") {
@@ -865,7 +861,7 @@ export class Network {
 
     public static sendSyncState(state: State, height: number, width: number,
          callback: (statusCode: { status: boolean, state: any }) => void) {
-        
+
         let connection = Network.getConnection();
 
         let terrains = state.terrains;
