@@ -870,9 +870,6 @@ export class Network {
 
         let terrains = state.terrains;
         let units = state.units;
-        connection.send(JSON.stringify({
-            tipo: "SYNC_STATE"
-        }));
         connection.onmessage = (message: MessageEvent) => {
             console.dir(JSON.parse(message.data));
             if(message.data == "Command not understood") {
@@ -885,6 +882,9 @@ export class Network {
                 callback({ status: result.status, state: state });
             }
         }
+        connection.send(JSON.stringify({
+            tipo: "SYNC_STATE"
+        }));
     }
 
     public static sendExitPreGame(callback: (statusCode: { status: boolean, message: string}) => void) {

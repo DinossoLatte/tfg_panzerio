@@ -35,9 +35,6 @@ server.on('connection', function connect(ws) {
     } else if(player2URL == undefined) {
         console.log("Conecta user 2");
         player2URL = ws;
-    } else {
-        console.log(ws != player1URL);
-        console.log(ws != player2URL);
     }
     ws.on("message", function getInitialState(data) {
         console.log("Got following action: " + data);
