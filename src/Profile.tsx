@@ -28,6 +28,7 @@ export class Profile extends React.Component<any, any> {
             googleId: this.props.parentObject.state.clientId
         };
         console.log("en profile"+this.props.parentObject.state.clientId);
+        var prof = this;
         Network.receiveProfileFromServer(getprofile,(statusCode: { status: boolean, error: string, name: string, gamesWon: number, gamesLost: number }) => {
             // Vemos cómo ha salido la operación
             if(!statusCode.status) {
@@ -42,25 +43,25 @@ export class Profile extends React.Component<any, any> {
                     name: "Nuevo batallón",
                     googleId: this.props.parentObject.state.clientId
                 });
-            }
-        });
-        let prof = this;
-        prof.getUserIdFromServer((error: { status: boolean, errorCode: string, userId: number })=>{
-            prof.getArmyIdFromServer(error, (errorarmy: { status: boolean, errorCode: string, armyId: number[], armyName: string[] }) =>{
-                for(var i=0; i<errorarmy.armyId.length; i++){
-                    let arm = null;
-                    let unit = prof.state.units;
-                    let name = errorarmy.armyName[i];
-                    prof.getUnitsFromServer(errorarmy.armyId[i],(errorunits: { status: boolean, errorCode: string, units: Array<{type: string, number: number}> }) =>{
-                        arm = new Army(errorunits.units,name);
-                        unit.push(arm);
-                        this.setState({units: unit});
+                
+                prof.getUserIdFromServer((error: { status: boolean, errorCode: string, userId: number })=>{
+                    prof.getArmyIdFromServer(error, (errorarmy: { status: boolean, errorCode: string, armyId: number[], armyName: string[] }) =>{
+                        for(var i=0; i<errorarmy.armyId.length; i++){
+                            let arm = null;
+                            let unit = prof.state.units;
+                            let name = errorarmy.armyName[i];
+                            prof.getUnitsFromServer(errorarmy.armyId[i],(errorunits: { status: boolean, errorCode: string, units: Array<{type: string, number: number}> }) =>{
+                                arm = new Army(errorunits.units,name);
+                                unit.push(arm);
+                                this.setState({units: unit});
+                            });
+                        }
+                        saveState(ProfileActions.save(prof, this.state.units, storeProfile.getState().selectedArmy, storeProfile.getState().selected, storeProfile.getState().type));
+                        this.forceUpdate();
                     });
-                }
-            });
+                });
+            } 
         });
-        saveState(ProfileActions.save(prof, this.state.units, storeProfile.getState().selectedArmy, storeProfile.getState().selected, storeProfile.getState().type));
-        this.forceUpdate();
     }
 
     getUnitsFromServer(army: number

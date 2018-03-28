@@ -384,6 +384,7 @@ server.on('connection', function connect(ws) {
             case "saveProfileName":
                 // Extraemos el perfil
                 let saveprofilename = message.profile;
+                console.log("<=====> Llama a saveProfileName");
                 UtilsServer.ProfileDatabase.saveProfileName(saveprofilename, (statusCode: UtilsServer.StatusCode) => {
                     // Devolveremos el contenido de la petición
                     ws.send(JSON.stringify(statusCode));

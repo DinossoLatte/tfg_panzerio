@@ -827,10 +827,12 @@ export class Network {
     public static sendLogInInfo(callback: (statusCode: { status: boolean, error: string}) => void, logInData: number) {
         let connection = Network.getConnection();
         // Como es la primera conexión del cliente, necesitamos espera las respuesta.
-        connection.send(JSON.stringify({
-            tipo: "logIn",
-            token: logInData
-        }));
+        connection.onopen = () => {
+            connection.send(JSON.stringify({
+                tipo: "logIn",
+                token: logInData
+            }));
+        };
         
         connection.onmessage = function(message: MessageEvent) {
             // Si el comando enviado es correcto

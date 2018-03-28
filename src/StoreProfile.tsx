@@ -15,7 +15,6 @@ export interface StoreProfile extends Redux.Store<StateProfile> {
 export var storeProfile = Redux.createStore<StateProfile>(ReducerProfile);
 
 export function saveState(act: Redux.AnyAction) {
-    saveStateServer(Parsers.stringifyCyclicObject(act));
     storeProfile.dispatch(act);
     var profile: Profile = storeProfile.getState().profile;
     var armies: Array<Army> = storeProfile.getState().armies;
@@ -26,23 +25,3 @@ export function saveState(act: Redux.AnyAction) {
 
 //Este será el estado actual que se guardará en cliente, el servidor tendrá guardado el estado real
 export var actualState: StateProfile = undefined;
-
-export function saveStateServer(act: string){
-    var connection = Network.getConnection();
-    console.log("Connection established with server");
-    // Establecemos la conexión
-    connection.onmessage = function(event: MessageEvent) {
-        console.log("Receiving data ...");
-        console.log("Message: "+event.data);
-        if(event.data == "Command not understood") {
-            // Enviamos un error, algo ha pasado con el servidor
-            throw new Error;
-        }
-        // Obtenemos el estado
-        actualState = Network.parseStateProfileFromServer(event.data);
-    };
-    console.log("Connection available for sending action");
-    // Enviamos la solicitud
-    connection.send(act);
-    console.log("Action sent.");
-}
