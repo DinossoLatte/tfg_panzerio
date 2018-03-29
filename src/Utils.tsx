@@ -499,6 +499,16 @@ export class Network {
                     case "Tank":
                         units.push(Units.Tank.create(new Pair(-1, -1), side));
                         break;
+                    case "Paratrooper":
+                        units.push(Units.Paratrooper.create(new Pair(-1, -1), side));
+                        break;
+                    case "Artillery":
+                        units.push(Units.Artillery.create(new Pair(-1, -1), side));
+                        break;
+                    default: 
+                        // Avisamos al desarrollador
+                        console.error("Unit type not recognized: "+pair.type);
+                        break;
                 }
                 // Finalmente, indicamos que hemos creado la unidad de este tipo
                 --unitsLeft;
