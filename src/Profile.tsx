@@ -43,29 +43,38 @@ export class Profile extends React.Component<any, any> {
                     name: "Nuevo batallón",
                     googleId: this.props.parentObject.state.clientId
                 });
-                
+
                 prof.getUserIdFromServer((error: { status: boolean, errorCode: string, userId: number })=>{
                     prof.getArmyIdFromServer(error, (errorarmy: { status: boolean, errorCode: string, armyId: number[], armyName: string[] }) =>{
+                        //this.setState({names: errorarmy.armyName});
                         for(var i=0; i<errorarmy.armyId.length; i++){
                             let arm = null;
                             let unit = prof.state.units;
-                            let name = errorarmy.armyName[i];
-                            prof.getUnitsFromServer(errorarmy.armyId[i],(errorunits: { status: boolean, errorCode: string, units: Array<{type: string, number: number}> }) =>{
-                                arm = new Army(errorunits.units,name);
-                                unit.push(arm);
-                                this.setState({units: unit});
+                            prof.getUnitsFromServer(errorarmy.armyId[i], errorarmy.armyName, errorarmy.armyId,(errorunits: { status: boolean, errorCode: string, units: Array<{type: string, number: number}>, name: string[], armies: number[], army: number }) =>{
+                                for(var j=0; j<errorunits.name.length; j++){
+                                    //Se hace esto porque tiene problemas a la hora de trabajar con un for exterior a la llamada al servidor asi que trabajamos desde dentro del callback con otro for
+                                    console.log("Valores del bucle for "+errorunits.armies[j]+" y "+errorunits.name[j]+" y el valor de errorarmyID es "+errorunits.army);
+                                    if(errorunits.army==errorunits.armies[j]){
+                                        console.log("Valor que busco "+errorunits.name[j]);
+                                        arm = new Army(errorunits.units,errorunits.name[j]);
+                                        console.log(JSON.stringify(arm));
+                                        unit.push(arm);
+                                        this.setState({units: unit});
+                                    }
+                                }
                             });
                         }
+                        console.log("Valor final de units "+JSON.stringify(this.state.units));
                         saveState(ProfileActions.save(prof, this.state.units, storeProfile.getState().selectedArmy, storeProfile.getState().selected, storeProfile.getState().type));
                         this.forceUpdate();
                     });
                 });
-            } 
+            }
         });
     }
 
-    getUnitsFromServer(army: number
-        , callback?: (error: { status: boolean, errorCode: string, units: Array<{type: string, number: number}> }) => void) {
+    getUnitsFromServer(army: number, name: string[], armies: number[]
+        , callback?: (error: { status: boolean, errorCode: string, units: Array<{type: string, number: number}>, name: string[], armies: number[], army: number }) => void) {
         // Primero, establecemos la conexión con el servidor
         let game = this;
         let connection = Network.getConnection();
@@ -78,7 +87,7 @@ export class Profile extends React.Component<any, any> {
                 console.log("Error when attempting to save, server didn't understood request");
             } else {
                 let data = JSON.parse(event.data);
-                callback({status: data.status, errorCode: data.error, units: data.units});
+                callback({status: data.status, errorCode: data.error, units: data.units, name: name, armies: armies, army: data.armyId});
             }
         };
         // Al abrirse la conexión, informamos al servidor del mapa
@@ -301,6 +310,7 @@ export class Profile extends React.Component<any, any> {
         let armies = [];
         // Iteramos por cada ejército
         for (var index = 0; index < storeProfile.getState().armies.length; index++) {
+            console.log("En el render "+JSON.stringify(storeProfile.getState().armies[index]));
             armies.push(<div id="bold">{storeProfile.getState().armies[index].name}</div>);
             // Por cada ejército mostraremos también las unidades que lo contienen
             var unitLists = this.renderArmyContent(index)
@@ -544,6 +554,7 @@ export class Profile extends React.Component<any, any> {
         } = {
             armies: storeProfile.getState().armies // Iteramos por los ejércitos
                 .map(army => { // Lo convertiremos en un map que almacena los datos
+                    console.log("Valor del nombre del batallon en el perfil actual "+army.name);
                     return {
                         id: 0, // Los ids de los ejércitos serán 0, al estar creandose
                         name: army.name,

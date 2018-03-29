@@ -257,7 +257,7 @@ server.on('connection', function connect(ws) {
             case "getUnits":
                 // Obtenemos los id de los mapas
                 console.log("--- Valor del armyclient en servidor: "+ message.armyclient);
-                UtilsServer.ProfileDatabase.getUnits(message.armyclient, (code: { status: boolean, error: string,  units: {type: string, number: number}[] }) => {
+                UtilsServer.ProfileDatabase.getUnits(message.armyclient, (code: { status: boolean, error: string,  units: {type: string, number: number}[], armyId: number }) => {
                     // Si hay error
                     console.log("server: "+code.status+","+code.error+","+code.units);
                     if(!code.status) {
@@ -265,7 +265,8 @@ server.on('connection', function connect(ws) {
                         ws.send(JSON.stringify({
                             status: false,
                             error: "Couldn't get map. Error: "+code.error,
-                            units: null
+                            units: null,
+                            armyId: null
                         }));
                     } else {
                         console.dir(Utils.Network.parseArmy(code.units, message.side));
@@ -283,7 +284,8 @@ server.on('connection', function connect(ws) {
                         ws.send(JSON.stringify({
                             status: true,
                             error: "Got successfully",
-                            units: code.units
+                            units: code.units,
+                            armyId: code.armyId
                         }));
                     }
                 });
@@ -400,7 +402,7 @@ server.on('connection', function connect(ws) {
                     ws.send(JSON.stringify(statusCode));
                 });
                 break;
-            case "exitPreGame": 
+            case "exitPreGame":
                 // Primero vemos quién ha enviado la salida
                 if(ws == player1URL) {
                     // Quitamos todo lo relacionado con este jugador

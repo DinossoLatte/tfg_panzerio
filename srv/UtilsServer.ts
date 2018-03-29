@@ -336,14 +336,14 @@ export class ProfileDatabase {
         });
     }
 
-    public static getUnits(armyId: number, callback: (code: { status: boolean, error: string, units: {type: string, number: number}[] }) => void) {
+    public static getUnits(armyId: number, callback: (code: { status: boolean, error: string, units: {type: string, number: number}[], armyId: number }) => void) {
         // Inicializamos o no la BD
         ProfileDatabase.initOrCallDatabase((err: Error) => {
             // Comprobamos el mensaje de error
             if(err) {
                 // Si hay error, lo mostramos en pantalla
                 console.error("Se ha producido un error intentando abrir la BD!");
-                callback({ status: false, error: "Can't connect to DB", units: null });
+                callback({ status: false, error: "Can't connect to DB", units: null, armyId: null });
             } else {
                 var i = 0;
                 let units : {type: string, number: number}[] = [];
@@ -352,13 +352,13 @@ export class ProfileDatabase {
                     // Si hay error
                     if(err) {
                         console.log("Error trying to get the ID");
-                        callback({ status: false, error: "Error trying to get the ID", units: null });
+                        callback({ status: false, error: "Error trying to get the ID", units: null, armyId: null });
                     } else {
                         // En este caso, tendremos los datos
                         units.push({type: rows['type'].toString(), number: Number(rows['number'])});
                     }
                 }, () => {
-			callback({ status: true, error: "Success", units: units });
+			callback({ status: true, error: "Success", units: units, armyId: armyId });
 		});
             }
         });

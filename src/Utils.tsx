@@ -833,7 +833,7 @@ export class Network {
                 token: logInData
             }));
         };
-        
+
         connection.onmessage = function(message: MessageEvent) {
             // Si el comando enviado es correcto
             if(message.data == "Command not understoood") {
