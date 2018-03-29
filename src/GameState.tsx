@@ -98,7 +98,6 @@ export class Actions {
     static generateSetListener(map: Map): Redux.AnyAction {
         //Este es el estado de espera para seleccionar una unidad
         return {
-            tipo: "SAVE_MAP",
             type: "SET_LISTENER",
             map: map
         };
