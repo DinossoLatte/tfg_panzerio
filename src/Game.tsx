@@ -621,7 +621,7 @@ class CreateMenu extends React.Component<any, any> {
                 tipo: "getMap",
                 mapData: Number(this.props.parentObject.state.selected)
             }));
-            
+
             this.props.parentObject.changeGameState(4);
         }else{
             window.alert("Se debe seleccionar un mapa");
@@ -695,7 +695,16 @@ class Game extends React.Component<any, any> {
                 break;
         }
 
-        return result;
+        let aud = '<audio src="./sounds/menu.ogg" loop autoplay></audio>';
+
+        let res = this.state.gameState!=2?
+                    (<div>
+                        <div dangerouslySetInnerHTML={{__html: aud}}>
+                        </div>
+                        {result}
+                    </div>):result;
+
+        return res;
     }
 
     changeSelected(selected: string) {

@@ -28,8 +28,35 @@ export class Map extends React.Component<any, any> {
 
     /** Renderiza el mapa **/
     render() {
-        // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
-        return (
+        let aud : string;
+
+        if((store.getState().turn==0 && store.getState().isPlayer) || (store.getState().turn==1 && !store.getState().isPlayer)){
+            //Suena la música de colocación de unidades aliada
+            aud = "start1";
+        }else if((store.getState().turn==1 && store.getState().isPlayer) || (store.getState().turn==0 && !store.getState().isPlayer)){
+            //Suena la música de colocación de unidades enemiga
+            aud = "start2";
+        }else if(store.getState().actualState==1 || store.getState().actualState==2){
+            //Suena la música de final del juego (se podría dividir)
+            aud = "final1";
+        }else if(store.getState().units.filter(x => !store.getState().isPlayer == x.player).length == 1){
+            //Si solo queda una unidad y no se ha acabado el juego será que solo queda el general (música de tensión aliada)
+            aud = "battlefinal1";
+        }else if(store.getState().units.filter(x => !store.getState().isPlayer != x.player).length == 1){
+            //Si solo queda una unidad y no se ha acabado el juego será que solo queda el general (música de tensión enemiga)
+            aud = "battlefinal2";
+        }else if(store.getState().turn%2==1 && !store.getState().isPlayer){
+            //Si es turno enemigo
+            aud = "battle2";
+        }else if(store.getState().turn%2==0 && store.getState().isPlayer){
+            //Si es turno aliado
+            aud = "battle1";
+        }else{
+            //Por defecto aunque practicamente nunca llegará aquí
+            aud = "battle1";
+        }
+
+        let result = (
             <div>
                 <p>Turno del {store.getState().turn%2==0?"Jugador":"Enemigo"}. Día {Math.floor(store.getState().turn/2)}{store.getState().actualState==1?". Victoria":store.getState().actualState==2?". Derrota":""} {store.getState().turn < 2?"(Pre juego)":""}</p>
                 <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
@@ -54,6 +81,14 @@ export class Map extends React.Component<any, any> {
                 </div>
             </div>
         );
+
+        let res = (<div>
+                        <div dangerouslySetInnerHTML={{__html: '<audio src="./sounds/'+aud+'.ogg" loop autoplay></audio>'}}>
+                        </div>
+                        {result}
+                    </div>);
+        // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
+        return res;
     }
 
     //Se guarda dicha unidad como seleccionada
