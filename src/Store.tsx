@@ -26,7 +26,7 @@ export function saveState(act: Redux.AnyAction) {
     // Si map está definido, lo actualizamos
     if(map) {
         console.log("actualiza el mapa");
-        map.setState({});    
+        map.setState({});
     }
 }
 
