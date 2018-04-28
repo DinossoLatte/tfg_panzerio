@@ -18,7 +18,7 @@ export class EditStats extends React.Component<any, any> {
         if(this.state.terrain != null) {
             terrainStats = (
                 <div>
-                    <p>Terreno: </p>
+                    <p id="bold">Terreno: </p>
                     <p>    Posición: {this.state.terrain.position.toString()}</p>
                     <p>    Tipo: {this.state.terrain.name}</p>
                     <p>    Coste (movimiento): {this.state.terrain.movement_penalty}</p>
@@ -27,11 +27,10 @@ export class EditStats extends React.Component<any, any> {
         }
 
         return (
-        <div className="leftPanel">
-            <div className="unitStats">
+        <div className="col-sm-3">
+                <h4>Contenido de la posición seleccionada: </h4>
                 {terrainStats}
-                {!terrainStats?<p>"Haga click derecho para poder obtener información de la unidad y terreno."</p>:null}
-            </div>
+                {!terrainStats?<div className="alert alert-info" id="error">Haga click derecho para poder obtener información de la unidad y terreno.</div>:null}
         </div>
         );
     }
