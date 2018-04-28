@@ -57,26 +57,29 @@ export class Map extends React.Component<any, any> {
         }
 
         let result = (
-            <div>
-                <p>Turno del {store.getState().turn%2==0?"Jugador":"Enemigo"}. Día {Math.floor(store.getState().turn/2)}{store.getState().actualState==1?". Victoria":store.getState().actualState==2?". Derrota":""} {store.getState().turn < 2?"(Pre juego)":""}</p>
-                <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
-                {(store.getState().actualState==0) && ((store.getState().turn%2 == 0 && store.getState().isPlayer) || (store.getState().turn%2 == 1 && !store.getState().isPlayer))?<button id="nextTurn" name="nextTurn" onClick={this.onClickTurn.bind(this)}>Pasar turno</button>:""}
-                {store.getState().selectedUnit!=null && store.getState().turn >= 2?<button id="cancelAction" name="cancelAction" onClick={this.onClickCancelAction.bind(this)}>Cancelar acción</button>:""}
-                {store.getState().selectedUnit!=null && store.getState().turn >= 2 && store.getState().units[store.getState().selectedUnit].action<2?<button id="nextAction" name="nextAction" onClick={this.onClickUnitAction.bind(this)}>Pasar acción</button>:""}
+            <div className="jumbotron text-center">
+                <h4>Turno del {store.getState().turn%2==0?"Jugador":"Enemigo"}. Día {Math.floor(store.getState().turn/2)}{store.getState().actualState==1?". Victoria":store.getState().actualState==2?". Derrota":""} {store.getState().turn < 2?"(Pre juego)":""}
+                    <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
+                </h4>
+                {(store.getState().actualState==0) && ((store.getState().turn%2 == 0 && store.getState().isPlayer) || (store.getState().turn%2 == 1 && !store.getState().isPlayer))?<button className="btn btn-primary btn-sm" id="nextTurn" name="nextTurn" onClick={this.onClickTurn.bind(this)}>Pasar turno</button>:""}
+                {store.getState().selectedUnit!=null && store.getState().turn >= 2?<button className="btn btn-primary btn-sm" id="cancelAction" name="cancelAction" onClick={this.onClickCancelAction.bind(this)}>Cancelar acción</button>:""}
+                {store.getState().selectedUnit!=null && store.getState().turn >= 2 && store.getState().units[store.getState().selectedUnit].action<2?<button className="btn btn-primary btn-sm" id="nextAction" name="nextAction" onClick={this.onClickUnitAction.bind(this)}>Pasar acción</button>:""}
                 {(store.getState().isPlayer && store.getState().turn == 0) || (!store.getState().isPlayer && store.getState().turn == 1)?<div>
                     <label> Selecciona la unidad:
-                        <select defaultValue={null} value={store.getState().selectedUnit} onChange={evt => this.selectUnit(evt.target.value)}>
+                        <select className="form-control" defaultValue={null} value={store.getState().selectedUnit} onChange={evt => this.selectUnit(evt.target.value)}>
                             {this.selectOptions()}
                         </select>
                     </label>
                 </div>:""}
-                {this.state.alertUnitsNotPlaced?<p className="alert">ATENCIÓN: Algunas de las unidades no han sido posicionadas en el juego, por favor, posicione las unidades en el juego</p>:""}
-                <div>
+                {this.state.alertUnitsNotPlaced?<div className="alert alert-danger" id="error"><strong>ATENCIÓN:</strong> Algunas de las unidades no han sido posicionadas en el juego, por favor, posicione las unidades en el mapa</div>:""}
+                <div className="row">
                     <UnitStats />
-                    <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)} onContextMenu={this.onRightClick.bind(this)}>
-                        {this.generateMap.bind(this)().map((a: any) => {
-                            return a;
-                        })}
+                    <div className="col-sm-9">
+                        <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)} onContextMenu={this.onRightClick.bind(this)}>
+                            {this.generateMap.bind(this)().map((a: any) => {
+                                return a;
+                            })}
+                        </div>
                     </div>
                 </div>
             </div>

@@ -602,51 +602,54 @@ export class Profile extends React.Component<any, any> {
 
     render() {
         return (
-            <div>
+            <div className="jumbotron text-center">
+                <h2> Perfil personal <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExitMenu.bind(this)}>Volver al menú</button></h2>
                 <img className="avatar" src={this.state.avatar} />
                 <p>Nombre: {this.state.username}</p>
-                <label id="bold">Modifique aquí su nombre: <input type="text" value={this.state.username} onChange={evt => this.updateUserName(evt.target.value)} />
-                <button id="saveProfile" name="saveProfile" className="saveProfileButton" onClick={this.onClickSaveProfileName.bind(this)}>Editar nombre</button>
-                </label>
+                <label id="bold">Modifique aquí su nombre: <input className="form-control" type="text" value={this.state.username} onChange={evt => this.updateUserName(evt.target.value)} /></label>
+                <button id="saveProfile" name="saveProfile" className="btn btn-primary btn-sm" onClick={this.onClickSaveProfileName.bind(this)}>Editar nombre</button>
                 <p>Partidas ganadas: {this.state.gameswon}</p>
                 <p>Partidas perdidas: {this.state.gameslost}</p>
-                {storeProfile.getState().type != "0" ? <button id="listArmy" name="listArmy" className="listArmyButton" onClick={this.onClickList.bind(this)}>Mostrar batallones</button> : ""}
-                {storeProfile.getState().type != "1" ? <button id="createArmy" name="createArmy" className="createArmyButton" onClick={this.onClickCreateArmy.bind(this)}>Crear un nuevo batallón</button> : ""}
-                {storeProfile.getState().type != "2" ? <button id="editArmy" name="editArmy" className="editArmyButton" onClick={this.onClickEditArmy.bind(this)}>Editar un batallón</button> : ""}
-                <button id="saveProfile" name="saveProfile" className="saveProfileButton" onClick={this.onClickSaveProfile.bind(this)}>Guardar batallones</button>
-                <button id="exitButton" name="exitButton" onClick={this.onClickExitMenu.bind(this)}>Volver al menú</button>
+                {storeProfile.getState().type != "0" ? <button id="listArmy" name="listArmy" className="btn btn-primary btn-sm" onClick={this.onClickList.bind(this)}>Mostrar batallones</button> : ""}
+                {storeProfile.getState().type != "1" ? <button id="createArmy" name="createArmy" className="btn btn-primary btn-sm" onClick={this.onClickCreateArmy.bind(this)}>Crear un nuevo batallón</button> : ""}
+                {storeProfile.getState().type != "2" ? <button id="editArmy" name="editArmy" className="btn btn-primary btn-sm" onClick={this.onClickEditArmy.bind(this)}>Editar un batallón</button> : ""}
+                <button id="saveProfile" name="saveProfile" className="btn btn-primary btn-sm" onClick={this.onClickSaveProfile.bind(this)}>Guardar batallones</button>
                 {storeProfile.getState().type >= "2" && storeProfile.getState().armies.length > 0 ? <div>
+                    <div className="alert alert-info" id="error">Los cambios serán almacenados en la lista de batallones por guardar</div>
+                    <h4> Edición del batallón </h4>
                     <label> Selecciona el batallón:
-                        <select defaultValue={null} value={storeProfile.getState().selectedArmy} onChange={evt => this.selectArmy(evt.target.value)}>
+                        <select className="form-control" defaultValue={null} value={storeProfile.getState().selectedArmy} onChange={evt => this.selectArmy(evt.target.value)}>
                             {this.renderSelectOptionsArmy()}
                         </select>
                     </label>
-                    {storeProfile.getState().type > "2" && storeProfile.getState().type != "3" ? <button id="editName" name="editName" className="editNameButton" onClick={this.onClickEditArmyName.bind(this)}>Editar nombre del batallón</button> : ""}
-                    {storeProfile.getState().type > "2" && storeProfile.getState().type != "4" ? <button id="addUnit" name="addUnit" className="addUnitButton" onClick={this.onClickAddEdit.bind(this)}>Añadir una nueva unidad</button> : ""}
-                    {storeProfile.getState().type > "2" && storeProfile.getState().type != "5" ? <button id="deleteUnit" name="deleteUnit" className="deleteUnitButton" onClick={this.onClickDeleteEdit.bind(this)}>Eliminar una unidad</button> : ""}
-                    {storeProfile.getState().type > "2" && storeProfile.getState().selectedArmy != null ? <button id="deleteArmy" name="deleteArmy" className="deleteArmyButton" onClick={this.onClickDeleteArmy.bind(this)}>Eliminar batallón</button> : ""}
-                </div> : storeProfile.getState().type >= "2" && storeProfile.getState().armies.length == 0 ? <div id="error">No hay batallones para seleccionar</div> : ""}
+                    {storeProfile.getState().type > "2" && storeProfile.getState().type != "3" ? <button id="editName" name="editName" className="btn btn-primary btn-sm" onClick={this.onClickEditArmyName.bind(this)}>Editar nombre del batallón</button> : ""}
+                    {storeProfile.getState().type > "2" && storeProfile.getState().type != "4" ? <button id="addUnit" name="addUnit" className="btn btn-primary btn-sm" onClick={this.onClickAddEdit.bind(this)}>Añadir una nueva unidad</button> : ""}
+                    {storeProfile.getState().type > "2" && storeProfile.getState().type != "5" ? <button id="deleteUnit" name="deleteUnit" className="btn btn-primary btn-sm" onClick={this.onClickDeleteEdit.bind(this)}>Eliminar una unidad</button> : ""}
+                    {storeProfile.getState().type > "2" && storeProfile.getState().selectedArmy != null ? <button id="deleteArmy" name="deleteArmy" className="btn btn-primary btn-sm" onClick={this.onClickDeleteArmy.bind(this)}>Eliminar batallón</button> : ""}
+                </div> : storeProfile.getState().type >= "2" && storeProfile.getState().armies.length == 0 ? <div className="alert alert-warning" id="error">No hay batallones para seleccionar</div> : ""}
                 {storeProfile.getState().type == "1" || storeProfile.getState().type == "4" ? <div>
+                    <div className="alert alert-info" id="error">Los cambios serán almacenados en la lista de batallones por guardar</div>
+                    <h4> Creación del batallón </h4>
                     <label> Selecciona el tipo de unidad:
-                        <select defaultValue={null} value={storeProfile.getState().selected} onChange={evt => this.selectUnit(evt.target.value)}>
+                        <select className="form-control" defaultValue={null} value={storeProfile.getState().selected} onChange={evt => this.selectUnit(evt.target.value)}>
                             {this.selectOptionsUnits()}
                         </select>
                     </label>
-                    {storeProfile.getState().selected != null ? <button id="addUnit" name="addUnit" className="addUnitButton" onClick={this.onClickAddUnit.bind(this)}>Añadir unidad</button> : ""}
+                    {storeProfile.getState().selected != null ? <button id="addUnit" name="addUnit" className="btn btn-primary btn-sm" onClick={this.onClickAddUnit.bind(this)}>Añadir unidad</button> : ""}
                 </div> : ""}
                 {(storeProfile.getState().type == "1" || storeProfile.getState().type == "3") && storeProfile.getState().selectedArmy != null ? <div>
-                    Nombre: <input type="text" value={this.state.name} onChange={evt => this.updateInput(evt.target.value)} />
-                    <button id="setName" name="setName" className="setNameButton" onClick={this.onClickSetName.bind(this)}>Establecer nombre</button>
+                     <label> Nombre del batallón: <input className="form-control" type="text" value={this.state.name} onChange={evt => this.updateInput(evt.target.value)} /> </label>
+                    <button id="setName" name="setName" className="btn btn-primary btn-sm" onClick={this.onClickSetName.bind(this)}>Establecer nombre</button>
                 </div> : ""}
                 {storeProfile.getState().type == "5" && storeProfile.getState().armies[storeProfile.getState().selectedArmy].unitList.length > 1 ? <div>
                     <label> Selecciona el tipo de unidad:
-                        <select defaultValue={null} value={storeProfile.getState().selected} onChange={evt => this.selectUnit(evt.target.value)}>
+                        <select className="form-control" defaultValue={null} value={storeProfile.getState().selected} onChange={evt => this.selectUnit(evt.target.value)}>
                             <option selected value={null}>--Selecciona--</option>
                             {this.selectOptionsUnitsDelete()}
                         </select>
                     </label>
-                    {storeProfile.getState().selected != null ? <button id="deleteUnit" name="deleteUnit" className="deleteUnitButton" onClick={this.onClickDeleteUnit.bind(this)}>Eliminar unidad</button> : ""}
-                </div> : storeProfile.getState().type == "5" && storeProfile.getState().armies[storeProfile.getState().selectedArmy].unitList.length <= 1 ? <div id="error">No hay unidades para eliminar</div> : ""}
+                    {storeProfile.getState().selected != null ? <button id="deleteUnit" name="deleteUnit" className="btn btn-primary btn-sm" onClick={this.onClickDeleteUnit.bind(this)}>Eliminar unidad</button> : ""}
+                </div> : storeProfile.getState().type == "5" && storeProfile.getState().armies[storeProfile.getState().selectedArmy].unitList.length <= 1 ? <div className="alert alert-warning" id="error">No hay unidades para eliminar</div> : ""}
                 {storeProfile.getState().selectedArmy != null && storeProfile.getState().armies.length > storeProfile.getState().selectedArmy ? <div>
                     <p>El batallón contiene:</p>
                     <div>
@@ -654,7 +657,8 @@ export class Profile extends React.Component<any, any> {
                     </div>
                 </div> : ""}
                 {storeProfile.getState().type == "0" ? <div>
-                    <p>Batallones del jugador:</p>
+                    <div className="alert alert-info" id="error">Para guardar los cambios debe darle a "Guardar batallones"</div>
+                    <h4> Batallones del jugador: </h4>
                     <div>
                         {this.renderArmyList()}
                     </div>

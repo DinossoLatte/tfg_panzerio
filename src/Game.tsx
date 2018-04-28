@@ -18,7 +18,7 @@ class EnterGameButton extends React.Component<any, any> {
     }
 
     render() {
-        return <button id="enterGame" name="enterGame" className="enterGameButton" onClick={this.onClick.bind(this)}>Jugar</button>
+        return <button id="enterGame" name="enterGame" className="btn btn-primary btn-sm" onClick={this.onClick.bind(this)}>Jugar</button>
     }
 
     onClick() {
@@ -51,7 +51,7 @@ class EditGameButton extends React.Component<any, any> {
     }
 
     render() {
-        return <button id="editGame" name="editGame" className="editGameButton" onClick={this.onClick.bind(this)}>Acceder a la edición de mapa</button>
+        return <button id="editGame" name="editGame" className="btn btn-primary btn-sm" onClick={this.onClick.bind(this)}>Acceder a la edición de mapa</button>
     }
 
     onClick() {
@@ -69,7 +69,7 @@ class ProfileButton extends React.Component<any, any> {
     }
 
     render() {
-        return <button id="profileButton" name="profileButton" className="profileButton" onClick={this.onClick.bind(this)}>Acceder al perfil personal</button>
+        return <button id="profileButton" name="profileButton" className="btn btn-primary btn-sm" onClick={this.onClick.bind(this)}>Acceder al perfil personal</button>
     }
 
     onClick() {
@@ -88,7 +88,7 @@ class OptionsMenuButton extends React.Component<any, any> {
     }
 
     render() {
-        return <button id="optionsMenu" name="optionsMenu" className="optionsMenuButton" onClick={this.onClick.bind(this)}>Acceder al menu de opciones</button>
+        return <button id="optionsMenu" name="optionsMenu" className="btn btn-primary btn-sm" onClick={this.onClick.bind(this)}>Acceder al menu de opciones</button>
     }
 
     onClick() {
@@ -168,11 +168,10 @@ class PreGameMenu extends React.Component<any, any> {
 
     render() {
         return (
-        <div className="preGameMenu">
-            <h2>Menu de pre juego</h2>
+        <div className="jumbotron text-center">
+            <h2>Menu de selección <button className="btn btn-primary btn-sm" onClick={this.exitPreGame.bind(this)}>Volver</button></h2>
             {this.showPlayerMenu()}
-            <button onClick={this.startGame.bind(this)}>Empezar juego</button>
-            <button onClick={this.exitPreGame.bind(this)}>Volver</button>
+            <button className="btn btn-primary btn-sm" onClick={this.startGame.bind(this)}>Empezar juego</button><br/>
         </div>);
     }
 
@@ -214,25 +213,25 @@ class PreGameMenu extends React.Component<any, any> {
         if(this.state.isPlayer) {
             return (
             <div>
-                <div className="playerMenu">
+                <div className="form-group">
                     <label> Seleccione el batallón aliado:
-                    <select id="player" defaultValue={null} value={this.state.selectedPlayer} onChange={evt => this.updatePlayer(evt.target.value)}>
+                    <select className="form-control" id="player" defaultValue={null} value={this.state.selectedPlayer} onChange={evt => this.updatePlayer(evt.target.value)}>
                         {this.selectUnits()}
                     </select>
                     </label>
                 </div>
-                <div className="mapMenu">
+                <div className="form-group">
                     <label> Seleccione el mapa:
-                    <select id="map" defaultValue={null} value={this.state.selected} onChange={evt => this.updateMap(evt.target.value)}>
+                    <select className="form-control" id="map" defaultValue={null} value={this.state.selected} onChange={evt => this.updateMap(evt.target.value)}>
                         {this.selectMaps()}
                     </select>
                     </label>
                 </div>
             </div>);
         } else {
-            return (<div className="enemyMenu">
+            return (<div className="form-group">
                 <label> Seleccione el batallón enemigo:
-                <select id="enemy" defaultValue={null} value={this.state.selectedEnemy} onChange={evt => this.updateEnemy(evt.target.value)}>
+                <select className="form-control" id="enemy" defaultValue={null} value={this.state.selectedEnemy} onChange={evt => this.updateEnemy(evt.target.value)}>
                     {this.selectUnits()}
                 </select>
                 </label>
@@ -530,25 +529,24 @@ class CreateMenu extends React.Component<any, any> {
     }
 
     render() {
-        return <div className="optionsMenu">
-            <div>
-                Anchura: <input type="text" value={this.props.parentObject.state.editx} onChange={evt => this.updateInput(evt.target.value,this.props.parentObject.state.edity)} />
-            </div>
-            <div>
-                Altura: <input type="text" value={this.props.parentObject.state.edity} onChange={evt => this.updateInput(this.props.parentObject.state.editx,evt.target.value)} />
-            </div>
-            {this.state.error?<div id="error">Deben introducirse valores numéricos</div>:""}
-            <button id="createButton" name="createButton" onClick={this.onClickCreate.bind(this)}>Crear mapa</button>
-            <div className="mapMenu">
-                <label> Seleccione el mapa:
-                <select id="map" defaultValue={null} value={this.state.selected} onChange={evt => this.updateMap(evt.target.value)}>
-                    {this.selectMaps()}
-                </select>
-                </label>
-            </div>
-            <button id="createButton" name="createButton" onClick={this.onClick.bind(this)}>Modificar mapa</button>
-            <button id="createButton" name="createButton" onClick={this.onClickDelete.bind(this)}>Eliminar mapa</button>
-            <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Volver al menu</button>
+        return <div className="jumbotron text-center">
+            <h2> Creación del mapa <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Volver al menu</button></h2>
+            <label> Anchura:
+                <input type="text" className="form-control" placeholder="Anchura" value={this.props.parentObject.state.editx} onChange={evt => this.updateInput(evt.target.value,this.props.parentObject.state.edity)} />
+            </label>
+            <label> Altura:
+                <input type="text" className="form-control" placeholder="Altura" value={this.props.parentObject.state.edity} onChange={evt => this.updateInput(this.props.parentObject.state.editx,evt.target.value)} />
+            </label>
+            <button className="btn btn-primary btn-sm" id="createButton" name="createButton" onClick={this.onClickCreate.bind(this)}>Crear mapa</button><br/>
+            {this.state.error?<div className="alert alert-danger" id="error">Deben introducirse valores numéricos</div>:""}
+            <h2> Edición del mapa </h2>
+            <label> Seleccione el mapa:
+            <select className="form-control" id="map" defaultValue={null} value={this.state.selected} onChange={evt => this.updateMap(evt.target.value)}>
+                {this.selectMaps()}
+            </select>
+            </label>
+            <button className="btn btn-primary btn-sm" id="createButton" name="createButton" onClick={this.onClick.bind(this)}>Modificar mapa</button>
+            <button className="btn btn-primary btn-sm" id="createButton" name="createButton" onClick={this.onClickDelete.bind(this)}>Eliminar mapa</button><br />
         </div>
     }
 
@@ -679,15 +677,17 @@ class Game extends React.Component<any, any> {
                         <script src="https://apis.google.com/js/platform.js" async defer></script>
                         <meta name="google-signin-client_id" content=" 637676591689-00d0rmr0ib1gsidcqtdleva0qkor596k.apps.googleusercontent.com" />
 
-                        <div className="menu">
-                            <h1> PanzerIO </h1>
-                            <EnterGameButton parentObject={this} /><br />
-                            <EditGameButton parentObject={this} /><br />
-                            <ProfileButton parentObject={this} /><br />
-                            <OptionsMenuButton parentObject={this} /><br />
-                        </div>
-                        <div className="loginDiv">
-                            {loginInfo}
+                        <div className="jumbotron text-center">
+                            <div className="menu">
+                                <h1> PanzergIO </h1>
+                                <EnterGameButton parentObject={this} /><br />
+                                <EditGameButton parentObject={this} /><br />
+                                <ProfileButton parentObject={this} /><br />
+                                <OptionsMenuButton parentObject={this} /><br />
+                            </div>
+                            <div className="loginDiv">
+                                {loginInfo}
+                            </div>
                         </div>
                     </div>
                 );

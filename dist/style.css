@@ -12,7 +12,7 @@ body {
     padding-bottom: 84px;
 
     overflow: scroll;
-    transform: scale(0.8);
+    transform: scale(1);
     transform-origin: 0% 0%;
 }
 
@@ -28,32 +28,32 @@ body {
     width: auto;
     display: inline-block;
     margin-bottom: -39px;
-    padding-right: 45px;
+    padding-right: 40px;
 }
 
 .cellRow .div_cell {
     width: auto;
     display: inline-block;
     margin-bottom: -39px;
-    padding-right: 45px;
+    padding-right: 50px;
 }
 
 .unit {
-    margin-left: -230px;
+    margin-left: -220px;
     margin-right: -40px;
     z-index: 1;
 }
 
 .obstacle {
     position: relative;
-    margin-left: -230px;
+    margin-left: -220px;
     margin-right: -40px;
     z-index: -1;
 }
 .selector {
     display: block;
     position: relative;
-    left: -224px;
+    left: -220px;
     top: -1px;
     margin-right: -223.7px;
 }

@@ -19,8 +19,7 @@ export class UnitStats extends React.Component<any, any> {
         if(this.state.unit != null) {
             unitStats = (
                 <div>
-                    <h4>Seleccionada: </h4>
-                    <p>Unidad: </p>
+                    <p id="bold">Unidad: </p>
                     <p>    Posición: {this.state.unit.position.toString()}</p>
                     <p>    Tipo: {this.state.unit.type}</p>
                     <p>    Acción disponible: {this.state.unit.action==0?"Movimiento":this.state.unit.action==1?"Ataque":"Ninguna"}</p>
@@ -38,7 +37,7 @@ export class UnitStats extends React.Component<any, any> {
         if(this.state.terrain != null) {
             terrainStats = (
                 <div>
-                    <p>Terreno: </p>
+                    <p id="bold">Terreno: </p>
                     <p>    Posición: {this.state.terrain.position.toString()}</p>
                     <p>    Tipo: {this.state.terrain.name}</p>
                     <p>    Coste (movimiento): {this.state.terrain.movement_penalty}</p>
@@ -51,12 +50,11 @@ export class UnitStats extends React.Component<any, any> {
         }
 
         return (
-        <div className="leftPanel">
-            <div className="unitStats">
+        <div className="col-sm-3">
+                <h4>Contenido de la posición seleccionada: </h4>
                 {unitStats}
                 {terrainStats}
-                {!unitStats && !terrainStats?"Haga click derecho para poder obtener información de la unidad y terreno.":null /* Hotfix porque CSS no quiere ponerlo con el tamaño fijo nunca */}
-            </div>
+            {!unitStats && !terrainStats?<div className="alert alert-info" id="error">Haga click derecho para poder obtener información de la unidad y terreno.</div>:null /* Hotfix porque CSS no quiere ponerlo con el tamaño fijo nunca */}
         </div>
         );
     }

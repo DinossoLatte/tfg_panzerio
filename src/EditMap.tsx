@@ -46,25 +46,29 @@ export class EditMap extends React.Component<any, any> {
         }
         // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
         return (
-            <div>
-                {storeEdit.getState().type!=1?<button id="terrainButton" name="terrainButton" onClick={this.onClickCreateTerrain.bind(this)}>Crear terreno</button>:""}
-                {storeEdit.getState().type==1?<p>Acción: Creación de terreno. Terreno seleccionado: {storeEdit.getState().selected}</p>:""}
+            <div className="jumbotron text-center">
+                <h4> Edición del mapa <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Volver atrás</button></h4>
+                <label> Nombre: <input className="form-control" type="text" value={this.state.name} onChange={evt => this.updateInput(evt.target.value)} /></label>
+                <div>
+                    {storeEdit.getState().type!=1?<button className="btn btn-primary btn-sm" id="terrainButton" name="terrainButton" onClick={this.onClickCreateTerrain.bind(this)}>Crear terreno</button>:""}
                     {storeEdit.getState().type==1?<div>
                         <label> Selecciona el tipo de terreno:
-                            <select defaultValue={null} value={storeEdit.getState().selected} onChange={evt => this.selected(evt.target.value)}>
+                            <select className="form-control" defaultValue={null} value={storeEdit.getState().selected} onChange={evt => this.selected(evt.target.value)}>
                                 {this.selectOptionsTerrains()}
                             </select>
                         </label>
+                        {storeEdit.getState().type==1?<p id="bold">Terreno seleccionado: {storeEdit.getState().selected!=null&&storeEdit.getState().selected!="--Selecciona--"?storeEdit.getState().selected:"Ninguno"} </p>:""}
                     </div>:""}
-                Nombre: <input type="text" value={this.state.name} onChange={evt => this.updateInput(evt.target.value)} />
-                <button id="generateButton" name="generateButton" onClick={this.onClickGenerateMap.bind(this)}>Guardar mapa</button>
-                <button id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Volver atrás</button>
-                <div>
+                    <button className="btn btn-primary btn-sm" id="generateButton" name="generateButton" onClick={this.onClickGenerateMap.bind(this)}>Guardar mapa</button>
+                </div>
+                <div className="row">
                     <EditStats map={this}/>
-                    <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)} onContextMenu={this.onRightClick.bind(this)}>
-                        {this.generateMap.bind(this)().map((a: any) => {
-                            return a;
-                        })}
+                    <div className="col-sm-9">
+                        <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)} onContextMenu={this.onRightClick.bind(this)}>
+                            {this.generateMap.bind(this)().map((a: any) => {
+                                return a;
+                            })}
+                        </div>
                     </div>
                 </div>
             </div>
