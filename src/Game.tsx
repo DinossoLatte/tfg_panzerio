@@ -88,7 +88,7 @@ class OptionsMenuButton extends React.Component<any, any> {
     }
 
     render() {
-        return <button id="optionsMenu" name="optionsMenu" className="btn btn-primary btn-sm" onClick={this.onClick.bind(this)}>Acceder al menu de opciones</button>
+        return <button id="optionsMenu" name="optionsMenu" className="btn btn-primary btn-sm" onClick={this.onClick.bind(this)}>Manual de usuario</button>
     }
 
     onClick() {
@@ -102,8 +102,145 @@ class OptionsMenu extends React.Component<any, any> {
     }
 
     render() {
-        return <div className="optionsMenu">
-            <button id="exitButton" name="exitButton" onClick={this.onClick.bind(this)}>Volver al menu</button>
+        return <div className="jumbotron text-center">
+            <h2>Manual de usuario <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClick.bind(this)}>Volver al menu</button></h2>
+            <div><p id="bold">Introducción</p>
+            PanzergIO es un videojuego de estrategia por turnos en la que dos jugadores luchan con batallones personalizados en un mapa que también es personalizable.
+            </div>
+            <div><p id="bold">Historia</p>
+            La historia se basa en un universo alternativo donde la humanidad se encuentra en una Tercera Guerra Mundial en la que todos los paises están en una guerra en la que no existen aliados, solamente enemigos.
+            </div>
+            <div><p id="bold">Unidades</p>
+            Hay un total de 5 unidades que pueden agruparse de forma personalizada como el jugador desee formando batallones, cada batallón debe contar obligatoriamente con un General. Cada unidad cuenta con una serie de estadísticas las cuales son:
+            <ul>
+              <li> Vida: Cantidad de daño que puede soportar la unidad para no morir, una vez llega a 0 la unidad desaparece.</li>
+              <li> Alcance: Distancia de la casilla más lejana que puede ser atacada por dicha unidad (se mide en número de casillas). </li>
+              <li> Movimiento: Distancia de la casilla más lejana a la que puede llegar una unidad en un turno (se mide en número de casillas). </li>
+              <li> Ataque fuerte y débil: Son los dos tipos de ataque que tiene la unidad, se combinan de forma que el ataque fuerte contrarresta a la defensa fuerte y el ataque débil contrarresta a la defensa débil, a continuación se pone la fórmula del daño que puede realizar a una unidad.</li>
+              <li> Defensa fuerte y débil: Es la resistencia de la unidad frente a los ataques fuertes y débiles enemigos respectivamente.</li>
+              <li> Fórmula del daño: Si una unidad A ataca a una unidad enemiga B, la formula del daño será: "Daño que recibe B = (Ataque fuerte de A - Defensa fuerte de B) + (Ataque débil de A - Ataque débil de B)"</li>
+            </ul>
+            Aquí se exponen cada una de las Unidades:
+
+            <ul>
+              <li> General: Es la unidad principal del juego, si muere se termina la partida. </li>
+              <ul>
+                <li> Vida: 2</li>
+                <li> Alcance: 1</li>
+                <li> Movimiento: 1</li>
+                <li> Ataque fuerte: 0</li>
+            	<li> Ataque débil: 1</li>
+                <li> Defensa fuerte: 2</li>
+                <li> Defensa débil: 1</li>
+              </ul>
+              <li> Infatería: Es la unidad básica y más equilibrada del juego.</li>
+              <ul>
+                <li> Vida: 2</li>
+                <li> Alcance: 1</li>
+                <li> Movimiento: 2</li>
+                <li> Ataque fuerte: 2</li>
+            	<li> Ataque débil: 2</li>
+                <li> Defensa fuerte: 2</li>
+                <li> Defensa débil: 1</li>
+              </ul>
+              <li> Tanque: Unidad pesada del juego que tiene mucho daño cuerpo a cuerpo.</li>
+              <ul>
+                <li> Vida: 4</li>
+                <li> Alcance: 1</li>
+                <li> Movimiento: 1</li>
+                <li> Ataque fuerte: 3</li>
+            	<li> Ataque débil: 2</li>
+                <li> Defensa fuerte: 1</li>
+                <li> Defensa débil: 2</li>
+              </ul>
+              <li> Artillería: Unidad pesada del juego que solo puede atacar a distancia (no puede atacar a las unidades situadas cuerpo a cuerpo).</li>
+              <ul>
+                <li> Vida: 3</li>
+                <li> Alcance: 3</li>
+                <li> Movimiento: 2</li>
+                <li> Ataque fuerte: 3</li>
+            	<li> Ataque débil: 2</li>
+                <li> Defensa fuerte: 2</li>
+                <li> Defensa débil: 2</li>
+              </ul>
+              <li> Paracaidista: Unidad de infantería con mucha movilidad pero que tras moverse necesita reposar (no puede atacar hasta el siguiente turno).</li>
+              <ul>
+                <li> Vida: 3</li>
+                <li> Alcance: 1</li>
+                <li> Movimiento: 5</li>
+                <li> Ataque fuerte: 4</li>
+            	<li> Ataque débil: 3</li>
+                <li> Defensa fuerte: 2</li>
+                <li> Defensa débil: 1</li>
+              </ul>
+            </ul>
+            </div>
+            <div><p id="bold">Terrenos</p>
+            Hay diferentes tipos de terrenos que pueden ser colocados al crear un nuevo mapa. Cada terreno posee las siguientes características:
+            <ul>
+              <li> Penalización de movimiento: Es el coste de movimiento por pasar por dicho terreno. Si cuesta 1 significa que cada casilla recorrida de ese tipo te costará 1 de movimiento, mientras que si costara 2 por ejemplo significará que costará 2 de movimiento por cada casilla de ese tipo que recorras.</li>
+              <li> Ataque fuerte, ataque débil, defensa fuerte y defensa débil: Son las bonifaciones de dichas estadísticas que recibe una unidad que esté colocada sobre dicha casilla.</li>
+            </ul>
+            Aquí se exponen cada uno de los terrenos:
+            <ul>
+              <li> Llanura: Terreno por defecto, no posee ninguna característica en especial.</li>
+              <ul>
+                <li> Penalización de movimiento: 1</li>
+                <li> Ataque fuerte: 0</li>
+                <li> Ataque débil: 0</li>
+                <li> Defensa fuerte: 0</li>
+                <li> Defensa débil: 0</li>
+              </ul>
+              <li> Montaña: Terreno impasable para todas las unidades (excepto el paracaidista debido a que es una unidad aérea).</li>
+              <ul>
+                <li> Penalización de movimiento: -1 (no se puede atravesar)</li>
+                <li> Ataque fuerte: 0</li>
+                <li> Ataque débil: 0</li>
+                <li> Defensa fuerte: 0</li>
+                <li> Defensa débil: 0</li>
+              </ul>
+              <li> Colina: Terreno con cierta inclinación.</li>
+              <ul>
+                <li> Penalización de movimiento: 2</li>
+                <li> Ataque fuerte: 1</li>
+                <li> Ataque débil: 0</li>
+                <li> Defensa fuerte: 1</li>
+                <li> Defensa débil: 1</li>
+              </ul>
+              <li> Bosque: Terreno repleto de árboles.</li>
+              <ul>
+                <li> Penalización de movimiento: 1</li>
+                <li> Ataque fuerte: 0</li>
+                <li> Ataque débil: 0</li>
+                <li> Defensa fuerte: 0</li>
+                <li> Defensa débil: 2</li>
+              </ul>
+              <li> Río: Terreno húmedo.</li>
+              <ul>
+                <li> Penalización de movimiento: 1</li>
+                <li> Ataque fuerte: 0</li>
+                <li> Ataque débil: 0</li>
+                <li> Defensa fuerte: -1</li>
+                <li> Defensa débil: -1</li>
+              </ul>
+            </ul>
+            </div>
+            <div><p id="bold">¿Cómo empezar?</p>
+            Una vez iniciado el juego y el jugador se encuentre en el menú de inicio, deberá iniciar sesión con su cuenta de Google de forma que podrá acceder al resto de opciones que dispone el juego.
+            Para poder jugador en multijugador bastará con que el jugador cree una partida en el menú y otro jugador abra una pestaña en el mismo navegador y acceda al menú, inicie sesión y se una a la partida que está creando el primer jugador.
+            </div>
+            <div><p id="bold">Mecánicas del juego</p>
+            Para empezar una partida deberán enfrentarse dos jugadores A (host) y B. Al empezar el jugador A elige mapa (de los que haya creado) y su batallón mientras que el jugador B solo elije su batallón, tras darle a empezar ambos jugadores comenzará el primer turno de colocación de unidades en la que A coloca todas sus unidades del batallón y cuando de a pasar turno podrá colocarlas B (en caso de que se equivoque al colocar una unidad podrá editar su posición seleccionándola de nuevo). Cuando ambos jugadores terminen de colocarlas empezará la partida en la que cada jugador en su turno podrá ir moviendo sus unidades y decidiendo a qué unidad atacar (primero deberá elegir movimiento y luego ataque, en caso de equivocarse podrá cancelar la acción o pasar sino desea realizar movimiento o ataque). La partida termina cuando el General de uno de los jugadores muere.
+            </div>
+            <div><p id="bold">Creación del mapa</p>
+            Para crear un mapa se accede a "Edición de mapa" y se selecciona el tamaño del mapa, una vez hecho se pueden ir colocando terrenos sobre el mapa y una vez el resultado sea el deseado se hace clic sobre "Guardar" para guardar dicho mapa.
+            Para editar un mapa se accede también a "Edición de mapa" pero esta vez se selecciona el mapa concreto y se edita de la misma forma que se creó el mapa, también hay posibilidad de eliminado.
+            </div>
+            <div><p id="bold">Perfil del jugador</p>
+            Al acceder al perfil personal desde el menú se podrá ver el nombre del jugador, el contador de victorias y derrotas y los batallones del jugador que podrán ser editados añadiendo nuevos batallones o modificando los existentes.
+            Al crear un batallón se elije un nombre y se van añadiendo unidades (el general se añade automáticamente). Al finalizar dichos cambios aparecerán en la lista de batallones en "Mostrar batallones" y podrán ser guardados dándole al botón "Guardar batallones" ya que los cambios son almacenados en local y deberán ser guardados en servidor una vez el jugador realice todos los cambios que vea oportuno.
+            La edición se realiza de forma similar a la creación con la excepción de que se debe seleccionar uno de los batallones que disponga el jugador, es importante que tras realizar todos los cambios se le de al botón "Guardar batallones" para que se guarden dichos datos.
+            </div>
         </div>
     }
 

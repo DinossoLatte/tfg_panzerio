@@ -110,7 +110,7 @@ export class General extends Unit {
         // Vida
         2,
         // Alcance
-        0,
+        1,
         0,
         //Tipo (property)
         0);
