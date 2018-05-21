@@ -884,9 +884,11 @@ export class Network {
                 callback({ status: false, state: null });
             } else {
                 let result = JSON.parse(message.data);
-                // Para facilitar el traspaso de los datos de servidor, necesitamos realizar una conversión a string y pasarlo a estado compatible
-                let stateString = JSON.stringify(result.state);
-                let state = Network.parseStateFromServer(stateString);
+                if(result.status == true) {
+                    // Para facilitar el traspaso de los datos de servidor, necesitamos realizar una conversión a string y pasarlo a estado compatible
+                    let stateString = JSON.stringify(result.state);
+                    let state = Network.parseStateFromServer(stateString);
+                }
                 callback({ status: result.status, state: state });
             }
         }

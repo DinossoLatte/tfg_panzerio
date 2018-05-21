@@ -308,7 +308,7 @@ class PreGameMenu extends React.Component<any, any> {
         <div className="jumbotron text-center">
             <h2>Menu de selección <button className="btn btn-primary btn-sm" onClick={this.exitPreGame.bind(this)}>Volver</button></h2>
             {this.showPlayerMenu()}
-            <button className="btn btn-primary btn-sm" onClick={this.startGame.bind(this)}>Empezar juego</button><br/>
+            <button className="btn btn-primary btn-sm" onClick={this.startGame.bind(this)}>Empezar juego</button><br/>            
         </div>);
     }
 
@@ -569,8 +569,10 @@ class PreGameMenu extends React.Component<any, any> {
                 console.log("Polling pre game state from server");
                 Network.sendSyncState(store.getState(), parentObject.state.rows, parentObject.state.columns, (statusCode) => {
                     console.dir(statusCode.state);
-                    if (statusCode.status == false) {
+                    if (statusCode.status == false) {                    
                         console.error("Ha fallado la sincronización con el servidor");
+                        window.alert("El usuario ha salido de la partida");
+                        throw new Error("error");
                     } else {
                         // Cuando salga bien, emitiremos un guardado de estado y cambiamos al inicio del juego
                         console.dir(statusCode.state);
@@ -596,7 +598,6 @@ class PreGameMenu extends React.Component<any, any> {
                 });
             } else {
                 game.getEnemyFromServer(game.state.selectedEnemy,(errorenemy: { status: boolean, errorCode: string, units: Array<Unit> })=>{
-                    // Iniciamos el proceso de polling para comprobar que el otro usuario haya terminado con su configuración
                     pollingStart();
                 })
             }

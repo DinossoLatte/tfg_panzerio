@@ -20,7 +20,7 @@ import { Terrain } from '../src/Terrains';
 import { resetInitialState } from './GameState';
 
 var server = new webSocket.Server({ port: 8080 });
-var player1URL, player2URL = undefined;
+var player1URL, player2URL;
 var firstPlayer = undefined;
 var player1FinishedSelection = false;
 var player2FinishedSelection = false;
@@ -36,6 +36,19 @@ server.on('connection', function connect(ws) {
         console.log("Conecta user 2");
         player2URL = ws;
     }
+    ws.on("close", () => {
+        if(player1URL == ws) {
+            player1URL = undefined;
+            if(player1FinishedSelection || player2FinishedSelection) {
+                player2URL.send(JSON.stringify({ status: false }));
+            }
+        } else {
+            player2URL = undefined;
+            if(player1FinishedSelection || player2FinishedSelection) {
+                player1URL.send(JSON.stringify({ status: false }));
+            }
+        }
+    })
     ws.on("message", function getInitialState(data) {
         console.log("Got following action: " + data);
         // Dependiendo del estado, retornaremos una cosa u otra
@@ -408,9 +421,12 @@ server.on('connection', function connect(ws) {
                     // Quitamos todo lo relacionado con este jugador
                     player1FinishedSelection = false;
                     // Si el primer jugador no ha salido de la partida, se convierte en el primer jugador
+                    player2URL.send(JSON.stringify({ status: false }));
                 } else {
                     // Igual que el caso anterior
                     player2FinishedSelection = false;
+                    // Avisamos al otro usuario
+                    player1URL.send(JSON.stringify({ status: false }));
                 }
                 // Reiniciamos el estado inicial
                 firstPlayer = undefined;
