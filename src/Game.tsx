@@ -308,7 +308,7 @@ class PreGameMenu extends React.Component<any, any> {
         <div className="jumbotron text-center">
             <h2>Menu de selección <button className="btn btn-primary btn-sm" onClick={this.exitPreGame.bind(this)}>Volver</button></h2>
             {this.showPlayerMenu()}
-            <button className="btn btn-primary btn-sm" onClick={this.startGame.bind(this)}>Empezar juego</button><br/>            
+            <button className="btn btn-primary btn-sm" onClick={this.startGame.bind(this)}>Empezar juego</button><br/>
         </div>);
     }
 
@@ -569,7 +569,7 @@ class PreGameMenu extends React.Component<any, any> {
                 console.log("Polling pre game state from server");
                 Network.sendSyncState(store.getState(), parentObject.state.rows, parentObject.state.columns, (statusCode) => {
                     console.dir(statusCode.state);
-                    if (statusCode.status == false) {                    
+                    if (statusCode.status == false) {
                         console.error("Ha fallado la sincronización con el servidor");
                         window.alert("El usuario ha salido de la partida");
                         throw new Error("error");
@@ -676,7 +676,7 @@ class CreateMenu extends React.Component<any, any> {
                 <input type="text" className="form-control" placeholder="Altura" value={this.props.parentObject.state.edity} onChange={evt => this.updateInput(this.props.parentObject.state.editx,evt.target.value)} />
             </label>
             <button className="btn btn-primary btn-sm" id="createButton" name="createButton" onClick={this.onClickCreate.bind(this)}>Crear mapa</button><br/>
-            {this.state.error?<div className="alert alert-danger" id="error">Deben introducirse valores numéricos</div>:""}
+            {this.state.error?<div className="alert alert-danger" id="error">Deben introducirse valores numéricos mayores a 1</div>:""}
             <h2> Edición del mapa </h2>
             <label> Seleccione el mapa:
             <select className="form-control" id="map" defaultValue={null} value={this.state.selected} onChange={evt => this.updateMap(evt.target.value)}>
@@ -723,7 +723,8 @@ class CreateMenu extends React.Component<any, any> {
 
     onClickCreate(clickEvent : React.MouseEvent<HTMLElement>) {
         this.props.parentObject.changeSelected(null);
-        if(this.props.parentObject.state.editx.match(/^[1-9][0-9]*$/g) && this.props.parentObject.state.edity.match(/^[1-9][0-9]*$/g)){
+        if(this.props.parentObject.state.editx.match(/^[1-9][0-9]*$/g) && this.props.parentObject.state.edity.match(/^[1-9][0-9]*$/g)
+            && Number(this.props.parentObject.state.editx)>1 && Number(this.props.parentObject.state.edity)>1){
             this.setState({ error: false });
             this.props.parentObject.changeGameState(4);
         }else{
