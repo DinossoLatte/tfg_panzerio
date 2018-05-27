@@ -391,7 +391,7 @@ export class Map extends React.Component<any, any> {
     generateMap() {
         var accum = [];
         // Repetirá este for hasta que se llegue al número de columnas especificado
-        for(var i = 0; i <= this.props.vertical*2 + 1; i++) { // Necesitamos 2*verticales para ordenarlos correctamente
+        for(var i = 0; i < this.props.vertical*2; i++) { // Necesitamos 2*verticales para ordenarlos correctamente
             // Este método retornará una lista con las casillas en fila
             accum.push(this.generateCellRow.bind(this)(i));
         }
