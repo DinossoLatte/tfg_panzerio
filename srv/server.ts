@@ -8,132 +8,141 @@ import * as Units from '../src/Unit';
 import * as Utils from '../src/Utils';
 import * as Terrains from '../src/Terrains';
 import * as GameState from './GameState';
-import * as Store from './Store';
 import * as GameEditState from './GameEditState';
 import * as StoreEdit from './StoreEdit';
 import * as GameProfileState from './GameProfileState';
 import * as StoreProfile from './StoreProfile';
 import * as UtilsServer from './UtilsServer';
+
 import { Actions } from '../src/GameState';
 import { Pair } from './Utils';
 import { Terrain } from '../src/Terrains';
 import { resetInitialState } from './GameState';
+import { Game } from './Game';
 
 var server = new webSocket.Server({ port: 8080 });
-var player1URL, player2URL;
-var firstPlayer = undefined;
-var player1FinishedSelection = false;
-var player2FinishedSelection = false;
+var games : { string: Game };
 
-server.on('connection', function connect(ws) {
+server.on('connection', function connect(ws: webSocket) {
     // Este será el inicio del servidor, por ahora nos encargaremos de mostrarle el estado
     console.log("Conected with client");
-    // Inicialización del servidor
-    if(player1URL == undefined) {
-        console.log("Conecta user 1");
-        player1URL = ws;
-    } else if(player2URL == undefined) {
-        console.log("Conecta user 2");
-        player2URL = ws;
-    }
     ws.on("close", () => {
-        if(player1URL == ws) {
-            player1URL = undefined;
-            if(player1FinishedSelection || player2FinishedSelection) {
-                player2URL.send(JSON.stringify({ status: false }));
+        let gameId = null;
+        for(let gameIndex in games) {
+            if(ws == games[gameIndex].player1URL || ws == games[gameIndex].player2URL) {
+                // Encontramos el juego del que ha salido un jugador
+                gameId = gameIndex;
+                break;
             }
-        } else {
-            player2URL = undefined;
-            if(player1FinishedSelection || player2FinishedSelection) {
-                player1URL.send(JSON.stringify({ status: false }));
+        }
+        if(gameId != null) {
+            if(games[gameId].player1URL == ws) {
+                games[gameId].player1URL = undefined;
+                if(games[gameId].player1FinishedSelection || games[gameId].player2FinishedSelection) {
+                    games[gameId].player2URL.send(JSON.stringify({ status: false }));
+                }
+            } else {
+                games[gameId].player2URL = undefined;
+                if(games[gameId].player1FinishedSelection || games[gameId].player2FinishedSelection) {
+                    games[gameId].player1URL.send(JSON.stringify({ status: false }));
+                }
             }
         }
     })
     ws.on("message", function getInitialState(data) {
-        console.log("Got following action: " + data);
+        console.debug("Got following action: " + data);
         // Dependiendo del estado, retornaremos una cosa u otra
         let message = JSON.parse(data as string);
+        // Debido a la forma de compilar el programa, es necesario declarar aqui el id del mensaje, aun cuando este no deba aparecer en el mensaje.
+        let gameId = message.id;
+        let game;
         switch (message.tipo) {
+            case "createGame": 
+                // Creamos la partida con la conexión entrante
+                let game: Game = new Game(ws, GameState.resetInitialState());
+                // Importante, las posibilidades de que el Id coincida son bajas, pero 
+                // TODO Hacer un if para evitar sobreescribir la partida
+                let id = Game.generateRandomIdentifier();
+                games[id] = game;
+                ws.send(JSON.stringify({
+                    id: id
+                }));
+                break;
             case "getInitialState":
-                var state;
-                console.log("Primer jugador: "+firstPlayer);
-                if(firstPlayer == undefined) {
-                    firstPlayer = ws;
-                    // Retornaremos el estado inicial
-                    state = {
-                        turn: 0,
-                        actualState: 0,
-                        units: [],
-                        visitables: null,
-                        terrains: [Terrains.ImpassableMountain.create(new Utils.Pair(2, 2)), Terrains.ImpassableMountain.create(new Utils.Pair(3, 2)), Terrains.Hills.create(new Utils.Pair(2, 3)), Terrains.Forest.create(new Utils.Pair(3, 3))],
-                        cursorPosition: new Utils.Pair(0, 0),
-                        map: null,
-                        selectedUnit: null,
-                        width: 0,
-                        heigth: 0,
-                        type: "SET_LISTENER",
-                        // Como es el primero en conectar, es el 1er jugador
-                        isPlayer: true
-                    };
-                } else {
-                    // Retorna el estado de la partida
-                    let storeState = Store.store.getState();
-                    state = {
-                        turn: storeState.turn,
-                        actualState: storeState.actualState,
-                        units: storeState.units,
-                        visitables: storeState.visitables,
-                        terrains: storeState.terrains,
-                        cursorPosition: storeState.cursorPosition,
-                        map: storeState.map,
-                        selectedUnit: storeState.selectedUnit,
-                        width: storeState.width,
-                        heigth: storeState.height,
-                        type: storeState.type,
-                        // Este es el segundo jugador
-                        isPlayer: false
-                    };
+                if(gameId) {
+                    var state;
+                    console.log("Primer jugador: "+games[gameId].firstPlayer);
+                    if(games[gameId].firstPlayer == undefined) {
+                        games[gameId].firstPlayer = ws;
+                        // Retornaremos el estado inicial
+                        state = {
+                            turn: 0,
+                            actualState: 0,
+                            units: [],
+                            visitables: null,
+                            terrains: [Terrains.ImpassableMountain.create(new Utils.Pair(2, 2)), Terrains.ImpassableMountain.create(new Utils.Pair(3, 2)), Terrains.Hills.create(new Utils.Pair(2, 3)), Terrains.Forest.create(new Utils.Pair(3, 3))],
+                            cursorPosition: new Utils.Pair(0, 0),
+                            map: null,
+                            selectedUnit: null,
+                            width: 0,
+                            heigth: 0,
+                            type: "SET_LISTENER",
+                            // Como es el primero en conectar, es el 1er jugador
+                            isPlayer: true
+                        };
+                    } else {
+                        // Retorna el estado de la partida
+                        let storeState = games[gameId].store.getState();
+                        state = {
+                            turn: storeState.turn,
+                            actualState: storeState.actualState,
+                            units: storeState.units,
+                            visitables: storeState.visitables,
+                            terrains: storeState.terrains,
+                            cursorPosition: storeState.cursorPosition,
+                            map: storeState.map,
+                            selectedUnit: storeState.selectedUnit,
+                            width: storeState.width,
+                            heigth: storeState.height,
+                            type: storeState.type,
+                            // Este es el segundo jugador
+                            isPlayer: false
+                        };
+                    }
+                    // Creamos la partida
+                    ws.send(JSON.stringify(state));
                 }
-                ws.send(JSON.stringify(state));
+                
                 break;
             // Este se llamará cuando se quiera sincronizar el estado del cliente con el servidor
             case "SYNC_STATE":
                 // Nos aseguramos de que el estado es el final para ambos
-                if(player1FinishedSelection && player2FinishedSelection) {
-                    player1URL.send(JSON.stringify({
-                        status: true,
-                        state: Store.store.getState()
-                    }));
-                    player2URL.send(JSON.stringify({
-                        status: true,
-                        state: Store.store.getState()
-                    }));
+                if(gameId) {
+                    game = games[gameId];
+                    if(game.player1FinishedSelection && game.player2FinishedSelection) {
+                        game.player1URL.send(JSON.stringify({
+                            status: true,
+                            state: game.store.getState()
+                        }));
+                        game.player2URL.send(JSON.stringify({
+                            status: true,
+                            state: game.store.getState()
+                        }));
+                    }
+                } else {
+                    // En este caso, el mensaje no contiene Id, debería informarse al cliente del error.
                 }
                 break;
             case "SAVE_MAP":
-                let actmap = GameState.parseActionMap(message);
-                console.dir(actmap);
-                //Guardamos el estado
-                Store.saveState(actmap);
-                //Enviamos el nuevo estado
-                ws.send(JSON.stringify(Store.store.getState()));
+                if(gameId) {
+                    let actmap = GameState.parseActionMap(message);
+                    //Guardamos el estado
+                    games[gameId].saveState(actmap);
+                    //Enviamos el nuevo estado
+                    ws.send(JSON.stringify(games[gameId].store.getState()));
+                    break;
+                }
                 break;
-            /* TODO temporalmente lo quito ya que se guardará en servidor el estado, no lo veo necesario aqui
-            case "SAVE_EDIT":
-                let actedit = GameEditState.parseActionMap(message);
-                //Guardamos el estado
-                StoreEdit.saveState(actedit);
-                //Enviamos el nuevo estado
-                ws.send(JSON.stringify(StoreEdit.storeEdit.getState()));
-                break;
-
-            case "SAVE_PROFILE":
-                let actprofile = GameProfileState.parseActionMap(message);
-                //Guardamos el estado
-                StoreProfile.saveState(actprofile);
-                //Enviamos el nuevo estado
-                ws.send(JSON.stringify(StoreProfile.storeProfile.getState()));
-                break;*/
             //Borrado del mapa
             case "deleteMap":
                 // Obtenemos los datos de la petición
@@ -195,7 +204,7 @@ server.on('connection', function connect(ws) {
                             error: "Couldn't get map. Error: "+code.error,
                             map: null
                         }));
-                    } else {
+                    } else if(gameId) {
                         // En caso contrario, avisamos de la obtención correcta
                         console.log("Mapa: "+code.map);
                         // Convertimos los terrenos en una interpretación válida de terrenos
@@ -204,7 +213,7 @@ server.on('connection', function connect(ws) {
                             let terrainJson = code.map.terrains[index];
                             terrains.push(new Terrain(terrainJson.name, terrainJson.image, terrainJson.movement_penalty, new Pair(terrainJson.position_row, terrainJson.position_cols), terrainJson.defense_weak, terrainJson.defense_strong, terrainJson.attack_weak, terrainJson.attack_strong));
                         }
-                        Store.saveState({
+                        games[gameId].store.saveState({
                             type: "UPDATE_MAP",
                             height: code.map.rows,
                             width: code.map.columns,
@@ -215,6 +224,8 @@ server.on('connection', function connect(ws) {
                             error: "Got successfully",
                             map: code.map
                         }))
+                    } else {
+                        // TODO Añadi tratamiento de no id en el mensaje.
                     }
                 });
                 break;
@@ -281,17 +292,17 @@ server.on('connection', function connect(ws) {
                             units: null,
                             armyId: null
                         }));
-                    } else {
+                    } else if(gameId) {
                         console.dir(Utils.Network.parseArmy(code.units, message.side));
-                        Store.saveState({
+                        games[gameId].saveState({
                             type: "UPDATE_UNITS",
-                            units: Store.store.getState().units.concat(Utils.Network.parseArmy(code.units, message.side))
+                            units: games[gameId].store.getState().units.concat(Utils.Network.parseArmy(code.units, message.side))
                         });
                         // Actualizamos el estado del jugador
                         if(message.side) {
-                            player1FinishedSelection = true;
+                            games[gameId].player1FinishedSelection = true;
                         } else {
-                            player2FinishedSelection = true;
+                            games[gameId].player2FinishedSelection = true;
                         }
                         // En caso contrario, avisamos de que se han obtenido correctamente
                         ws.send(JSON.stringify({
@@ -300,6 +311,8 @@ server.on('connection', function connect(ws) {
                             units: code.units,
                             armyId: code.armyId
                         }));
+                    } else {
+                        // TODO Añadir tratamiento de no Id en el mensaje.
                     }
                 });
                 break;
@@ -315,15 +328,16 @@ server.on('connection', function connect(ws) {
                 // Confirma que el jugador ha terminado su turno.
                 // Devolveremos el estado final, para sincronizarlo con el jugador
                 // Primero, comprobamos la conexión actual
-                if(player1URL == ws) {
-                    // Entonces, esperamos al jugador 2
-                    // Avisamoa al usuario 2
-                    player2URL.send(JSON.stringify({ status: true, state: Store.store.getState() }));
-                } else {
-                    // Es el jugador 2, le enviamos al 1 el estado
-                    player1URL.send(JSON.stringify({ status: true, state: Store.store.getState() }));
+                if(gameId) {
+                    if(games[gameId].player1URL == ws) {
+                        // Entonces, esperamos al jugador 2
+                        // Avisamoa al usuario 2
+                        games[gameId].player2URL.send(JSON.stringify({ status: true, state: games[gameId].store.getState() }));
+                    } else {
+                        // Es el jugador 2, le enviamos al 1 el estado
+                        games[gameId].player1URL.send(JSON.stringify({ status: true, state: games[gameId].store.getState() }));
+                    }
                 }
-
                 break;
             case "logIn":
                 // Este caso se llamará cuando el cliente haga inicio de sesión
@@ -415,29 +429,31 @@ server.on('connection', function connect(ws) {
                     ws.send(JSON.stringify(statusCode));
                 });
                 break;
-            case "exitPreGame":
-                // Primero vemos quién ha enviado la salida
-                if(ws == player1URL) {
-                    // Quitamos todo lo relacionado con este jugador
-                    player1FinishedSelection = false;
-                    // Si el primer jugador no ha salido de la partida, se convierte en el primer jugador
-                    player2URL.send(JSON.stringify({ status: false }));
-                } else {
-                    // Igual que el caso anterior
-                    player2FinishedSelection = false;
-                    // Avisamos al otro usuario
-                    player1URL.send(JSON.stringify({ status: false }));
+            case "exitPreGame": 
+                if(gameId) {
+                    // Primero vemos quién ha enviado la salida
+                    if(ws == games[gameId].player1URL) {
+                        // Quitamos todo lo relacionado con este jugador
+                        games[gameId].player1FinishedSelection = false;
+                        // Si el primer jugador no ha salido de la partida, se convierte en el primer jugador
+                        games[gameId].player2URL.send(JSON.stringify({ status: false }));
+                    } else {
+                        // Igual que el caso anterior
+                        games[gameId].player2FinishedSelection = false;
+                        // Avisamos al otro usuario
+                        games[gameId].player1URL.send(JSON.stringify({ status: false }));
+                    }
+                    // Reiniciamos el estado inicial
+                    games[gameId].firstPlayer = undefined;
+                    games[gameId].store.dispatch({
+                        type: "resetState"
+                    })
+                    // Y Confirmamos la realización correcta
+                    ws.send(JSON.stringify({
+                        status: true,
+                        message: "Success"
+                    }));
                 }
-                // Reiniciamos el estado inicial
-                firstPlayer = undefined;
-                Store.store.dispatch({
-                    type: "resetState"
-                })
-                // Y Confirmamos la realización correcta
-                ws.send(JSON.stringify({
-                    status: true,
-                    message: "Success"
-                }));
                 break;
             default:
                 console.warn("Action sent not understood! Type is " + message.tipo);

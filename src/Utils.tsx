@@ -339,6 +339,7 @@ export class Pathfinding {
 // Esta clase contendrán métodos auxiliares con respecto a la conexión entre cliente y servidor
 export class Network {
     private static connection: WebSocket = undefined;
+    private static gameId: string = undefined;
 
     /// Esta función permitirá crear la conexión, con la idea de cambiar los parametros en el caso de cambio
     public static getConnection() {
@@ -812,23 +813,28 @@ export class Network {
 
     public static sendWaitTurn(callback: (statusCode: { status: boolean, error: string, state: State }) => void) {
         // Como siempre, iniciamos la conexión
-        let connection = Network.getConnection();
+        if(Network.gameId == undefined) {
+            callback({ status: false, error: "Game id not defined", state: null });
+        } else {
+            let connection = Network.getConnection();
 
-        connection.send(JSON.stringify({
-            tipo: "waitTurn"
-        }));
+            connection.send(JSON.stringify({
+                tipo: "waitTurn",
+                id: Network.gameId
+            }));
 
-        connection.onmessage = function(message: MessageEvent) {
-            if(message.data == "Command not understood") {
-                callback({ status: false, error: message.data, state: null });
-            } else {
-                // Se comprueba la respuesta, generalmente será correcta
-                let result = JSON.parse(message.data);
-                // Vemos el resultado
-                if(result.status) {
-                    // Si es correcto, obtenemos el estado y llamamos al callback
-                    let newState = Network.parseStateFromServer(JSON.stringify(result.state));
-                    callback({ status: true, error: "Success", state: newState });
+            connection.onmessage = function(message: MessageEvent) {
+                if(message.data == "Command not understood") {
+                    callback({ status: false, error: message.data, state: null });
+                } else {
+                    // Se comprueba la respuesta, generalmente será correcta
+                    let result = JSON.parse(message.data);
+                    // Vemos el resultado
+                    if(result.status) {
+                        // Si es correcto, obtenemos el estado y llamamos al callback
+                        let newState = Network.parseStateFromServer(JSON.stringify(result.state));
+                        callback({ status: true, error: "Success", state: newState });
+                    }
                 }
             }
         }
@@ -871,47 +877,55 @@ export class Network {
         }
     }
 
-    public static sendSyncState(state: State, height: number, width: number,
-         callback: (statusCode: { status: boolean, state: any }) => void) {
+    public static sendSyncState(state: State, height: number, width: number, callback: (statusCode: { status: boolean, state: any }) => void) {
+        if(Network.gameId == undefined) {
+            callback({ status: false, state: null });
+        } else {
+            let connection = Network.getConnection();
 
-        let connection = Network.getConnection();
-
-        let terrains = state.terrains;
-        let units = state.units;
-        connection.onmessage = (message: MessageEvent) => {
-            console.dir(JSON.parse(message.data));
-            if(message.data == "Command not understood") {
-                callback({ status: false, state: null });
-            } else {
-                let result = JSON.parse(message.data);
-                if(result.status == true) {
-                    // Para facilitar el traspaso de los datos de servidor, necesitamos realizar una conversión a string y pasarlo a estado compatible
-                    let stateString = JSON.stringify(result.state);
-                    let state = Network.parseStateFromServer(stateString);
+            let terrains = state.terrains;
+            let units = state.units;
+            connection.onmessage = (message: MessageEvent) => {
+                console.dir(JSON.parse(message.data));
+                if (message.data == "Command not understood") {
+                    callback({ status: false, state: null });
+                } else {
+                    let result = JSON.parse(message.data);
+                    if (result.status == true) {
+                        // Para facilitar el traspaso de los datos de servidor, necesitamos realizar una conversión a string y pasarlo a estado compatible
+                        let stateString = JSON.stringify(result.state);
+                        let state = Network.parseStateFromServer(stateString);
+                    }
+                    callback({ status: result.status, state: state });
                 }
-                callback({ status: result.status, state: state });
             }
+            connection.send(JSON.stringify({
+                tipo: "SYNC_STATE",
+                id: Network.gameId
+            }));
         }
-        connection.send(JSON.stringify({
-            tipo: "SYNC_STATE"
-        }));
     }
 
     public static sendExitPreGame(callback: (statusCode: { status: boolean, message: string}) => void) {
-        let connection = Network.getConnection();
-        connection.onmessage = (message: MessageEvent) => {
-            // Comprobamos el tipo de mensaje
-            let data = message.data;
-            if(data == "Command not understood") {
-                callback({ status: false, message: data });
-            } else {
-                // Asumimos que ha salido bien
-                callback({ status: true, message: "Success" });
+        if(Network.gameId == undefined) {
+            callback({ status: false, message: "Game id not defined" });
+        } else {
+            let connection = Network.getConnection();
+            connection.onmessage = (message: MessageEvent) => {
+                // Comprobamos el tipo de mensaje
+                let data = message.data;
+                if (data == "Command not understood") {
+                    callback({ status: false, message: data });
+                } else {
+                    // Asumimos que ha salido bien
+                    callback({ status: true, message: "Success" });
+                }
             }
+            connection.send(JSON.stringify({
+                tipo: "exitPreGame",
+                id: Network.gameId
+            }));
         }
-        connection.send(JSON.stringify({
-            tipo: "exitPreGame"
-        }));
     }
 }
 
