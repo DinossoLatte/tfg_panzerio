@@ -1,16 +1,17 @@
 import * as Redux from 'redux';
 import * as WebSocket from 'ws';
 
-import { State, Reducer } from './GameState';
-import { Store } from './Store';
+import { GameState, State } from './GameState';
+import { GameStore } from './Store';
 
 export class Game {
     player1URL: WebSocket;
     player2URL: WebSocket;
     player1FinishedSelection: boolean;
     player2FinishedSelection: boolean;
-    state: State;
-    store: Store;
+    currentState: number; // 0 -> Por empezar (unible), 1 -> En progreso, 2 -> Terminado (sobreescribible).
+    gameState: GameState;
+    store: GameStore;
 
     private static hexValues: string[] = [ '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F' ];
 
@@ -22,21 +23,25 @@ export class Game {
 
     constructor(player1URL: WebSocket, initialState: State) {
         this.player1URL = player1URL;
-        this.state = initialState;
         this.player1FinishedSelection = false;
         this.player2FinishedSelection = false;
-        this.state = initialState;
-        this.store = Redux.createStore<State>(Reducer);
+        this.gameState = new GameState();
+        this.store = new GameStore(this.gameState.Reducer);
+        this.currentState = 0;
     }
 
     public static generateRandomIdentifier(): string {
         let result = "";
         for(let i = 0; i < 10; i++) { // Identificador de hasta 10 números
-            let index = Math.floor(Math.random() * 17);
-            result.concat(Game.hexValues[index]);
+            let index = Math.floor(Math.random() * 16);
+            result = result.concat(Game.hexValues[index]);
         }
 
         return result;
+    }
+
+    getState() {
+        return this.store.store.getState();
     }
 
 }

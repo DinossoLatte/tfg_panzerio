@@ -17,11 +17,11 @@ import * as UtilsServer from './UtilsServer';
 import { Actions } from '../src/GameState';
 import { Pair } from './Utils';
 import { Terrain } from '../src/Terrains';
-import { resetInitialState } from './GameState';
+import { getInitialState } from './GameState';
 import { Game } from './Game';
 
 var server = new webSocket.Server({ port: 8080 });
-var games : { string: Game };
+var games : Map<string, Game> = new Map<string, Game>();
 
 server.on('connection', function connect(ws: webSocket) {
     // Este será el inicio del servidor, por ahora nos encargaremos de mostrarle el estado
@@ -59,7 +59,7 @@ server.on('connection', function connect(ws: webSocket) {
         switch (message.tipo) {
             case "createGame": 
                 // Creamos la partida con la conexión entrante
-                let game: Game = new Game(ws, GameState.resetInitialState());
+                let game: Game = new Game(ws, GameState.getInitialState());
                 // Importante, las posibilidades de que el Id coincida son bajas, pero 
                 // TODO Hacer un if para evitar sobreescribir la partida
                 let id = Game.generateRandomIdentifier();
@@ -67,6 +67,16 @@ server.on('connection', function connect(ws: webSocket) {
                 ws.send(JSON.stringify({
                     id: id
                 }));
+                break;
+            case "joinGame": 
+                if(games[gameId]) {
+                    // Hemos encontrado el juego, se lo devolvemos
+                    games[gameId].player2URL = ws;
+                    ws.send(JSON.stringify({ id: gameId }));
+                } else {
+                    // Enviamos error
+                    ws.send(JSON.stringify({ status: false, error: "Game not found" }));
+                }
                 break;
             case "getInitialState":
                 if(gameId) {
@@ -88,11 +98,12 @@ server.on('connection', function connect(ws: webSocket) {
                             heigth: 0,
                             type: "SET_LISTENER",
                             // Como es el primero en conectar, es el 1er jugador
-                            isPlayer: true
+                            isPlayer: true,
+                            id: gameId
                         };
                     } else {
                         // Retorna el estado de la partida
-                        let storeState = games[gameId].store.getState();
+                        let storeState = games[gameId].getState();
                         state = {
                             turn: storeState.turn,
                             actualState: storeState.actualState,
@@ -106,8 +117,10 @@ server.on('connection', function connect(ws: webSocket) {
                             heigth: storeState.height,
                             type: storeState.type,
                             // Este es el segundo jugador
-                            isPlayer: false
+                            isPlayer: false,
+                            id: gameId
                         };
+                        games[gameId].currentState = 1; // Cambiamos el estado del juego a en progreso.
                     }
                     // Creamos la partida
                     ws.send(JSON.stringify(state));
@@ -117,16 +130,18 @@ server.on('connection', function connect(ws: webSocket) {
             // Este se llamará cuando se quiera sincronizar el estado del cliente con el servidor
             case "SYNC_STATE":
                 // Nos aseguramos de que el estado es el final para ambos
+                console.debug("Height (sync): "+games[gameId].getState().height);
+                console.debug("Width (sync): "+games[gameId].getState().width);
                 if(gameId) {
                     game = games[gameId];
                     if(game.player1FinishedSelection && game.player2FinishedSelection) {
                         game.player1URL.send(JSON.stringify({
                             status: true,
-                            state: game.store.getState()
+                            state: game.getState()
                         }));
                         game.player2URL.send(JSON.stringify({
                             status: true,
-                            state: game.store.getState()
+                            state: game.getState()
                         }));
                     }
                 } else {
@@ -137,9 +152,9 @@ server.on('connection', function connect(ws: webSocket) {
                 if(gameId) {
                     let actmap = GameState.parseActionMap(message);
                     //Guardamos el estado
-                    games[gameId].saveState(actmap);
+                    games[gameId].store.saveState(actmap);
                     //Enviamos el nuevo estado
-                    ws.send(JSON.stringify(games[gameId].store.getState()));
+                    ws.send(JSON.stringify(games[gameId].getState()));
                     break;
                 }
                 break;
@@ -294,9 +309,9 @@ server.on('connection', function connect(ws: webSocket) {
                         }));
                     } else if(gameId) {
                         console.dir(Utils.Network.parseArmy(code.units, message.side));
-                        games[gameId].saveState({
+                        games[gameId].store.saveState({
                             type: "UPDATE_UNITS",
-                            units: games[gameId].store.getState().units.concat(Utils.Network.parseArmy(code.units, message.side))
+                            units: games[gameId].getState().units.concat(Utils.Network.parseArmy(code.units, message.side))
                         });
                         // Actualizamos el estado del jugador
                         if(message.side) {
@@ -332,10 +347,10 @@ server.on('connection', function connect(ws: webSocket) {
                     if(games[gameId].player1URL == ws) {
                         // Entonces, esperamos al jugador 2
                         // Avisamoa al usuario 2
-                        games[gameId].player2URL.send(JSON.stringify({ status: true, state: games[gameId].store.getState() }));
+                        games[gameId].player2URL.send(JSON.stringify({ status: true, state: games[gameId].getState() }));
                     } else {
                         // Es el jugador 2, le enviamos al 1 el estado
-                        games[gameId].player1URL.send(JSON.stringify({ status: true, state: games[gameId].store.getState() }));
+                        games[gameId].player1URL.send(JSON.stringify({ status: true, state: games[gameId].getState() }));
                     }
                 }
                 break;
@@ -435,17 +450,25 @@ server.on('connection', function connect(ws: webSocket) {
                     if(ws == games[gameId].player1URL) {
                         // Quitamos todo lo relacionado con este jugador
                         games[gameId].player1FinishedSelection = false;
+                        games[gameId].player1URL = undefined;
                         // Si el primer jugador no ha salido de la partida, se convierte en el primer jugador
-                        games[gameId].player2URL.send(JSON.stringify({ status: false }));
+                        if(games[gameId].player2URL) {
+                            games[gameId].player2URL.send(JSON.stringify({ status: false }));
+                        }
                     } else {
                         // Igual que el caso anterior
                         games[gameId].player2FinishedSelection = false;
+                        games[gameId].player2URL = undefined;
                         // Avisamos al otro usuario
-                        games[gameId].player1URL.send(JSON.stringify({ status: false }));
+                        if(games[gameId].player2URL) {
+                            games[gameId].player1URL.send(JSON.stringify({ status: false }));
+                        }
                     }
                     // Reiniciamos el estado inicial
                     games[gameId].firstPlayer = undefined;
-                    games[gameId].store.dispatch({
+                    // Actualizamos el estado, si no hay jugadores el juego ha terminado
+                    games[gameId].currentState = !games[gameId].player1URL && !games[gameId].player2URL?2:0;
+                    games[gameId].store.saveState({
                         type: "resetState"
                     })
                     // Y Confirmamos la realización correcta
@@ -454,6 +477,13 @@ server.on('connection', function connect(ws: webSocket) {
                         message: "Success"
                     }));
                 }
+                break;
+            case "getGames":
+                // Obtenemos los juegos que estén en funcionamiento.
+                ws.send(Utils.Parsers.stringifyCyclicObject({
+                    status: true,
+                    games: games
+                }));
                 break;
             default:
                 console.warn("Action sent not understood! Type is " + message.tipo);

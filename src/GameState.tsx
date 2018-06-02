@@ -27,7 +27,7 @@ export type State = {
 export var InitialState: State = undefined;
 
 // Esta función se encargará de devolver el estado inicial, es la única forma de ofrecer un objeto inmutable:
-export function getInitialState(callback: (height: number, width: number) => void) {
+export function getInitialState(id: string, callback: (height: number, width: number) => void) {
     // Creamos la petición al servidor
     var connection = Network.getConnection();
     console.log("Connection established with server");
@@ -49,7 +49,8 @@ export function getInitialState(callback: (height: number, width: number) => voi
     // Enviamos la solicitud de estado inicial (se ha modificado a tipo para hacer el menor número de cambios posibles al código)
     // La variable tipo indica el tipo de la acción
     connection.send(JSON.stringify({
-        tipo: "getInitialState"
+        tipo: "getInitialState",
+        id: id
     }));
     console.log("Action sent.");
 }
@@ -63,6 +64,13 @@ export class Actions {
             tipo: "SAVE_MAP",
             type: "SELECT",
             selectedUnit: selectedUnit
+        };
+    }
+
+    static generateNewId(gameId: string): Redux.AnyAction {
+        return {
+            type: "NEW_ID",
+            id: gameId
         };
     }
 
@@ -586,6 +594,21 @@ export var Reducer: Redux.Reducer<State> =
                     isTurn: state.isTurn,
                     isPlayer: state.isPlayer,
                     id: state.id
+                }
+            case "NEW_ID":
+                return {
+                    turn: state.turn,
+                    actualState: state.actualState,
+                    units: state.units,
+                    visitables: state.visitables,
+                    terrains: state.terrains,
+                    map: state.map,
+                    cursorPosition: state.cursorPosition,
+                    selectedUnit: state.selectedUnit,
+                    type: state.type,
+                    isTurn: state.isTurn,
+                    isPlayer: state.isPlayer,
+                    id: action.id
                 }
             default:
                 return state;

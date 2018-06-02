@@ -22,27 +22,91 @@ class EnterGameButton extends React.Component<any, any> {
     }
 
     onClick() {
-        if(this.props.parentObject.state.clientId==null){
-            window.alert("Necesita iniciar sesión para usar esta opción");
-        }else{
-            // Realizamos una llamada al servidor para obtener el estado inicial de las partidas
-            getInitialState((height, width) => {
-                // Reiniciamos el estado
-                store.dispatch(Actions.generateFinish());
-                // Y también cambiamos el estado del juego
-                this.props.parentObject.changeGameState(5);
-                // TODO En caso de partida jugada, echar a este jugador ya que no debería poder jugar
-                // Comprobamos si hay ganador o perdedor, en cuyo caso se reiniciará el estado al entrar en el juego
-                if (store.getState().map && store.getState().actualState > 0) {
-                    // Si se ha producido esto, debemos reiniciar el estado
-                    store.dispatch(Actions.generateFinish());
-                    // Ejecutamos también el reiniciado de estado del mapa
-                    store.getState().map.restartState();
-                }
-            });
-        }
-
+        this.props.parentObject.changeGameState(7);
     }
+}
+
+// Este panel contendrá información sobre las partidas actuales y crear una nueva partida
+class MainPanelMenu extends React.Component<any, any> {
+    constructor(props: any) {
+        super(props);
+        this.state = {
+            games: [],
+        }
+        this.updateGameList();
+    }
+
+    render() {
+        return (
+            <div>
+                <table id="gameList">
+                    <tbody>
+                        <tr>
+                            <td>Identificador</td>
+                            <td>Número de usuarios</td>
+                        </tr>
+                        {this.renderGameList()}
+                    </tbody>
+                </table>
+
+                <button onClick={this.onClickCreate.bind(this)} id="buttonCreateGame" name="buttonCreateGame">Crear partida</button>
+            </div>
+        );
+    }
+
+    renderGameList() {
+        let result = [];
+        for(let gameIndex in this.state.games) {
+            console.log("Index: "+gameIndex);
+            let game = this.state.games[gameIndex];
+            let row = <tr><td>{gameIndex}</td><td>{game.player1URL?1:0 + game.player2URL?1:0} / 2</td><td><button onClick={() => this.onClickJoin(gameIndex)}>Unirse a la partida</button></td></tr>
+            result.push(row);
+        }
+        return result;
+    }
+
+    onClickCreate() {
+        // Creamos la partida
+        Network.createGame((result) => {
+            // Comprobamos que haya salido bien la operación
+            if(result.status) {
+                // TODO store.dispatch(Actions.generateNewId(result.gameId)); Creo que el estado no está definido en este momento
+                Network.gameId = result.gameId;
+                getInitialState(result.gameId, (height, width) => {
+                    store.dispatch(Actions.generateFinish());
+                    // Cambiamos el estado a pre juego.
+                    this.props.parentObject.changeGameState(5);
+                });
+            }
+        })
+    }
+
+    onClickJoin(gameId: string) {
+        Network.joinGame(gameId, (result) => {
+            if(result.status) {
+                Network.gameId = result.gameId;
+                getInitialState(result.gameId, (height, width) => {
+                    store.dispatch(Actions.generateFinish());
+                    this.props.parentObject.setState({
+                        rows: height,
+                        columns: width
+                    });
+                    // Cambiamos el estado a pre juego.
+                    this.props.parentObject.changeGameState(5);
+                });
+            }
+        })
+    }
+
+    updateGameList() {
+        Network.sendGetGameList((status: { status: boolean, games: any[] }) => {
+            console.dir(status.games);
+            if(status.status) {
+                this.setState({ games: status.games });
+            }
+        });
+    }
+
 }
 
 class EditGameButton extends React.Component<any, any> {
@@ -286,6 +350,7 @@ class SideOptionMenu extends React.Component<any, any> {
 class PreGameMenu extends React.Component<any, any> {
     constructor(props: any) {
         super(props);
+        console.debug("Entra en constructor de PreGameMenu");
         this.state = {
             playerArmy: [] as Array<{type: string, number: number}>,
             enemyArmy: [] as Array<{type: string, number: number}>,
@@ -296,7 +361,8 @@ class PreGameMenu extends React.Component<any, any> {
             selected: null,
             selectedPlayer: null,
             selectedEnemy: null,
-            isPlayer: store.getState().isPlayer
+            isPlayer: store.getState().isPlayer,
+            id: store.getState().id
         };
         this.getUserIdFromServer((error: { status: boolean, errorCode: string, userId: number })=>{
             this.getArmyIdFromServer(error);
@@ -306,6 +372,7 @@ class PreGameMenu extends React.Component<any, any> {
     render() {
         return (
         <div className="jumbotron text-center">
+            <h1>Id de partida: {this.state.id}</h1>
             <h2>Menu de selección <button className="btn btn-primary btn-sm" onClick={this.exitPreGame.bind(this)}>Volver</button></h2>
             {this.showPlayerMenu()}
             <button className="btn btn-primary btn-sm" onClick={this.startGame.bind(this)}>Empezar juego</button><br/>
@@ -469,6 +536,7 @@ class PreGameMenu extends React.Component<any, any> {
         // Al abrirse la conexión, informamos al servidor del mapa
         connection.send(JSON.stringify({
             tipo: "getArmyId",
+            id: Network.gameId,
             armyclient: armyclient
         }));
     }
@@ -496,6 +564,7 @@ class PreGameMenu extends React.Component<any, any> {
         // Al abrirse la conexión, informamos al servidor del mapa
         connection.send(JSON.stringify({
             tipo: "getMap",
+            id: Network.gameId,
             mapData: mapData.id
         }));
     }
@@ -524,6 +593,7 @@ class PreGameMenu extends React.Component<any, any> {
         // Al abrirse la conexión, informamos al servidor del mapa
         connection.send(JSON.stringify({
             tipo: "getUnits",
+            id: Network.gameId,
             armyclient: army,
             side: true
         }));
@@ -553,6 +623,7 @@ class PreGameMenu extends React.Component<any, any> {
         // Al abrirse la conexión, informamos al servidor del mapa
         connection.send(JSON.stringify({
             tipo: "getUnits",
+            id: Network.gameId,
             armyclient: army,
             side: false
         }));
@@ -567,8 +638,9 @@ class PreGameMenu extends React.Component<any, any> {
             var parentObject = this.props.parentObject;
             let pollingStart = function pollingStart() {
                 console.log("Polling pre game state from server");
-                Network.sendSyncState(store.getState(), parentObject.state.rows, parentObject.state.columns, (statusCode) => {
-                    console.dir(statusCode.state);
+                Network.sendSyncState((statusCode, height, width) => {
+                    console.debug("Height: "+height);
+                    console.debug("Width: "+width);
                     if (statusCode.status == false) {
                         console.error("Ha fallado la sincronización con el servidor");
                         window.alert("El usuario ha salido de la partida");
@@ -579,8 +651,8 @@ class PreGameMenu extends React.Component<any, any> {
                         saveState(statusCode.state);
                         parentObject.setState({
                             gameState: 2,
-                            rows: statusCode.state.height,
-                            columns: statusCode.state.width
+                            rows: height,
+                            columns: width
                         });
                         // Comprobamos si el jugador actual es el 2º
                         if(!store.getState().isPlayer) {
@@ -803,6 +875,9 @@ class Game extends React.Component<any, any> {
                 break;
             case 6:
                 result = <Profile parentObject={this} />;
+                break;
+            case 7:
+                result = <MainPanelMenu parentObject={this} />;
                 break;
             default:
                 let loginInfo = null;
