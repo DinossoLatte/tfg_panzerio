@@ -57,6 +57,8 @@ export function saveStateServer(callback: () => void, act: Redux.AnyAction){
     };
     console.log("Connection available for sending action");
     // Enviamos la solicitud
-    connection.send(JSON.stringify(act));
+    let actionWithId = act;
+    actionWithId.id = Network.gameId;
+    connection.send(JSON.stringify(actionWithId));
     console.log("Action sent.");
 }

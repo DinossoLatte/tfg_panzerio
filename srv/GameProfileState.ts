@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Redux from 'redux';
 import { Profile } from './Profile';
-import { Reducer, State } from './GameState';
+import { State } from './GameState';
 import { Pair, Cubic } from '../src/Utils';
 import { Unit } from '../src/Unit';
 import { Army } from '../src/Army';

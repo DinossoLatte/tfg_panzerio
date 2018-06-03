@@ -339,6 +339,7 @@ export class Pathfinding {
 // Esta clase contendrán métodos auxiliares con respecto a la conexión entre cliente y servidor
 export class Network {
     private static connection: WebSocket = undefined;
+    public static gameId: string = undefined;
 
     /// Esta función permitirá crear la conexión, con la idea de cambiar los parametros en el caso de cambio
     public static getConnection() {
@@ -365,14 +366,17 @@ export class Network {
             height: 5,
             width: 5,
             isTurn: true,
-            isPlayer: true
+            isPlayer: true,
+            id: ""
         };
         // Primero, convertimos el objeto en un mapa
         let json = JSON.parse(data);
         result.isTurn = json.isTurn;
         result.isPlayer = json.isPlayer;
         result.height = json.height;
+        console.debug("Height: "+result.height);
         result.width = json.width;
+        console.debug("Width: "+result.width);
         // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
         // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
         result.turn = json.turn;
@@ -398,6 +402,7 @@ export class Network {
         }
         // Finalmente, nos quedan los terrenos, mismo proceso
         result.terrains = this.parseMap(json.terrains);
+        result.id = json.id;
         // Retornamos el estado final
         return result;
     }
@@ -516,6 +521,65 @@ export class Network {
         }
         // Retornamos el conjunto de unidades del bando
         return units;
+    }
+
+    public static createGame(callback: (error: { status: boolean, message: string, gameId: string }) => void) {
+        let connection = Network.getConnection();
+
+        connection.onmessage = (event: MessageEvent) => {
+            if(event.data == "Command not understood") {
+                console.log("Error attempting to create the game");
+                callback({ status: false, message: event.data, gameId: undefined });
+            } else {
+                let json = JSON.parse(event.data);
+                callback({ status: true, message: undefined, gameId: json.id });
+            }
+        }
+
+        connection.send(JSON.stringify({
+            tipo: "createGame"
+        }));
+    }
+
+    public static joinGame(gameId: string, callback: (error: { status: boolean, message: string, gameId: string }) => void) {
+        let connection = Network.getConnection();
+
+        connection.onmessage = (event: MessageEvent) => {
+            if(event.data == "Command not understood") {
+                console.log("Error attempting to join game");
+                callback({ status: false, message: event.data, gameId: undefined });
+            } else {
+                let json = JSON.parse(event.data);
+                if(json.status) {
+                    callback({ status: true, message: undefined, gameId: json.id });
+                } else {
+                    callback({ status: false, message: json.error, gameId: undefined });
+                }
+            }
+        }
+
+        connection.send(JSON.stringify({
+            tipo: "joinGame",
+            id: gameId
+        }))
+    }
+
+    public static sendGetGameList(callback: (status: { status: boolean, games: any[] }) => void) {
+        let connection = Network.getConnection();
+
+        connection.onmessage = (event: MessageEvent) => {
+            if(event.data == "Command not understood") {
+                console.log("Error attempting to join game");
+                callback({ status: false, games: [] });
+            } else {
+                let json = JSON.parse(event.data);
+                callback({ status: true, games: json.games });
+            }
+        }
+
+        connection.send(JSON.stringify({
+            tipo: "getGames"
+        }))
     }
 
     // Este método se encargará de enviar los datos del mapa al servidor, para que se guarden en BD
@@ -812,23 +876,28 @@ export class Network {
 
     public static sendWaitTurn(callback: (statusCode: { status: boolean, error: string, state: State }) => void) {
         // Como siempre, iniciamos la conexión
-        let connection = Network.getConnection();
+        if(Network.gameId == undefined) {
+            callback({ status: false, error: "Game id not defined", state: null });
+        } else {
+            let connection = Network.getConnection();
 
-        connection.send(JSON.stringify({
-            tipo: "waitTurn"
-        }));
+            connection.send(JSON.stringify({
+                tipo: "waitTurn",
+                id: Network.gameId
+            }));
 
-        connection.onmessage = function(message: MessageEvent) {
-            if(message.data == "Command not understood") {
-                callback({ status: false, error: message.data, state: null });
-            } else {
-                // Se comprueba la respuesta, generalmente será correcta
-                let result = JSON.parse(message.data);
-                // Vemos el resultado
-                if(result.status) {
-                    // Si es correcto, obtenemos el estado y llamamos al callback
-                    let newState = Network.parseStateFromServer(JSON.stringify(result.state));
-                    callback({ status: true, error: "Success", state: newState });
+            connection.onmessage = function(message: MessageEvent) {
+                if(message.data == "Command not understood") {
+                    callback({ status: false, error: message.data, state: null });
+                } else {
+                    // Se comprueba la respuesta, generalmente será correcta
+                    let result = JSON.parse(message.data);
+                    // Vemos el resultado
+                    if(result.status) {
+                        // Si es correcto, obtenemos el estado y llamamos al callback
+                        let newState = Network.parseStateFromServer(JSON.stringify(result.state));
+                        callback({ status: true, error: "Success", state: newState });
+                    }
                 }
             }
         }
@@ -871,47 +940,54 @@ export class Network {
         }
     }
 
-    public static sendSyncState(state: State, height: number, width: number,
-         callback: (statusCode: { status: boolean, state: any }) => void) {
+    public static sendSyncState(callback: (statusCode: { status: boolean, state: any }, height?: number, width?: number) => void) {
+        if(Network.gameId == undefined) {
+            callback({ status: false, state: null });
+        } else {
+            let connection = Network.getConnection();
 
-        let connection = Network.getConnection();
-
-        let terrains = state.terrains;
-        let units = state.units;
-        connection.onmessage = (message: MessageEvent) => {
-            console.dir(JSON.parse(message.data));
-            if(message.data == "Command not understood") {
-                callback({ status: false, state: null });
-            } else {
-                let result = JSON.parse(message.data);
-                if(result.status == true) {
-                    // Para facilitar el traspaso de los datos de servidor, necesitamos realizar una conversión a string y pasarlo a estado compatible
-                    let stateString = JSON.stringify(result.state);
-                    let state = Network.parseStateFromServer(stateString);
+            connection.onmessage = (message: MessageEvent) => {
+                console.dir(JSON.parse(message.data));
+                if (message.data == "Command not understood") {
+                    callback({ status: false, state: null });
+                } else {
+                    let result = JSON.parse(message.data);
+                    let state;
+                    if (result.status == true) {
+                        // Para facilitar el traspaso de los datos de servidor, necesitamos realizar una conversión a string y pasarlo a estado compatible
+                        let stateString = JSON.stringify(result.state);
+                        state = Network.parseStateFromServer(stateString);
+                    }
+                    callback({ status: result.status, state: state}, result.state.height, result.state.width);
                 }
-                callback({ status: result.status, state: state });
             }
+            connection.send(JSON.stringify({
+                tipo: "SYNC_STATE",
+                id: Network.gameId
+            }));
         }
-        connection.send(JSON.stringify({
-            tipo: "SYNC_STATE"
-        }));
     }
 
     public static sendExitPreGame(callback: (statusCode: { status: boolean, message: string}) => void) {
-        let connection = Network.getConnection();
-        connection.onmessage = (message: MessageEvent) => {
-            // Comprobamos el tipo de mensaje
-            let data = message.data;
-            if(data == "Command not understood") {
-                callback({ status: false, message: data });
-            } else {
-                // Asumimos que ha salido bien
-                callback({ status: true, message: "Success" });
+        if(Network.gameId == undefined) {
+            callback({ status: false, message: "Game id not defined" });
+        } else {
+            let connection = Network.getConnection();
+            connection.onmessage = (message: MessageEvent) => {
+                // Comprobamos el tipo de mensaje
+                let data = message.data;
+                if (data == "Command not understood") {
+                    callback({ status: false, message: data });
+                } else {
+                    // Asumimos que ha salido bien
+                    callback({ status: true, message: "Success" });
+                }
             }
+            connection.send(JSON.stringify({
+                tipo: "exitPreGame",
+                id: Network.gameId
+            }));
         }
-        connection.send(JSON.stringify({
-            tipo: "exitPreGame"
-        }));
     }
 }
 

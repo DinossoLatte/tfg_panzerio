@@ -19,14 +19,15 @@ export type State = {
     readonly selectedUnit: number,
     readonly type: string,
     readonly isTurn: boolean,
-    readonly isPlayer: boolean
+    readonly isPlayer: boolean,
+    readonly id: string // El id de la partida
 }
 
 //El estado inicial será este (selectedUnit es el valor del indice en la lista de unidades(position) de la unidad seleccionada)
 export var InitialState: State = undefined;
 
 // Esta función se encargará de devolver el estado inicial, es la única forma de ofrecer un objeto inmutable:
-export function getInitialState(callback: (height: number, width: number) => void) {
+export function getInitialState(id: string, callback: (height: number, width: number) => void) {
     // Creamos la petición al servidor
     var connection = Network.getConnection();
     console.log("Connection established with server");
@@ -48,7 +49,8 @@ export function getInitialState(callback: (height: number, width: number) => voi
     // Enviamos la solicitud de estado inicial (se ha modificado a tipo para hacer el menor número de cambios posibles al código)
     // La variable tipo indica el tipo de la acción
     connection.send(JSON.stringify({
-        tipo: "getInitialState"
+        tipo: "getInitialState",
+        id: id
     }));
     console.log("Action sent.");
 }
@@ -62,6 +64,13 @@ export class Actions {
             tipo: "SAVE_MAP",
             type: "SELECT",
             selectedUnit: selectedUnit
+        };
+    }
+
+    static generateNewId(gameId: string): Redux.AnyAction {
+        return {
+            type: "NEW_ID",
+            id: gameId
         };
     }
 
@@ -174,7 +183,7 @@ export class Actions {
 }
 
 //Y aquí se producirá el cambio
-export const Reducer: Redux.Reducer<State> =
+export var Reducer: Redux.Reducer<State> =
     (state: State = InitialState, action: Redux.AnyAction) => {
         //Dependiendo del tipo se cambiarán las variables del estado
         switch (action.type) {
@@ -218,7 +227,8 @@ export const Reducer: Redux.Reducer<State> =
                     cursorPosition: state.cursorPosition,
                     type: "SET_LISTENER",
                     isTurn: state.isTurn,
-                    isPlayer: state.isPlayer
+                    isPlayer: state.isPlayer,
+                    id: state.id
                 };
             case "MOVE":
                 // Casillas disponibles
@@ -243,7 +253,8 @@ export const Reducer: Redux.Reducer<State> =
                     cursorPosition: state.cursorPosition,
                     type: "MOVE",
                     isTurn: state.isTurn,
-                    isPlayer: state.isPlayer
+                    isPlayer: state.isPlayer,
+                    id: state.id
                 };
             case "SET_LISTENER":
                 return {
@@ -257,7 +268,8 @@ export const Reducer: Redux.Reducer<State> =
                     cursorPosition: state.cursorPosition,
                     type: "SET_LISTENER",
                     isTurn: state.isTurn,
-                    isPlayer: state.isPlayer
+                    isPlayer: state.isPlayer,
+                    id: state.id
                 };
             case "CURSOR_MOVE":
                 return {
@@ -271,7 +283,8 @@ export const Reducer: Redux.Reducer<State> =
                     selectedUnit: state.selectedUnit,
                     type: state.type,
                     isTurn: state.isTurn,
-                    isPlayer: state.isPlayer
+                    isPlayer: state.isPlayer,
+                    id: state.id
                 };
             case "ATTACK":
                 // Lógica de ataque
@@ -431,7 +444,8 @@ export const Reducer: Redux.Reducer<State> =
                     selectedUnit: selectedUnit,
                     type: "SET_LISTENER",
                     isTurn: state.isTurn,
-                    isPlayer: state.isPlayer
+                    isPlayer: state.isPlayer,
+                    id: state.id
                 }
             case "FINISH":
                 // En este caso retornamos el objeto inicial InitialState.
@@ -469,7 +483,8 @@ export const Reducer: Redux.Reducer<State> =
                     selectedUnit: null,
                     type: "SET_LISTENER",
                     isTurn: state.isTurn,
-                    isPlayer: state.isPlayer
+                    isPlayer: state.isPlayer,
+                    id: state.id
                 }
             case "NEXT_ACTION":
                 state.units[action.selectedUnit].action++;
@@ -488,7 +503,8 @@ export const Reducer: Redux.Reducer<State> =
                     selectedUnit: null,
                     type: "SET_LISTENER",
                     isTurn: state.isTurn,
-                    isPlayer: state.isPlayer
+                    isPlayer: state.isPlayer,
+                    id: state.id
                 }
             case "PRE_GAME_CONFIGURATION":
                 // Si se quiere importar un mapa, se cambiará los terrenos y las unidades
@@ -503,7 +519,8 @@ export const Reducer: Redux.Reducer<State> =
                     selectedUnit: state.selectedUnit,
                     type: state.type,
                     isTurn: state.isTurn,
-                    isPlayer: action.state.isPlayer
+                    isPlayer: action.state.isPlayer,
+                    id: state.id
                 }
             case "SELECT":
                 state.units[action.selectedUnit].action = 0;
@@ -521,7 +538,8 @@ export const Reducer: Redux.Reducer<State> =
                     selectedUnit: action.selectedUnit,
                     type: "SET_LISTENER",
                     isTurn: state.isTurn,
-                    isPlayer: state.isPlayer
+                    isPlayer: state.isPlayer,
+                    id: state.id
                 }
             case "NEW_STATE_FROM_SERVER":
                 // Retornamos el estado de la acción
@@ -542,7 +560,8 @@ export const Reducer: Redux.Reducer<State> =
                     selectedUnit: action.state.selectedUnit,
                     type: action.state.type,
                     isTurn: state.isTurn,
-                    isPlayer: state.isPlayer
+                    isPlayer: state.isPlayer,
+                    id: state.id
                 }
             case "UPDATE_UNITS":
                 let units = state.units;
@@ -558,7 +577,8 @@ export const Reducer: Redux.Reducer<State> =
                     selectedUnit: state.selectedUnit,
                     type: state.type,
                     isTurn: state.isTurn,
-                    isPlayer: state.isPlayer
+                    isPlayer: state.isPlayer,
+                    id: state.id
                 }
             case "NEW_STATE":
                 return {
@@ -572,7 +592,23 @@ export const Reducer: Redux.Reducer<State> =
                     selectedUnit: state.selectedUnit,
                     type: state.type,
                     isTurn: state.isTurn,
-                    isPlayer: state.isPlayer
+                    isPlayer: state.isPlayer,
+                    id: state.id
+                }
+            case "NEW_ID":
+                return {
+                    turn: state.turn,
+                    actualState: state.actualState,
+                    units: state.units,
+                    visitables: state.visitables,
+                    terrains: state.terrains,
+                    map: state.map,
+                    cursorPosition: state.cursorPosition,
+                    selectedUnit: state.selectedUnit,
+                    type: state.type,
+                    isTurn: state.isTurn,
+                    isPlayer: state.isPlayer,
+                    id: action.id
                 }
             default:
                 return state;
