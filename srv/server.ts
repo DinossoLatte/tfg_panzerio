@@ -70,9 +70,22 @@ server.on('connection', function connect(ws: webSocket) {
                 break;
             case "joinGame": 
                 if(games[gameId]) {
-                    // Hemos encontrado el juego, se lo devolvemos
-                    games[gameId].player2URL = ws;
-                    ws.send(JSON.stringify({ id: gameId }));
+                    // Primero, vemos si la sala está vacia
+                    if(!games[gameId].player1URL && !games[gameId].player2URL) {
+                        // En cuyo caso, el jugador actual será el primero
+                        games[gameId].player1URL = ws;
+                        ws.send(JSON.stringify({ status: true, id: gameId }));
+                    } else {
+                        // Hemos encontrado el juego, vemos si hay posición disponible
+                        if (!games[gameId].player2URL) {
+                            // Jugador actual es el jugador 2:
+                            games[gameId].player2URL = ws;
+                            ws.send(JSON.stringify({ status: true, id: gameId }));
+                        } else {
+                            // En caso contrario, avisamos de que la sala está ocupada
+                            ws.send(JSON.stringify({ status: false, error: "Game is full" }));
+                        }
+                    }
                 } else {
                     // Enviamos error
                     ws.send(JSON.stringify({ status: false, error: "Game not found" }));
@@ -81,7 +94,6 @@ server.on('connection', function connect(ws: webSocket) {
             case "getInitialState":
                 if(gameId) {
                     var state;
-                    console.log("Primer jugador: "+games[gameId].firstPlayer);
                     if(games[gameId].firstPlayer == undefined) {
                         games[gameId].firstPlayer = ws;
                         // Retornaremos el estado inicial
@@ -130,8 +142,6 @@ server.on('connection', function connect(ws: webSocket) {
             // Este se llamará cuando se quiera sincronizar el estado del cliente con el servidor
             case "SYNC_STATE":
                 // Nos aseguramos de que el estado es el final para ambos
-                console.debug("Height (sync): "+games[gameId].getState().height);
-                console.debug("Width (sync): "+games[gameId].getState().width);
                 if(gameId) {
                     game = games[gameId];
                     if(game.player1FinishedSelection && game.player2FinishedSelection) {
@@ -206,12 +216,10 @@ server.on('connection', function connect(ws: webSocket) {
                 // Obtenemos los datos de la petición
                 let getMapvar = message.mapData;
                 // Obtenemos el mapa
-                console.log(JSON.stringify(getMapvar));
                 UtilsServer.MapsDatabase.getMap(getMapvar, (code: { status: boolean, error: string,  map: { rows: number, columns: number, mapName: string,
                     terrains: {name: string, image: string, movement_penalty: number, position_row: number, position_cols: number,
                          defense_weak: number, defense_strong: number, attack_weak: number, attack_strong: number}[]} }) => {
                     // Si hay error
-                    console.log("server: "+code.status+","+code.error+","+JSON.stringify(code.map));
                     if(!code.status) {
                         // Entonces indicamos al receptor la obtención incorrecta del mapa
                         ws.send(JSON.stringify({
@@ -221,7 +229,6 @@ server.on('connection', function connect(ws: webSocket) {
                         }));
                     } else if(gameId) {
                         // En caso contrario, avisamos de la obtención correcta
-                        console.log("Mapa: "+code.map);
                         // Convertimos los terrenos en una interpretación válida de terrenos
                         let terrains = new Array();
                         for(let index in code.map.terrains) {
@@ -239,17 +246,13 @@ server.on('connection', function connect(ws: webSocket) {
                             error: "Got successfully",
                             map: code.map
                         }))
-                    } else {
-                        // TODO Añadi tratamiento de no id en el mensaje.
                     }
                 });
                 break;
             case "getMapId":
-                console.log("mapclient: "+JSON.stringify(message.mapclient));
                 // Obtenemos los id de los mapas
                 UtilsServer.MapsDatabase.getMapId(message.mapclient, (code: { status: boolean, error: string,  mapId: number[], mapName: string[] }) => {
                     // Si hay error
-                    console.log("server: "+code.status+","+code.error+","+code.mapId);
                     if(!code.status) {
                         // Entonces indicamos al receptor que se han obtenido mal
                         ws.send(JSON.stringify({
@@ -273,7 +276,6 @@ server.on('connection', function connect(ws: webSocket) {
                 // Obtenemos los id de los mapas
                 UtilsServer.ProfileDatabase.getArmyId(message.armyclient, (code: { status: boolean, error: string,  armyId: number[], armyName: string[] }) => {
                     // Si hay error
-                    console.log("server: "+code.status+","+code.error+","+code.armyId);
                     if(!code.status) {
                         // Entonces indicamos al receptor que se han obtenido mal
                         ws.send(JSON.stringify({
@@ -295,10 +297,8 @@ server.on('connection', function connect(ws: webSocket) {
                 break;
             case "getUnits":
                 // Obtenemos los id de los mapas
-                console.log("--- Valor del armyclient en servidor: "+ message.armyclient);
                 UtilsServer.ProfileDatabase.getUnits(message.armyclient, (code: { status: boolean, error: string,  units: {type: string, number: number}[], armyId: number }) => {
                     // Si hay error
-                    console.log("server: "+code.status+","+code.error+","+code.units);
                     if(!code.status) {
                         // Entonces indicamos al receptor que se han obtenido mal
                         ws.send(JSON.stringify({
@@ -308,7 +308,6 @@ server.on('connection', function connect(ws: webSocket) {
                             armyId: null
                         }));
                     } else if(gameId) {
-                        console.dir(Utils.Network.parseArmy(code.units, message.side));
                         games[gameId].store.saveState({
                             type: "UPDATE_UNITS",
                             units: games[gameId].getState().units.concat(Utils.Network.parseArmy(code.units, message.side))
@@ -367,10 +366,8 @@ server.on('connection', function connect(ws: webSocket) {
                 };
                 //Obtenemos el perfil
                 UtilsServer.ProfileDatabase.getProfile(logprofile, (statusCode: { status: boolean, error: string, name: string, gamesWon: number, gamesLost: number }) => {
-                    console.log("valor de error y name "+statusCode.error+", "+statusCode.name);
                     //Sino existe entonces se crea un nuevo perfil
                     if(statusCode.name==null){
-                        console.log("entra en el primer if");
                         let initialprofile: {
                             id: number,
                             name: string,
@@ -404,7 +401,6 @@ server.on('connection', function connect(ws: webSocket) {
                 let getprofile = message.profile;
                 UtilsServer.ProfileDatabase.getProfile(getprofile, (statusCode: { status: boolean, error: string, name: string, gamesWon: number, gamesLost: number }) => {
                     // Devolveremos el contenido de la petición
-                    console.log("valor del name en server: "+statusCode.name);
                     ws.send(JSON.stringify(statusCode));
                 });
                 break;
@@ -428,7 +424,6 @@ server.on('connection', function connect(ws: webSocket) {
             case "saveProfileName":
                 // Extraemos el perfil
                 let saveprofilename = message.profile;
-                console.log("<=====> Llama a saveProfileName");
                 UtilsServer.ProfileDatabase.saveProfileName(saveprofilename, (statusCode: UtilsServer.StatusCode) => {
                     // Devolveremos el contenido de la petición
                     ws.send(JSON.stringify(statusCode));
@@ -437,9 +432,7 @@ server.on('connection', function connect(ws: webSocket) {
             case "updateProfile":
                 // Extraemos el perfil
                 let updateprofile = message.profile;
-                console.log("llega a updateprofile");
                 UtilsServer.ProfileDatabase.updateProfile(updateprofile, (statusCode: UtilsServer.StatusCode) => {
-                    console.log("ejecuta el updateprofile");
                     // Devolveremos el contenido de la petición
                     ws.send(JSON.stringify(statusCode));
                 });
@@ -479,6 +472,11 @@ server.on('connection', function connect(ws: webSocket) {
                 }
                 break;
             case "getGames":
+                let result = Utils.Parsers.stringifyCyclicObject({
+                    status: true,
+                    games: games
+                });
+                console.log(result);
                 // Obtenemos los juegos que estén en funcionamiento.
                 ws.send(Utils.Parsers.stringifyCyclicObject({
                     status: true,

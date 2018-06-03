@@ -550,7 +550,11 @@ export class Network {
                 callback({ status: false, message: event.data, gameId: undefined });
             } else {
                 let json = JSON.parse(event.data);
-                callback({ status: true, message: undefined, gameId: json.id });
+                if(json.status) {
+                    callback({ status: true, message: undefined, gameId: json.id });
+                } else {
+                    callback({ status: false, message: json.error, gameId: undefined });
+                }
             }
         }
 

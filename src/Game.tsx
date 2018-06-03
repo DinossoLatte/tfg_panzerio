@@ -50,6 +50,7 @@ class MainPanelMenu extends React.Component<any, any> {
                 </table>
 
                 <button onClick={this.onClickCreate.bind(this)} id="buttonCreateGame" name="buttonCreateGame">Crear partida</button>
+                <button onClick={this.onClickExit.bind(this)} id="buttonExitMenu" name="buttonExitMenu">Salir</button>
             </div>
         );
     }
@@ -57,9 +58,8 @@ class MainPanelMenu extends React.Component<any, any> {
     renderGameList() {
         let result = [];
         for(let gameIndex in this.state.games) {
-            console.log("Index: "+gameIndex);
             let game = this.state.games[gameIndex];
-            let row = <tr><td>{gameIndex}</td><td>{game.player1URL?1:0 + game.player2URL?1:0} / 2</td><td><button onClick={() => this.onClickJoin(gameIndex)}>Unirse a la partida</button></td></tr>
+            let row = <tr><td>{gameIndex}</td><td>{(game.player1URL?1:0) + (game.player2URL?1:0)} / 2</td><td><button onClick={() => this.onClickJoin(gameIndex)}>Unirse a la partida</button></td></tr>
             result.push(row);
         }
         return result;
@@ -94,8 +94,18 @@ class MainPanelMenu extends React.Component<any, any> {
                     // Cambiamos el estado a pre juego.
                     this.props.parentObject.changeGameState(5);
                 });
+            } else {
+                // Vemos el código de error
+                if(result.message == "Game is full") {
+                    // Avisamos con un warning de que la sala está ocupada
+                    window.alert("La sala seleccionada está ocupada");
+                }
             }
         })
+    }
+
+    onClickExit() {
+        this.props.parentObject.changeGameState(0);
     }
 
     updateGameList() {
