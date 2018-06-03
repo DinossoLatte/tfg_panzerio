@@ -8,15 +8,52 @@ import { Army } from './Army';
 import { UNITS, UNITS_ESP } from './Unit';
 import { Network } from './Utils';
 
+const playerText = "Jugador";
+const armyText = "Nuevo batallón";
+const newArmyText = "Batallón ";
+const saveAlert1 = "Se ha guardado correctamente el perfil";
+const saveAlert2 = "No se ha podido guardar correctamente el perfil";
+const personalProfileText = "Perfil personal";
+const backText = "Volver atrás";
+const editNameText = "Modifique aquí su nombre";
+const editNameButton = "Editar nombre";
+const winText = "Partidas ganadas";
+const loseText = "Partidas perdidas";
+const showArmy = "Mostrar batallones";
+const createArmyTitle = "Crear batallón";
+const editArmyTitle = "Editar batallón";
+const saveArmy = "Guardar batallones";
+const saveInfo = "Los cambios serán almacenados en la lista de batallones por guardar";
+const editArmy = "Edición del batallón";
+const selectArmy = "Selecciona el batallón";
+const editNameArmy = "Editar nombre del batallón";
+const addUnit = "Añadir una nueva unidad";
+const deleteUnitTitle = "Eliminar una unidad";
+const deleteArmy = "Eliminar batallón";
+const noArmies = "No hay batallones para seleccionar";
+const selectUnitText = "Selecciona el tipo de unidad";
+const createArmy = "Creación del batallón";
+const addOtherUnit = "Añadir unidad";
+const armyNameText = "Nombre del batallón: ";
+const saveArmyName = "Establecer nombre";
+const selectText = "--Selecciona--";
+const deleteUnit = "Eliminar unidad";
+const noUnit = "No hay unidades para eliminar";
+const armyContentText = "El batallón contiene: ";
+const saveArmyInfo = 'Para guardar los cambios deberá darle al botón de Guardar batallones';
+const armyListText = "Batallones del jugador: ";
+const unitListText = UNITS_ESP;
+const nameUserText = "Nombre: ";
+
 export class Profile extends React.Component<any, any> {
 
     constructor(props: any) {
         super(props);
         this.state = {
-            username: "Jugador",
+            username: playerText,
             gameswon: 0,
             gameslost: 0,
-            name: "Nuevo batallón",
+            name: armyText,
             googleId: this.props.parentObject.state.clientId,
             avatar: this.props.parentObject.state.clientAvatar,
             units: new Array<Army>()
@@ -40,7 +77,7 @@ export class Profile extends React.Component<any, any> {
                     username: statusCode.name,
                     gameswon: statusCode.gamesWon,
                     gameslost: statusCode.gamesLost,
-                    name: "Nuevo batallón",
+                    name: armyText,
                     googleId: this.props.parentObject.state.clientId
                 });
 
@@ -149,28 +186,28 @@ export class Profile extends React.Component<any, any> {
     // Este método cambiará el título
     updateInput(title: string) {
         if (title.trim() == "") {
-            // Si nos viene el TODO (objeto), indicamos el batallón seleccionado
-            this.setState({ name: "Batallón " + storeProfile.getState().selectedArmy });
+            // Si nos viene el (objeto), indicamos el batallón seleccionado
+            this.setState({ name: newArmyText + storeProfile.getState().selectedArmy });
         } else {
-            // En otro caso, mostraremos el elemento de entrada TODO ???
+            // En otro caso, mostraremos el elemento de entrada
             this.setState({ name: title });
         }
     }
 
     //Se crean los options segun la lista de unidades disponibles (empieza en 1 para no contar general)
     selectOptionsUnits() {
-        let army = [<option selected value={null}>--Selecciona--</option>];
+        let army = [<option selected value={null}>{selectText}</option>];
         for (var i = 1; i < UNITS.length; i++) {
-            army.push(<option value={UNITS[i]}>{UNITS_ESP[i]}</option>);
+            army.push(<option value={UNITS[i]}>{unitListText[i]}</option>);
         }
         return army;
     }
 
     selectOptionsUnitsDelete() {
-        let army = [<option selected value={null}>--Selecciona--</option>];
+        let army = [<option selected value={null}>{selectText}</option>];
         for(var i = 1; i < UNITS.length; i++) {
             if(storeProfile.getState().armies[storeProfile.getState().selectedArmy].unitList.some(x => x.type == UNITS[i] && x.number > 0)) {
-                army.push(<option value={UNITS[i]}>{UNITS_ESP[i]}</option>);
+                army.push(<option value={UNITS[i]}>{unitListText[i]}</option>);
             }
         }
         return army;
@@ -185,7 +222,7 @@ export class Profile extends React.Component<any, any> {
             // Definimos el ejército por defecto
             army = new Army([{ type: "General", number: 1 }],
                 // Si el nombre no está definido, ponemos uno por defecto
-                this.state.name == null ? "Batallón " + storeProfile.getState().selectedArmy :
+                this.state.name == null ? newArmyText + storeProfile.getState().selectedArmy :
                     // Si ya nos viene, le ponemos el que tengamos
                     this.state.name);
             // Si tenemos un ejército seleccionado
@@ -214,7 +251,7 @@ export class Profile extends React.Component<any, any> {
                 // Entonces cambiamos el nombre del ejército
                 army.name =
                     // Si el nombre no está definido, le asignamos uno por defecto
-                    this.state.name == null ? "Batallón " + storeProfile.getState().selectedArmy :
+                    this.state.name == null ? newArmyText + storeProfile.getState().selectedArmy :
                         // Si lo tenemos, ponemos el que está definido
                         this.state.name;
             }
@@ -261,7 +298,7 @@ export class Profile extends React.Component<any, any> {
     /// Esta función representará las opciones del los ejércitos
     renderSelectOptionsArmy() {
         // Primero, ponemos la opción por defecto
-        let armies = [<option selected value={null}>--Selecciona--</option>];
+        let armies = [<option selected value={null}>{selectText}</option>];
         for (var i = 0; i < storeProfile.getState().armies.length; i++) {
             // y introducimos cada posible ejército
             armies.push(<option value={i}>{storeProfile.getState().armies[i].name}</option>);
@@ -298,7 +335,7 @@ export class Profile extends React.Component<any, any> {
         }
         // Finalmente, añadiremos a los componentes el número de unidades
         for(let indexNumbers = 0; indexNumbers < armyNumbers.length; indexNumbers++) {
-            result.push(<p>{UNITS_ESP[indexNumbers]}: {armyNumbers[indexNumbers]}</p>);
+            result.push(<p>{unitListText[indexNumbers]}: {armyNumbers[indexNumbers]}</p>);
         }
         return result;
     }
@@ -356,7 +393,7 @@ export class Profile extends React.Component<any, any> {
         army.unitList = armyUnits
             // En el caso de que alguno de los valores sea negativo, quitaremos de la lista el elemento
             .filter(pair => pair.number > 0);
-        // Actualizamos el estado TODO MEJORARLO, ASÍ NO SE HACE!?
+        // Actualizamos el estado
         storeProfile.getState().armies[storeProfile.getState().selectedArmy] = army;
         // Y finalmente llamamos a la actualización del estado
         saveState(ProfileActions.save(this, storeProfile.getState().armies, storeProfile.getState().selectedArmy, storeProfile.getState().selected, storeProfile.getState().type));
@@ -384,7 +421,7 @@ export class Profile extends React.Component<any, any> {
             // Definimos el ejército por defecto
             army = new Army([{ type: "General", number: 1 }],
                 // Si el nombre no está definido, ponemos uno por defecto
-                this.state.name == null ? "Batallón " + storeProfile.getState().selectedArmy :
+                this.state.name == null ? newArmyText + storeProfile.getState().selectedArmy :
                     // Si ya nos viene, le ponemos el que tengamos
                     this.state.name);
             storeProfile.getState().armies.push(army);
@@ -396,11 +433,11 @@ export class Profile extends React.Component<any, any> {
                 // Entonces cambiamos el nombre del ejército
                 army.name =
                     // Si el nombre no está definido, le asignamos uno por defecto
-                    this.state.name == null ? "Batallón " + storeProfile.getState().selectedArmy :
+                    this.state.name == null ? newArmyText + storeProfile.getState().selectedArmy :
                         // Si lo tenemos, ponemos el que está definido
                         this.state.name;
             }
-            // Finalmente ponemos el ejército, TODO de nuevo no es esta la forma de hacerlo
+            // Finalmente ponemos el ejército
             storeProfile.getState().armies[storeProfile.getState().selectedArmy] = army;
         }
         saveState(ProfileActions.save(this, storeProfile.getState().armies, storeProfile.getState().selectedArmy, storeProfile.getState().selected, storeProfile.getState().type));
@@ -435,7 +472,7 @@ export class Profile extends React.Component<any, any> {
             // Refrescamos la vista
             this.setState({ name: null })
         }
-        // Y actualizamos el estado para pasar a la fase 2 TODO ??
+        // Y actualizamos el estado para pasar a la fase 2
         saveState(ProfileActions.save(this, storeProfile.getState().armies, null, null, "2"));
     }
 
@@ -491,10 +528,10 @@ export class Profile extends React.Component<any, any> {
 
     updateUserName(title: string) {
         if (title.trim() == "") {
-            // Si nos viene el TODO (objeto), indicamos el batallón seleccionado
-            this.setState({ username: "Jugador"});
+            // Si nos viene el (objeto), indicamos el batallón seleccionado
+            this.setState({ username: playerText});
         } else {
-            // En otro caso, mostraremos el elemento de entrada TODO ???
+            // En otro caso, mostraremos el elemento de entrada
             this.setState({ username: title });
         }
     }
@@ -515,10 +552,10 @@ export class Profile extends React.Component<any, any> {
             // Vemos cómo ha salido la operación
             if(!statusCode.status) {
                 // Si ha salido mal, alertamos al usuario
-                window.alert("No se ha podido guardar correctamente el perfil");
+                window.alert(saveAlert2);
             } else {
                 // En caso contrario, indicamos el guardado correcto
-                window.alert("Se ha guardado correctamente el perfil");
+                window.alert(saveAlert1);
                 let getprofile: {
                     googleId: number
                 } = {
@@ -535,7 +572,7 @@ export class Profile extends React.Component<any, any> {
                             username: status.name,
                             gameswon: status.gamesWon,
                             gameslost: status.gamesLost,
-                            name: "Nuevo batallón",
+                            name: armyText,
                             googleId: getprofile.googleId
                         });
                     }
@@ -570,10 +607,10 @@ export class Profile extends React.Component<any, any> {
             // Vemos cómo ha salido la operación
             if(!error.status) {
                 // Si ha salido mal, alertamos al usuario
-                window.alert("No se ha podido guardar correctamente el perfil");
+                window.alert(saveAlert2);
             } else {
                 // En caso contrario, indicamos el guardado correcto
-                window.alert("Se ha guardado correctamente el perfil");
+                window.alert(saveAlert1);
                 let getprofile: {
                     googleId: number
                 } = {
@@ -590,7 +627,7 @@ export class Profile extends React.Component<any, any> {
                             username: status.name,
                             gameswon: status.gamesWon,
                             gameslost: status.gamesLost,
-                            name: "Nuevo batallón",
+                            name: armyText,
                             googleId: getprofile.googleId
                         });
                     }
@@ -603,62 +640,62 @@ export class Profile extends React.Component<any, any> {
     render() {
         return (
             <div className="jumbotron text-center">
-                <h2> Perfil personal <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExitMenu.bind(this)}>Volver al menú</button></h2>
+                <h2> {personalProfileText} <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExitMenu.bind(this)}>{backText}</button></h2>
                 <img className="avatar" src={this.state.avatar} />
-                <p>Nombre: {this.state.username}</p>
-                <label id="bold">Modifique aquí su nombre: <input className="form-control" type="text" value={this.state.username} onChange={evt => this.updateUserName(evt.target.value)} /></label>
-                <button id="saveProfile" name="saveProfile" className="btn btn-primary btn-sm" onClick={this.onClickSaveProfileName.bind(this)}>Editar nombre</button>
-                <p>Partidas ganadas: {this.state.gameswon}</p>
-                <p>Partidas perdidas: {this.state.gameslost}</p>
-                {storeProfile.getState().type != "0" ? <button id="listArmy" name="listArmy" className="btn btn-primary btn-sm" onClick={this.onClickList.bind(this)}>Mostrar batallones</button> : ""}
-                {storeProfile.getState().type != "1" ? <button id="createArmy" name="createArmy" className="btn btn-primary btn-sm" onClick={this.onClickCreateArmy.bind(this)}>Crear un nuevo batallón</button> : ""}
-                {storeProfile.getState().type != "2" ? <button id="editArmy" name="editArmy" className="btn btn-primary btn-sm" onClick={this.onClickEditArmy.bind(this)}>Editar un batallón</button> : ""}
-                <button id="saveProfile" name="saveProfile" className="btn btn-primary btn-sm" onClick={this.onClickSaveProfile.bind(this)}>Guardar batallones</button>
+                <p>{nameUserText+his.state.username}</p>
+                <label id="bold">{editNameText} <input className="form-control" type="text" value={this.state.username} onChange={evt => this.updateUserName(evt.target.value)} /></label>
+                <button id="saveProfile" name="saveProfile" className="btn btn-primary btn-sm" onClick={this.onClickSaveProfileName.bind(this)}>{editNameButton}</button>
+                <p>{winText} {this.state.gameswon}</p>
+                <p>{loseText} {this.state.gameslost}</p>
+                {storeProfile.getState().type != "0" ? <button id="listArmy" name="listArmy" className="btn btn-primary btn-sm" onClick={this.onClickList.bind(this)}>{showArmy}</button> : ""}
+                {storeProfile.getState().type != "1" ? <button id="createArmy" name="createArmy" className="btn btn-primary btn-sm" onClick={this.onClickCreateArmy.bind(this)}>{createArmyTitle}</button> : ""}
+                {storeProfile.getState().type != "2" ? <button id="editArmy" name="editArmy" className="btn btn-primary btn-sm" onClick={this.onClickEditArmy.bind(this)}>{editArmyTitle}</button> : ""}
+                <button id="saveProfile" name="saveProfile" className="btn btn-primary btn-sm" onClick={this.onClickSaveProfile.bind(this)}>{saveArmy}</button>
                 {storeProfile.getState().type >= "2" && storeProfile.getState().armies.length > 0 ? <div>
-                    <div className="alert alert-info" id="error">Los cambios serán almacenados en la lista de batallones por guardar</div>
-                    <h4> Edición del batallón </h4>
-                    <label> Selecciona el batallón:
+                    <div className="alert alert-info" id="error">{saveInfo}</div>
+                    <h4> {editArmy} </h4>
+                    <label> {selectArmy}
                         <select className="form-control" defaultValue={null} value={storeProfile.getState().selectedArmy} onChange={evt => this.selectArmy(evt.target.value)}>
                             {this.renderSelectOptionsArmy()}
                         </select>
                     </label>
-                    {storeProfile.getState().type > "2" && storeProfile.getState().type != "3" ? <button id="editName" name="editName" className="btn btn-primary btn-sm" onClick={this.onClickEditArmyName.bind(this)}>Editar nombre del batallón</button> : ""}
-                    {storeProfile.getState().type > "2" && storeProfile.getState().type != "4" ? <button id="addUnit" name="addUnit" className="btn btn-primary btn-sm" onClick={this.onClickAddEdit.bind(this)}>Añadir una nueva unidad</button> : ""}
-                    {storeProfile.getState().type > "2" && storeProfile.getState().type != "5" ? <button id="deleteUnit" name="deleteUnit" className="btn btn-primary btn-sm" onClick={this.onClickDeleteEdit.bind(this)}>Eliminar una unidad</button> : ""}
-                    {storeProfile.getState().type > "2" && storeProfile.getState().selectedArmy != null ? <button id="deleteArmy" name="deleteArmy" className="btn btn-primary btn-sm" onClick={this.onClickDeleteArmy.bind(this)}>Eliminar batallón</button> : ""}
-                </div> : storeProfile.getState().type >= "2" && storeProfile.getState().armies.length == 0 ? <div className="alert alert-warning" id="error">No hay batallones para seleccionar</div> : ""}
+                    {storeProfile.getState().type > "2" && storeProfile.getState().type != "3" ? <button id="editName" name="editName" className="btn btn-primary btn-sm" onClick={this.onClickEditArmyName.bind(this)}>{editNameArmy}</button> : ""}
+                    {storeProfile.getState().type > "2" && storeProfile.getState().type != "4" ? <button id="addUnit" name="addUnit" className="btn btn-primary btn-sm" onClick={this.onClickAddEdit.bind(this)}>{addUnit}</button> : ""}
+                    {storeProfile.getState().type > "2" && storeProfile.getState().type != "5" ? <button id="deleteUnit" name="deleteUnit" className="btn btn-primary btn-sm" onClick={this.onClickDeleteEdit.bind(this)}>{deleteUnitTitle}</button> : ""}
+                    {storeProfile.getState().type > "2" && storeProfile.getState().selectedArmy != null ? <button id="deleteArmy" name="deleteArmy" className="btn btn-primary btn-sm" onClick={this.onClickDeleteArmy.bind(this)}>{deleteArmy}</button> : ""}
+                </div> : storeProfile.getState().type >= "2" && storeProfile.getState().armies.length == 0 ? <div className="alert alert-warning" id="error">{noArmies}</div> : ""}
                 {storeProfile.getState().type == "1" || storeProfile.getState().type == "4" ? <div>
-                    <div className="alert alert-info" id="error">Los cambios serán almacenados en la lista de batallones por guardar</div>
-                    <h4> Creación del batallón </h4>
-                    <label> Selecciona el tipo de unidad:
+                    <div className="alert alert-info" id="error">{saveInfo}</div>
+                    <h4> {createArmy} </h4>
+                    <label> {selectUnitText}
                         <select className="form-control" defaultValue={null} value={storeProfile.getState().selected} onChange={evt => this.selectUnit(evt.target.value)}>
                             {this.selectOptionsUnits()}
                         </select>
                     </label>
-                    {storeProfile.getState().selected != null ? <button id="addUnit" name="addUnit" className="btn btn-primary btn-sm" onClick={this.onClickAddUnit.bind(this)}>Añadir unidad</button> : ""}
-                </div> : ""}
+                    {storeProfile.getState().selected != null ? <button id="addUnit" name="addUnit" className="btn btn-primary btn-sm" onClick={this.onClickAddUnit.bind(this)}>{addOtherUnit}</button> : ""}
+                </div> : ""}{selectUnitText}
                 {(storeProfile.getState().type == "1" || storeProfile.getState().type == "3") && storeProfile.getState().selectedArmy != null ? <div>
-                     <label> Nombre del batallón: <input className="form-control" type="text" value={this.state.name} onChange={evt => this.updateInput(evt.target.value)} /> </label>
-                    <button id="setName" name="setName" className="btn btn-primary btn-sm" onClick={this.onClickSetName.bind(this)}>Establecer nombre</button>
+                     <label> {armyNameText} <input className="form-control" type="text" value={this.state.name} onChange={evt => this.updateInput(evt.target.value)} /> </label>
+                    <button id="setName" name="setName" className="btn btn-primary btn-sm" onClick={this.Selecciona el tipo de unidad:onClickSetName.bind(this)}>{saveArmyName}</button>
                 </div> : ""}
                 {storeProfile.getState().type == "5" && storeProfile.getState().armies[storeProfile.getState().selectedArmy].unitList.length > 1 ? <div>
-                    <label> Selecciona el tipo de unidad:
+                    <label> {selectUnitText}
                         <select className="form-control" defaultValue={null} value={storeProfile.getState().selected} onChange={evt => this.selectUnit(evt.target.value)}>
-                            <option selected value={null}>--Selecciona--</option>
+                            <option selected value={null}>{selectText}</option>
                             {this.selectOptionsUnitsDelete()}
                         </select>
                     </label>
-                    {storeProfile.getState().selected != null ? <button id="deleteUnit" name="deleteUnit" className="btn btn-primary btn-sm" onClick={this.onClickDeleteUnit.bind(this)}>Eliminar unidad</button> : ""}
-                </div> : storeProfile.getState().type == "5" && storeProfile.getState().armies[storeProfile.getState().selectedArmy].unitList.length <= 1 ? <div className="alert alert-warning" id="error">No hay unidades para eliminar</div> : ""}
+                    {storeProfile.getState().selected != null ? <button id="deleteUnit" name="deleteUnit" className="btn btn-primary btn-sm" onClick={this.onClickDeleteUnit.bind(this)}>{deleteUnit}</button> : ""}
+                </div> : storeProfile.getState().type == "5" && storeProfile.getState().armies[storeProfile.getState().selectedArmy].unitList.length <= 1 ? <div className="alert alert-warning" id="error">{noUnit}</div> : ""}
                 {storeProfile.getState().selectedArmy != null && storeProfile.getState().armies.length > storeProfile.getState().selectedArmy ? <div>
-                    <p>El batallón contiene:</p>
+                    <p>{armyContentText}</p>
                     <div>
                         {this.renderArmyContent(null)}
                     </div>
                 </div> : ""}
                 {storeProfile.getState().type == "0" ? <div>
-                    <div className="alert alert-info" id="error">Para guardar los cambios debe darle a "Guardar batallones"</div>
-                    <h4> Batallones del jugador: </h4>
+                    <div className="alert alert-info" id="error">{saveArmyInfo}</div>
+                    <h4> {armyListText} </h4>
                     <div>
                         {this.renderArmyList()}
                     </div>

@@ -66,6 +66,8 @@ export class Unit {
     }
 }
 
+
+
 export class Infantry extends Unit {
     static create(position: Pair, player: boolean) : Unit {
         return new Unit("Infantry", "infantry", 2, position, player, false,
@@ -151,6 +153,7 @@ export class Artillery extends Unit {
     }
 }
 
+//Una vez creada una nueva clase para una unidad es necesario añadirlo aquí para que se refleje en todos los select
 export const UNITS = [
     "General", "Infantry", "Tank",
     "Artillery", "Paratrooper"
@@ -160,3 +163,11 @@ export const UNITS_ESP = [
     "General", "Infantería", "Tanque",
     "Artillería", "Paracaidista"
 ];
+
+export const UNITS_CREATE = {
+    General: General,
+    Infantry: Infantry,
+    Tank: Tank,
+    Artillery: Artillery,
+    Paratrooper: Paratrooper,
+}

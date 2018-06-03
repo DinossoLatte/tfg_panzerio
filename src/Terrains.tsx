@@ -54,6 +54,7 @@ export class River extends Terrain {
     }
 }
 
+//Una vez añadida una nueva clase de terreno es necesario añadir aquí el nombre (en estas tres constantes) para que se refleje en todos los select
 export const TERRAINS = [
     "Plains", "Mountains", "Hills",
     "Forest", "River"
@@ -63,3 +64,11 @@ export const TERRAINS_ESP = [
     "Llanura", "Montaña", "Colina",
     "Bosque", "Río"
 ];
+
+export const TERRAINS_CREATE = {
+    Plains: Plains,
+    Mountains: ImpassableMountain,
+    Hills: Hills,
+    Forest: Forest,
+    River: River,
+}

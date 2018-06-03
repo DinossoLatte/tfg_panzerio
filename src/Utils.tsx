@@ -12,6 +12,8 @@ import { StateEdit } from './GameEditState';
 import { StateProfile } from './GameProfileState';
 import * as Units from './Unit';
 
+//Aquí se encuentran clases útiles para todo el proyecto, desde el pair hasta conexión al servidor o parseadores de json, etc.
+
 export class Pair {
     row : any;
     column : any;
@@ -510,7 +512,7 @@ export class Network {
                     case "Artillery":
                         units.push(Units.Artillery.create(new Pair(-1, -1), side));
                         break;
-                    default: 
+                    default:
                         // Avisamos al desarrollador
                         console.error("Unit type not recognized: "+pair.type);
                         break;
