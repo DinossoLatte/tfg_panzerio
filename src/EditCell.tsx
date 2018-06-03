@@ -9,6 +9,9 @@ import { UnitCell } from './UnitCell';
 import { Pair, myIndexOf } from './Utils';
 import * as Terrain from './Terrains';
 
+const baseRoute = "imgs/hex_base.png";
+const numpadRoute = "imgs/hex_base_numpad.png";
+
 //ESta clase es similar a Cell pero obteniendo los datos de storeEdit (quizas se pudiera generalizar y de esa forma juntar con Cell)
 export class EditCell extends React.Component<any, any> {
     constructor(props : any) {
@@ -30,8 +33,8 @@ export class EditCell extends React.Component<any, any> {
                 <div className="div_cell">
                     <img className="cell" id={"hex"+this.props.row+"_"+this.props.column}
                         src={
-                            cursor?"imgs/hex_base_numpad.png"
-                            :"imgs/hex_base.png"} />
+                            cursor?numpadRoute
+                            :baseRoute} />
                     <TerrainCell terrain={terrain} />
                 </div>
         );

@@ -2,6 +2,17 @@ import * as React from 'react';
 
 import { storeEdit } from './StoreEdit';
 
+const terrainText = "Terreno: ";
+const positionText = "Posición: ";
+const typeText = "Tipo: ";
+const costText = "Coste (movimiento): ";
+const weakDefTerrain = "Bonificación defensa débil: ";
+const strongDefTerrain = "Bonificación defensa fuerte: ";
+const weakAttTerrain = "Bonificación ataque débil: ";
+const strongAttTerrain = "Bonificación ataque fuerte: ";
+const contText = "Cotenido de la posición seleccionada: ";
+const infoText = "Haga click derecho para poder obtener información de la unidad y terreno.";
+
 //Esta clase funciona igual que UnitStats pero simplemente obtiene los datos de storeEdit
 export class EditStats extends React.Component<any, any> {
     constructor(props: any) {
@@ -18,19 +29,23 @@ export class EditStats extends React.Component<any, any> {
         if(this.state.terrain != null) {
             terrainStats = (
                 <div>
-                    <p id="bold">Terreno: </p>
-                    <p>    Posición: {this.state.terrain.position.toString()}</p>
-                    <p>    Tipo: {this.state.terrain.name}</p>
-                    <p>    Coste (movimiento): {this.state.terrain.movement_penalty}</p>
+                    <p id="bold"> {terrainText} </p>
+                    <p>    {positionText+this.state.terrain.position.toString()}</p>
+                    <p>    {typeText+this.state.terrain.name}</p>
+                    <p>    {costText+this.state.terrain.movement_penalty}</p>
+                    <p>    {weakDefTerrain+this.state.terrain.defenseWeak}</p>
+                    <p>    {strongDefTerrain+this.state.terrain.defenseStrong}</p>
+                    <p>    {weakAttTerrain+this.state.terrain.attackWeak}</p>
+                    <p>    {strongAttTerrain+this.state.terrain.attackStrong}</p>
                 </div>
             );
         }
 
         return (
         <div className="col-sm-3">
-                <h4>Contenido de la posición seleccionada: </h4>
+                <h4>{contText}</h4>
                 {terrainStats}
-                {!terrainStats?<div className="alert alert-info" id="error">Haga click derecho para poder obtener información de la unidad y terreno.</div>:null}
+                {!terrainStats?<div className="alert alert-info" id="error">{infoText}</div>:null}
         </div>
         );
     }
