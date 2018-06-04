@@ -348,7 +348,7 @@ export class Network {
         // Retornamos la conexión
         if(this.connection == undefined) {
             console.log("Nueva conexión");
-            this.connection = new WebSocket("ws://localhost:8080");
+            this.connection = new WebSocket("ws://"+location.hostname+":8080");
         }
         return this.connection;
     }
