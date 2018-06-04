@@ -38,8 +38,9 @@ class MainPanelMenu extends React.Component<any, any> {
 
     render() {
         return (
-            <div>
-                <table id="gameList">
+            <div className="jumbotron text-center">
+                <h2>Listado de partidas <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Volver al menu</button></h2>
+                <table className="table" id="gameList">
                     <tbody>
                         <tr>
                             <td>Identificador</td>
@@ -49,8 +50,7 @@ class MainPanelMenu extends React.Component<any, any> {
                     </tbody>
                 </table>
 
-                <button onClick={this.onClickCreate.bind(this)} id="buttonCreateGame" name="buttonCreateGame">Crear partida</button>
-                <button onClick={this.onClickExit.bind(this)} id="buttonExitMenu" name="buttonExitMenu">Salir</button>
+                <button className="btn btn-primary btn-sm" onClick={this.onClickCreate.bind(this)} id="buttonCreateGame" name="buttonCreateGame">Crear partida</button>
             </div>
         );
     }
@@ -59,7 +59,7 @@ class MainPanelMenu extends React.Component<any, any> {
         let result = [];
         for(let gameIndex in this.state.games) {
             let game = this.state.games[gameIndex];
-            let row = <tr><td>{gameIndex}</td><td>{(game.player1URL?1:0) + (game.player2URL?1:0)} / 2</td><td><button onClick={() => this.onClickJoin(gameIndex)}>Unirse a la partida</button></td></tr>
+            let row = <tr><td>{gameIndex}</td><td>{(game.player1URL?1:0) + (game.player2URL?1:0)} / 2</td><td><button className="btn btn-primary btn-sm" onClick={() => this.onClickJoin(gameIndex)}>Unirse a la partida</button></td></tr>
             result.push(row);
         }
         return result;

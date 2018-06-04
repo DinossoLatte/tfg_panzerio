@@ -50,12 +50,13 @@ export class EditMap extends React.Component<any, any> {
     /** Renderiza el mapa **/
     render() {
         if(this.props.selected!=null){
-            console.log("Entra en el else: valor del selected: "+this.props.selected);
+            console.log("--------------->Entra en el else: valor del selected: "+this.props.selected);
             //Solo se ejecutara una vez
             if(this.state.request<2){
                 this.getMapFromServer({id: Number(this.props.selected)},(error: { status: boolean, errorCode: string, retmap: Array<Terrain> })=>{});
                 this.state.request++;
             }
+            console.log(storeEdit.getState().terrains.length);
         }
         // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
         return (
@@ -110,6 +111,7 @@ export class EditMap extends React.Component<any, any> {
                     name: data.mapName,
                     selected: mapData.id
                 });
+                console.log("------------->"+data.terrains+" "+data.terrains.length);
                 saveState(EditActions.saveState(game, data.terrains, storeEdit.getState().cursorPosition, storeEdit.getState().selected, "SAVE"));
                 if(callback) {
                     callback({ status: true, errorCode: "Success", retmap: data.terrains});
@@ -289,8 +291,10 @@ export class EditMap extends React.Component<any, any> {
                 terrain = River.create(newPosition);
             default:
         };*/
+        //if(storeEdit.getState().selected!=null&&storeEdit.getState().selected!=undefined){
         const sel : keyof TERR_CREATE = storeEdit.getState().selected;
-        TERRAINS_CREATE[sel].create(newPosition);
+        terrain = TERRAINS_CREATE[sel].create(newPosition);
+        //}
 
         // Comprobamos si la posición está ocupada
         if(terrainIndex > -1) {

@@ -33,6 +33,7 @@ export class EditActions {
     }
 
     static saveState(map: EditMap, terrains: Array<Terrain>, cursorPosition: Pair, selected: string, type: string) : Redux.AnyAction{
+        console.log("-------->"+terrains+" "+terrains.length);
         return {
             tipo: "SAVE_EDIT",
             map: map,

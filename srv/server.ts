@@ -50,7 +50,7 @@ server.on('connection', function connect(ws: webSocket) {
         }
     })
     ws.on("message", function getInitialState(data) {
-        console.debug("Got following action: " + data);
+        console.log("Got following action: " + data);
         // Dependiendo del estado, retornaremos una cosa u otra
         let message = JSON.parse(data as string);
         // Debido a la forma de compilar el programa, es necesario declarar aqui el id del mensaje, aun cuando este no deba aparecer en el mensaje.

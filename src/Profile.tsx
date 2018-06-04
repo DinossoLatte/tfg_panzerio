@@ -17,8 +17,8 @@ const personalProfileText = "Perfil personal";
 const backText = "Volver atrás";
 const editNameText = "Modifique aquí su nombre";
 const editNameButton = "Editar nombre";
-const winText = "Partidas ganadas";
-const loseText = "Partidas perdidas";
+const winText = "Partidas ganadas: ";
+const loseText = "Partidas perdidas: ";
 const showArmy = "Mostrar batallones";
 const createArmyTitle = "Crear batallón";
 const editArmyTitle = "Editar batallón";
@@ -673,7 +673,7 @@ export class Profile extends React.Component<any, any> {
                         </select>
                     </label>
                     {storeProfile.getState().selected != null ? <button id="addUnit" name="addUnit" className="btn btn-primary btn-sm" onClick={this.onClickAddUnit.bind(this)}>{addOtherUnit}</button> : ""}
-                </div> : ""}{selectUnitText}
+                </div> : ""}
                 {(storeProfile.getState().type == "1" || storeProfile.getState().type == "3") && storeProfile.getState().selectedArmy != null ? <div>
                      <label> {armyNameText} <input className="form-control" type="text" value={this.state.name} onChange={evt => this.updateInput(evt.target.value)} /> </label>
                     <button id="setName" name="setName" className="btn btn-primary btn-sm" onClick={this.onClickSetName.bind(this)}>{saveArmyName}</button>
