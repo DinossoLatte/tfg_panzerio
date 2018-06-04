@@ -642,11 +642,11 @@ export class Profile extends React.Component<any, any> {
             <div className="jumbotron text-center">
                 <h2> {personalProfileText} <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExitMenu.bind(this)}>{backText}</button></h2>
                 <img className="avatar" src={this.state.avatar} />
-                <p>{nameUserText+his.state.username}</p>
+                <p>{nameUserText+this.state.username}</p>
                 <label id="bold">{editNameText} <input className="form-control" type="text" value={this.state.username} onChange={evt => this.updateUserName(evt.target.value)} /></label>
                 <button id="saveProfile" name="saveProfile" className="btn btn-primary btn-sm" onClick={this.onClickSaveProfileName.bind(this)}>{editNameButton}</button>
-                <p>{winText} {this.state.gameswon}</p>
-                <p>{loseText} {this.state.gameslost}</p>
+                <p>{winText+this.state.gameswon}</p>
+                <p>{loseText+this.state.gameslost}</p>
                 {storeProfile.getState().type != "0" ? <button id="listArmy" name="listArmy" className="btn btn-primary btn-sm" onClick={this.onClickList.bind(this)}>{showArmy}</button> : ""}
                 {storeProfile.getState().type != "1" ? <button id="createArmy" name="createArmy" className="btn btn-primary btn-sm" onClick={this.onClickCreateArmy.bind(this)}>{createArmyTitle}</button> : ""}
                 {storeProfile.getState().type != "2" ? <button id="editArmy" name="editArmy" className="btn btn-primary btn-sm" onClick={this.onClickEditArmy.bind(this)}>{editArmyTitle}</button> : ""}
@@ -654,7 +654,7 @@ export class Profile extends React.Component<any, any> {
                 {storeProfile.getState().type >= "2" && storeProfile.getState().armies.length > 0 ? <div>
                     <div className="alert alert-info" id="error">{saveInfo}</div>
                     <h4> {editArmy} </h4>
-                    <label> {selectArmy}
+                    <label> <p>{selectArmy}</p>
                         <select className="form-control" defaultValue={null} value={storeProfile.getState().selectedArmy} onChange={evt => this.selectArmy(evt.target.value)}>
                             {this.renderSelectOptionsArmy()}
                         </select>
@@ -676,7 +676,7 @@ export class Profile extends React.Component<any, any> {
                 </div> : ""}{selectUnitText}
                 {(storeProfile.getState().type == "1" || storeProfile.getState().type == "3") && storeProfile.getState().selectedArmy != null ? <div>
                      <label> {armyNameText} <input className="form-control" type="text" value={this.state.name} onChange={evt => this.updateInput(evt.target.value)} /> </label>
-                    <button id="setName" name="setName" className="btn btn-primary btn-sm" onClick={this.Selecciona el tipo de unidad:onClickSetName.bind(this)}>{saveArmyName}</button>
+                    <button id="setName" name="setName" className="btn btn-primary btn-sm" onClick={this.onClickSetName.bind(this)}>{saveArmyName}</button>
                 </div> : ""}
                 {storeProfile.getState().type == "5" && storeProfile.getState().armies[storeProfile.getState().selectedArmy].unitList.length > 1 ? <div>
                     <label> {selectUnitText}

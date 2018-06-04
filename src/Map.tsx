@@ -11,6 +11,24 @@ import { Plains } from './Terrains';
 import { UnitCell } from './UnitCell';
 import { UnitStats } from './UnitStats';
 
+const playerText = "Jugador";
+const enemyText = "Enemigo";
+const dayText = "Día";
+const victoryText = "Victoria";
+const defeatText = "Derrota";
+const preGameText = "(Pre juego)";
+const backText = "Salir del juego";
+const nextTurnText = "Pasar turno";
+const cancelText = "Cancelar acción";
+const nextActionText = "Pasar acción";
+const selectUnitText = "Selecciona la unidad: ";
+const noPlacedText = "Algunas unidades no han sido posicionadas en el juego, por favor, posicione las unidades en el mapa.";
+const selectText = "--Selecciona--";
+const unitListText = UNITS_ESP;
+const turnText = "Turno de ";
+const cautionText = "ATENCIÓN:";
+const unitText = "Unidad ";
+
 /** Representa el mapa que contendrá las unidades y las casillas **/
 export class Map extends React.Component<any, any> {
     unitStats: UnitStats = null;
@@ -26,74 +44,6 @@ export class Map extends React.Component<any, any> {
         this.restartState();
     }
 
-    /** Renderiza el mapa **/
-    render() {
-        let aud : string;
-
-        if((store.getState().turn==0 && store.getState().isPlayer) || (store.getState().turn==1 && !store.getState().isPlayer)){
-            //Suena la música de colocación de unidades aliada
-            aud = "start1";
-        }else if((store.getState().turn==1 && store.getState().isPlayer) || (store.getState().turn==0 && !store.getState().isPlayer)){
-            //Suena la música de colocación de unidades enemiga
-            aud = "start2";
-        }else if(store.getState().actualState==1 || store.getState().actualState==2){
-            //Suena la música de final del juego (se podría dividir)
-            aud = "final1";
-        }else if(store.getState().units.filter(x => !store.getState().isPlayer == x.player).length == 1){
-            //Si solo queda una unidad y no se ha acabado el juego será que solo queda el general (música de tensión aliada)
-            aud = "battlefinal1";
-        }else if(store.getState().units.filter(x => !store.getState().isPlayer != x.player).length == 1){
-            //Si solo queda una unidad y no se ha acabado el juego será que solo queda el general (música de tensión enemiga)
-            aud = "battlefinal2";
-        }else if(store.getState().turn%2==1 && !store.getState().isPlayer){
-            //Si es turno enemigo
-            aud = "battle2";
-        }else if(store.getState().turn%2==0 && store.getState().isPlayer){
-            //Si es turno aliado
-            aud = "battle1";
-        }else{
-            //Por defecto aunque practicamente nunca llegará aquí
-            aud = "battle1";
-        }
-
-        let result = (
-            <div className="jumbotron text-center">
-                <h4>Turno del {store.getState().turn%2==0?"Jugador":"Enemigo"}. Día {Math.floor(store.getState().turn/2)}{store.getState().actualState==1?". Victoria":store.getState().actualState==2?". Derrota":""} {store.getState().turn < 2?"(Pre juego)":""}
-                    <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Salir del juego</button>
-                </h4>
-                {(store.getState().actualState==0) && ((store.getState().turn%2 == 0 && store.getState().isPlayer) || (store.getState().turn%2 == 1 && !store.getState().isPlayer))?<button className="btn btn-primary btn-sm" id="nextTurn" name="nextTurn" onClick={this.onClickTurn.bind(this)}>Pasar turno</button>:""}
-                {store.getState().selectedUnit!=null && store.getState().turn >= 2?<button className="btn btn-primary btn-sm" id="cancelAction" name="cancelAction" onClick={this.onClickCancelAction.bind(this)}>Cancelar acción</button>:""}
-                {store.getState().selectedUnit!=null && store.getState().turn >= 2 && store.getState().units[store.getState().selectedUnit].action<2?<button className="btn btn-primary btn-sm" id="nextAction" name="nextAction" onClick={this.onClickUnitAction.bind(this)}>Pasar acción</button>:""}
-                {(store.getState().isPlayer && store.getState().turn == 0) || (!store.getState().isPlayer && store.getState().turn == 1)?<div>
-                    <label> Selecciona la unidad:
-                        <select className="form-control" defaultValue={null} value={store.getState().selectedUnit} onChange={evt => this.selectUnit(evt.target.value)}>
-                            {this.selectOptions()}
-                        </select>
-                    </label>
-                </div>:""}
-                {this.state.alertUnitsNotPlaced?<div className="alert alert-danger" id="error"><strong>ATENCIÓN:</strong> Algunas de las unidades no han sido posicionadas en el juego, por favor, posicione las unidades en el mapa</div>:""}
-                <div className="row">
-                    <UnitStats />
-                    <div className="col-sm-9">
-                        <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)} onContextMenu={this.onRightClick.bind(this)}>
-                            {this.generateMap.bind(this)().map((a: any) => {
-                                return a;
-                            })}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-
-        let res = (<div>
-                        <div dangerouslySetInnerHTML={{__html: '<audio src="./sounds/'+aud+'.ogg" loop autoplay></audio>'}}>
-                        </div>
-                        {result}
-                    </div>);
-        // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
-        return res;
-    }
-
     //Se guarda dicha unidad como seleccionada
     selectUnit(evt: string){
         // Si el jugador actual es el que puede posicionar unidades
@@ -104,14 +54,14 @@ export class Map extends React.Component<any, any> {
 
     selectOptions(){
         //Creamos todos los options a partir de todas las unidades de la lista de unidades
-        let army = [<option selected value={null}>--Selecciona--</option>];
+        let army = [<option selected value={null}>{selectText}</option>];
         for(var i = 0; i < store.getState().units.length; i++){
             //Se usa for para generalizar si se añadieran más unidades
             if(store.getState().units[i].player == (store.getState().turn%2 == 0)){
                 for (var j = 0; j < UNITS.length; j++){
                     if(store.getState().units[i].name==UNITS[j]){
                         // La unidad será nombrada de esa manera para poder distinguirla y saber además su tipo
-                        army.push(<option value={i}>{"Unidad "+i+" - "+UNITS_ESP[j]}</option>);
+                        army.push(<option value={i}>{unitText+i+" - "+unitListText[j]}</option>);
                     }
                 }
             }
@@ -418,5 +368,73 @@ export class Map extends React.Component<any, any> {
                 {accum2}
             </div>
         );
+    }
+
+    /** Renderiza el mapa **/
+    render() {
+        let aud : string;
+
+        if((store.getState().turn==0 && store.getState().isPlayer) || (store.getState().turn==1 && !store.getState().isPlayer)){
+            //Suena la música de colocación de unidades aliada
+            aud = "start1";
+        }else if((store.getState().turn==1 && store.getState().isPlayer) || (store.getState().turn==0 && !store.getState().isPlayer)){
+            //Suena la música de colocación de unidades enemiga
+            aud = "start2";
+        }else if(store.getState().actualState==1 || store.getState().actualState==2){
+            //Suena la música de final del juego (se podría dividir)
+            aud = "final1";
+        }else if(store.getState().units.filter(x => !store.getState().isPlayer == x.player).length == 1){
+            //Si solo queda una unidad y no se ha acabado el juego será que solo queda el general (música de tensión aliada)
+            aud = "battlefinal1";
+        }else if(store.getState().units.filter(x => !store.getState().isPlayer != x.player).length == 1){
+            //Si solo queda una unidad y no se ha acabado el juego será que solo queda el general (música de tensión enemiga)
+            aud = "battlefinal2";
+        }else if(store.getState().turn%2==1 && !store.getState().isPlayer){
+            //Si es turno enemigo
+            aud = "battle2";
+        }else if(store.getState().turn%2==0 && store.getState().isPlayer){
+            //Si es turno aliado
+            aud = "battle1";
+        }else{
+            //Por defecto aunque practicamente nunca llegará aquí
+            aud = "battle1";
+        }
+
+        let result = (
+            <div className="jumbotron text-center">
+                <h4> {store.getState().turn%2==0?turnText+playerText:turnText+enemyText}. {dayText} {Math.floor(store.getState().turn/2)}{store.getState().actualState==1?". "+victoryText:store.getState().actualState==2?". "+defeatText:""} {store.getState().turn < 2?preGameText:""}
+                    <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>{backText}</button>
+                </h4>
+                {(store.getState().actualState==0) && ((store.getState().turn%2 == 0 && store.getState().isPlayer) || (store.getState().turn%2 == 1 && !store.getState().isPlayer))?<button className="btn btn-primary btn-sm" id="nextTurn" name="nextTurn" onClick={this.onClickTurn.bind(this)}>{nextTurnText}</button>:""}
+                {store.getState().selectedUnit!=null && store.getState().turn >= 2?<button className="btn btn-primary btn-sm" id="cancelAction" name="cancelAction" onClick={this.onClickCancelAction.bind(this)}>{cancelText}</button>:""}
+                {store.getState().selectedUnit!=null && store.getState().turn >= 2 && store.getState().units[store.getState().selectedUnit].action<2?<button className="btn btn-primary btn-sm" id="nextAction" name="nextAction" onClick={this.onClickUnitAction.bind(this)}>{nextActionText}</button>:""}
+                {(store.getState().isPlayer && store.getState().turn == 0) || (!store.getState().isPlayer && store.getState().turn == 1)?<div>
+                    <label> {selectUnitText}
+                        <select className="form-control" defaultValue={null} value={store.getState().selectedUnit} onChange={evt => this.selectUnit(evt.target.value)}>
+                            {this.selectOptions()}
+                        </select>
+                    </label>
+                </div>:""}
+                {this.state.alertUnitsNotPlaced?<div className="alert alert-danger" id="error"><strong>{cautionText}</strong> {noPlacedText}</div>:""}
+                <div className="row">
+                    <UnitStats />
+                    <div className="col-sm-9">
+                        <div id="map" className="map" onClick={this.onClick.bind(this)} tabIndex={0} onKeyDown={this.onKey.bind(this)} onContextMenu={this.onRightClick.bind(this)}>
+                            {this.generateMap.bind(this)().map((a: any) => {
+                                return a;
+                            })}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        let res = (<div>
+                        <div dangerouslySetInnerHTML={{__html: '<audio src="./sounds/'+aud+'.ogg" loop autoplay></audio>'}}>
+                        </div>
+                        {result}
+                    </div>);
+        // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
+        return res;
     }
 }

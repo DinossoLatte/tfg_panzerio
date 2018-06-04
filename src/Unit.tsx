@@ -163,11 +163,3 @@ export const UNITS_ESP = [
     "General", "Infantería", "Tanque",
     "Artillería", "Paracaidista"
 ];
-
-export const UNITS_CREATE = {
-    General: General,
-    Infantry: Infantry,
-    Tank: Tank,
-    Artillery: Artillery,
-    Paratrooper: Paratrooper,
-}

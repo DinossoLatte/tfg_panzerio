@@ -11,7 +11,7 @@ import { Pair, Cubic, myIndexOf, CUBIC_DIRECTIONS, myIndexOfCubic, Pathfinding, 
 import { UnitCell } from './UnitCell';
 import { UnitStats } from './UnitStats';
 import { EditStats } from './EditStats';
-import { Terrain, Plains, ImpassableMountain, Hills, Forest, River, TERRAINS, TERRAINS_ESP, TERRAINS_CREATE } from './Terrains';
+import { Terrain, Plains, ImpassableMountain, Hills, Forest, River, TERRAINS, TERRAINS_ESP, TERRAINS_CREATE, TERR_CREATE} from './Terrains';
 
 const editMapText = "Edición del mapa";
 const nameText = "Nombre";
@@ -289,7 +289,8 @@ export class EditMap extends React.Component<any, any> {
                 terrain = River.create(newPosition);
             default:
         };*/
-        TERRAINS_CREATE[storeEdit.getState().selected].create(newPosition);
+        const sel : keyof TERR_CREATE = storeEdit.getState().selected;
+        TERRAINS_CREATE[sel].create(newPosition);
 
         // Comprobamos si la posición está ocupada
         if(terrainIndex > -1) {

@@ -46,7 +46,7 @@ export class UnitStats extends React.Component<any, any> {
                     <p id="bold">{unitText} </p>
                     <p>    {positionUnit+this.state.unit.position.toString()}</p>
                     <p>    {typeUnit+this.state.unit.type}</p>
-                    <p>    {actionUnit+this.state.unit.action==0?moveText:this.state.unit.action==1?attackText:noneText}</p>
+                    <p>    {this.state.unit.action==0?actionUnit+moveText:this.state.unit.action==1?actionUnit+attackText:actionUnit+noneText}</p>
                     <p>    {movementUnit+this.state.unit.movement}</p>
                     <p>    {rangeUnit+this.state.unit.range}</p>
                     <p>    {healthUnit+this.state.unit.health}</p>
