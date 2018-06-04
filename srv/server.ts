@@ -50,17 +50,17 @@ server.on('connection', function connect(ws: webSocket) {
         }
     })
     ws.on("message", function getInitialState(data) {
-        console.log("Got following action: " + data);
+        console.debug("Got following action: " + data);
         // Dependiendo del estado, retornaremos una cosa u otra
         let message = JSON.parse(data as string);
         // Debido a la forma de compilar el programa, es necesario declarar aqui el id del mensaje, aun cuando este no deba aparecer en el mensaje.
         let gameId = message.id;
         let game;
         switch (message.tipo) {
-            case "createGame": 
+            case "createGame":
                 // Creamos la partida con la conexión entrante
                 let game: Game = new Game(ws, GameState.getInitialState());
-                // Importante, las posibilidades de que el Id coincida son bajas, pero 
+                // Importante, las posibilidades de que el Id coincida son bajas, pero
                 // TODO Hacer un if para evitar sobreescribir la partida
                 let id = Game.generateRandomIdentifier();
                 games[id] = game;
@@ -68,7 +68,7 @@ server.on('connection', function connect(ws: webSocket) {
                     id: id
                 }));
                 break;
-            case "joinGame": 
+            case "joinGame":
                 if(games[gameId]) {
                     console.log(games[gameId]);
                     // Primero, vemos si la sala está vacia
@@ -141,7 +141,7 @@ server.on('connection', function connect(ws: webSocket) {
                     // Creamos la partida
                     ws.send(JSON.stringify(state));
                 }
-                
+
                 break;
             // Este se llamará cuando se quiera sincronizar el estado del cliente con el servidor
             case "SYNC_STATE":
@@ -441,7 +441,7 @@ server.on('connection', function connect(ws: webSocket) {
                     ws.send(JSON.stringify(statusCode));
                 });
                 break;
-            case "exitPreGame": 
+            case "exitPreGame":
                 if(gameId) {
                     // Primero vemos quién ha enviado la salida
                     if(ws == games[gameId].player1URL) {

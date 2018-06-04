@@ -40,9 +40,9 @@ export function parseActionMap(data: any) {
     };
     // Primero, convertimos el objeto en un mapa
     let json = data;
-    console.log("Height (parse): " + json.height);
+    console.debug("Height (parse): " + json.height);
     result.width = json.width;
-    console.log("Width (parse): " + json.width);
+    console.debug("Width (parse): " + json.width);
     result.height = json.height;
     // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
     // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
@@ -103,7 +103,7 @@ export class GameState {
     constructor() {
 
     }
-    
+
     static InitialState: State = getInitialState();
 
     //Y aquí se producirá el cambio
@@ -139,7 +139,7 @@ export class GameState {
                         cursorPosition: state.cursorPosition,
                         width: state.width,
                         height: state.height,
-                        type: "SET_LISTENER"                    
+                        type: "SET_LISTENER"
                     };
                 case "MOVE":
                     // Casillas disponibles
@@ -242,7 +242,7 @@ export class GameState {
                     }else if(state.units.filter(x => x.player && x.name=="General").length==0){
                         actualstate=2;
                     }
-                    
+
                     return {
                         turn: state.turn,
                         actualState: actualstate,
