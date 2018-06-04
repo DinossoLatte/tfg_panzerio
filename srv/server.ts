@@ -70,18 +70,22 @@ server.on('connection', function connect(ws: webSocket) {
                 break;
             case "joinGame": 
                 if(games[gameId]) {
+                    console.log(games[gameId]);
                     // Primero, vemos si la sala está vacia
                     if(!games[gameId].player1URL && !games[gameId].player2URL) {
+                        console.log("El jugador 1 es el actual");
                         // En cuyo caso, el jugador actual será el primero
                         games[gameId].player1URL = ws;
                         ws.send(JSON.stringify({ status: true, id: gameId }));
                     } else {
                         // Hemos encontrado el juego, vemos si hay posición disponible
                         if (!games[gameId].player2URL) {
+                            console.log("El jugador 2 es el actual");
                             // Jugador actual es el jugador 2:
                             games[gameId].player2URL = ws;
                             ws.send(JSON.stringify({ status: true, id: gameId }));
                         } else {
+                            console.log("La partida está completa");
                             // En caso contrario, avisamos de que la sala está ocupada
                             ws.send(JSON.stringify({ status: false, error: "Game is full" }));
                         }
@@ -444,6 +448,8 @@ server.on('connection', function connect(ws: webSocket) {
                         // Quitamos todo lo relacionado con este jugador
                         games[gameId].player1FinishedSelection = false;
                         games[gameId].player1URL = undefined;
+                        // Reiniciamos el estado inicial
+                        games[gameId].firstPlayer = games[gameId].player2URL;
                         // Si el primer jugador no ha salido de la partida, se convierte en el primer jugador
                         if(games[gameId].player2URL) {
                             games[gameId].player2URL.send(JSON.stringify({ status: false }));
@@ -452,13 +458,13 @@ server.on('connection', function connect(ws: webSocket) {
                         // Igual que el caso anterior
                         games[gameId].player2FinishedSelection = false;
                         games[gameId].player2URL = undefined;
+                        // Reiniciamos el estado inicial
+                        games[gameId].firstPlayer = games[gameId].player1URL;
                         // Avisamos al otro usuario
-                        if(games[gameId].player2URL) {
+                        if(games[gameId].player1URL) {
                             games[gameId].player1URL.send(JSON.stringify({ status: false }));
                         }
                     }
-                    // Reiniciamos el estado inicial
-                    games[gameId].firstPlayer = undefined;
                     // Actualizamos el estado, si no hay jugadores el juego ha terminado
                     games[gameId].currentState = !games[gameId].player1URL && !games[gameId].player2URL?2:0;
                     games[gameId].store.saveState({
