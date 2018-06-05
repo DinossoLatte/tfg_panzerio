@@ -76,6 +76,7 @@ export class UnitStats extends React.Component<any, any> {
         return (
         <div className="col-sm-3">
                 <h4>{contText}</h4>
+                {unitStats}
                 {terrainStats}
                 {!terrainStats?<div className="alert alert-info" id="error">{infoText}</div>:null}
         </div>

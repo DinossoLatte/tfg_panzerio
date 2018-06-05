@@ -66,12 +66,12 @@ export const TERRAINS_ESP = [
 ];
 
 export interface TERR_CREATE {
+    [sel: string]: any;
     Plains: typeof Plains;
     Mountains: typeof ImpassableMountain;
     Hills: typeof Hills;
     Forest: typeof Forest;
     River: typeof River;
-    [sel: string]: any;
 }
 
 export const TERRAINS_CREATE : TERR_CREATE = {

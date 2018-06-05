@@ -13,6 +13,7 @@ import * as StoreEdit from './StoreEdit';
 import * as GameProfileState from './GameProfileState';
 import * as StoreProfile from './StoreProfile';
 import * as UtilsServer from './UtilsServer';
+import * as StoreMenu from './StoreMenu';
 
 import { Actions } from '../src/GameState';
 import { Pair } from './Utils';
@@ -50,7 +51,7 @@ server.on('connection', function connect(ws: webSocket) {
         }
     })
     ws.on("message", function getInitialState(data) {
-        console.debug("Got following action: " + data);
+        console.log("Got following action: " + data);
         // Dependiendo del estado, retornaremos una cosa u otra
         let message = JSON.parse(data as string);
         // Debido a la forma de compilar el programa, es necesario declarar aqui el id del mensaje, aun cuando este no deba aparecer en el mensaje.
@@ -488,6 +489,72 @@ server.on('connection', function connect(ws: webSocket) {
                     status: true,
                     games: games
                 }));
+                break;
+            case "getMapEdit":
+                // Obtenemos los datos de la petición
+                let getMapvarMenu = message.mapData;
+                // Obtenemos el mapa
+                UtilsServer.MapsDatabase.getMap(getMapvarMenu, (code: { status: boolean, error: string,  map: { rows: number, columns: number, mapName: string,
+                    terrains: {name: string, image: string, movement_penalty: number, position_row: number, position_cols: number,
+                         defense_weak: number, defense_strong: number, attack_weak: number, attack_strong: number}[]} }) => {
+                    // Si hay error
+                    if(!code.status) {
+                        // Entonces indicamos al receptor la obtención incorrecta del mapa
+                        ws.send(JSON.stringify({
+                            status: false,
+                            error: "Couldn't get map. Error: "+code.error,
+                            map: null
+                        }));
+                    } else {
+                        // En caso contrario, avisamos de la obtención correcta
+                        // Convertimos los terrenos en una interpretación válida de terrenos
+                        let terrains = new Array();
+                        for(let index in code.map.terrains) {
+                            let terrainJson = code.map.terrains[index];
+                            terrains.push(new Terrain(terrainJson.name, terrainJson.image, terrainJson.movement_penalty, new Pair(terrainJson.position_row, terrainJson.position_cols), terrainJson.defense_weak, terrainJson.defense_strong, terrainJson.attack_weak, terrainJson.attack_strong));
+                        }
+                        StoreMenu.saveState({
+                            type: "UPDATE_MAP",
+                            height: code.map.rows,
+                            width: code.map.columns,
+                            terrains: terrains
+                        });
+                        console.log("---------->"+terrains+";"+terrains.length);
+                        console.log("---------->"+JSON.stringify(code.map.terrains)+";"+code.map.terrains.length);
+                        ws.send(JSON.stringify({
+                            status: true,
+                            error: "Got successfully",
+                            map: code.map
+                        }))
+                    }
+                });
+                break;
+            case "getUnitsMenu":
+                // Obtenemos los id de los mapas
+                UtilsServer.ProfileDatabase.getUnits(message.armyclient, (code: { status: boolean, error: string,  units: {type: string, number: number}[], armyId: number }) => {
+                    // Si hay error
+                    if(!code.status) {
+                        // Entonces indicamos al receptor que se han obtenido mal
+                        ws.send(JSON.stringify({
+                            status: false,
+                            error: "Couldn't get map. Error: "+code.error,
+                            units: null,
+                            armyId: null
+                        }));
+                    } else {
+                        StoreMenu.saveState({
+                            type: "UPDATE_UNITS",
+                            units: StoreMenu.store.getState().units.concat(Utils.Network.parseArmy(code.units, message.side))
+                        })
+                        // En caso contrario, avisamos de que se han obtenido correctamente
+                        ws.send(JSON.stringify({
+                            status: true,
+                            error: "Got successfully",
+                            units: code.units,
+                            armyId: code.armyId
+                        }));
+                    }
+                });
                 break;
             default:
                 console.warn("Action sent not understood! Type is " + message.tipo);

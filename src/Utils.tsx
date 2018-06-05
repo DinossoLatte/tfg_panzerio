@@ -1,6 +1,6 @@
 import * as sqlite from 'sqlite3';
 
-import { Unit } from './Unit';
+import { Unit, UNITS_CREATE, UNIT_CREATE} from './Unit';
 import { store } from './Store';
 import { Terrain } from './Terrains';
 import { Army } from './Army';
@@ -496,7 +496,7 @@ export class Network {
             while(unitsLeft > 0) {
                 // Dependiendo del tipo, se creará una unidad u otra
                 // Todas las unidades se crearán en la posición (-1, -1)
-                switch(pair.type) {
+                /*switch(pair.type) {
                     case "General":
                         units.push(Units.General.create(new Pair(-1, -1), side));
                         break;
@@ -516,7 +516,9 @@ export class Network {
                         // Avisamos al desarrollador
                         console.error("Unit type not recognized: "+pair.type);
                         break;
-                }
+                }*/
+                const sel : keyof UNIT_CREATE = pair.type;
+                units.push(UNITS_CREATE[sel].create(new Pair(-1, -1), side));
                 // Finalmente, indicamos que hemos creado la unidad de este tipo
                 --unitsLeft;
             }

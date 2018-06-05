@@ -217,6 +217,7 @@ export class MapsDatabase {
                                         attack_strong: Number(rows2['attack_strong'])});
                                 }
                             }, () => {
+                                console.log(JSON.stringify(terrains));
                                 callback({status: true, error: "Success", map:{rows: row, columns: columns, mapName: name, terrains: terrains}});
                             });
                         }

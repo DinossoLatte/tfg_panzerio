@@ -163,3 +163,20 @@ export const UNITS_ESP = [
     "General", "Infantería", "Tanque",
     "Artillería", "Paracaidista"
 ];
+
+export interface UNIT_CREATE {
+    [sel: string]: any;
+    General: typeof General;
+    Infantry: typeof Infantry;
+    Tank: typeof Tank;
+    Artillery: typeof Artillery;
+    Paratrooper: typeof Paratrooper;
+}
+
+export const UNITS_CREATE : UNIT_CREATE = {
+    General : General,
+    Infantry: Infantry,
+    Tank: Tank,
+    Artillery: Artillery,
+    Paratrooper: Paratrooper,
+}

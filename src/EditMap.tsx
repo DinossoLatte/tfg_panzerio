@@ -111,7 +111,7 @@ export class EditMap extends React.Component<any, any> {
                     name: data.mapName,
                     selected: mapData.id
                 });
-                console.log("------------->"+data.terrains+" "+data.terrains.length);
+                console.log("------------->"+JSON.stringify(data.terrains)+"; "+data.terrains.length);
                 saveState(EditActions.saveState(game, data.terrains, storeEdit.getState().cursorPosition, storeEdit.getState().selected, "SAVE"));
                 if(callback) {
                     callback({ status: true, errorCode: "Success", retmap: data.terrains});
@@ -119,7 +119,7 @@ export class EditMap extends React.Component<any, any> {
             }
         };
         connection.send(JSON.stringify({
-            tipo: "getMap",
+            tipo: "getMapEdit",
             mapData: mapData.id
         }));
     }

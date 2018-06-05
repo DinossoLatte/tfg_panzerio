@@ -129,7 +129,7 @@ export class Profile extends React.Component<any, any> {
         };
         // Al abrirse la conexión, informamos al servidor del mapa
         connection.send(JSON.stringify({
-            tipo: "getUnits",
+            tipo: "getUnitsMenu",
             armyclient: army
         }));
     }

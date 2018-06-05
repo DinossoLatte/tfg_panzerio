@@ -40,9 +40,9 @@ export function parseActionMap(data: any) {
     };
     // Primero, convertimos el objeto en un mapa
     let json = data;
-    console.debug("Height (parse): " + json.height);
+    console.log("Height (parse): " + json.height);
     result.width = json.width;
-    console.debug("Width (parse): " + json.width);
+    console.log("Width (parse): " + json.width);
     result.height = json.height;
     // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
     // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
