@@ -30,7 +30,7 @@ server.on('connection', function connect(ws: webSocket) {
     ws.on("close", () => {
         let gameId = null;
         for(let gameIndex in games) {
-            if(ws == games[gameIndex].player1URL || ws == games[gameIndex].player2URL) {
+            if(games[gameIndex] && ws == games[gameIndex].player1URL || ws == games[gameIndex].player2URL) {
                 // Encontramos el juego del que ha salido un jugador
                 gameId = gameIndex;
                 break;
@@ -80,15 +80,21 @@ server.on('connection', function connect(ws: webSocket) {
                         ws.send(JSON.stringify({ status: true, id: gameId }));
                     } else {
                         // Hemos encontrado el juego, vemos si hay posición disponible
-                        if (!games[gameId].player2URL) {
-                            console.log("El jugador 2 es el actual");
-                            // Jugador actual es el jugador 2:
-                            games[gameId].player2URL = ws;
-                            ws.send(JSON.stringify({ status: true, id: gameId }));
+                        // Comprobamos si la partida ha finalizado
+                        if(games[gameId].currentState == 2 || games[gameId].currentState == 1) {
+                            // Si es el caso, avisamos que la partida está finalizada
+                            ws.send(JSON.stringify({ status: false, error: "Game is over or in progress" }));
                         } else {
-                            console.log("La partida está completa");
-                            // En caso contrario, avisamos de que la sala está ocupada
-                            ws.send(JSON.stringify({ status: false, error: "Game is full" }));
+                            if (!games[gameId].player2URL) {
+                                console.log("El jugador 2 es el actual");
+                                // Jugador actual es el jugador 2:
+                                games[gameId].player2URL = ws;
+                                ws.send(JSON.stringify({ status: true, id: gameId }));
+                            } else {
+                                console.log("La partida está completa");
+                                // En caso contrario, avisamos de que la sala está ocupada
+                                ws.send(JSON.stringify({ status: false, error: "Game is full" }));
+                            }
                         }
                     }
                 } else {
@@ -350,11 +356,20 @@ server.on('connection', function connect(ws: webSocket) {
                 if(gameId) {
                     if(games[gameId].player1URL == ws) {
                         // Entonces, esperamos al jugador 2
-                        // Avisamoa al usuario 2
-                        games[gameId].player2URL.send(JSON.stringify({ status: true, state: games[gameId].getState() }));
+                        // Comprobamos que el usuario 2 no se haya ido de la partida
+                        if(games[gameId].player2URL == undefined) {
+                            games[gameId].player1URL.send(JSON.stringify({ status: false, state: games[gameId].getState() }));
+                        } else {
+                            // En caso contrario, esperamos al usuario 2
+                            games[gameId].player2URL.send(JSON.stringify({ status: true, state: games[gameId].getState() }));
+                        }
                     } else {
-                        // Es el jugador 2, le enviamos al 1 el estado
-                        games[gameId].player1URL.send(JSON.stringify({ status: true, state: games[gameId].getState() }));
+                        // Misma comprobación del jugador 1
+                        if(games[gameId].player1URL == undefined) {
+                            games[gameId].player1URL.send(JSON.stringify({ status: false, state: games[gameId].getState() }));
+                        } else {
+                            games[gameId].player1URL.send(JSON.stringify({ status: true, state: games[gameId].getState() }));
+                        }
                     }
                 }
                 break;
@@ -454,6 +469,9 @@ server.on('connection', function connect(ws: webSocket) {
                         // Si el primer jugador no ha salido de la partida, se convierte en el primer jugador
                         if(games[gameId].player2URL) {
                             games[gameId].player2URL.send(JSON.stringify({ status: false }));
+                        } else {
+                            // Eliminamos la partida, ya que no habrá más usuarios
+                            games[gameId] = undefined;
                         }
                     } else {
                         // Igual que el caso anterior
@@ -464,13 +482,15 @@ server.on('connection', function connect(ws: webSocket) {
                         // Avisamos al otro usuario
                         if(games[gameId].player1URL) {
                             games[gameId].player1URL.send(JSON.stringify({ status: false }));
+                        } else {
+                            // Eliminamos la partida, ya que no habrá más usuarios
+                            games[gameId] = undefined;
                         }
                     }
                     // Actualizamos el estado, si no hay jugadores el juego ha terminado
-                    games[gameId].currentState = !games[gameId].player1URL && !games[gameId].player2URL?2:0;
-                    games[gameId].store.saveState({
-                        type: "resetState"
-                    })
+                    if(games[gameId]) {
+                        games[gameId].currentState = 2;
+                    }
                     // Y Confirmamos la realización correcta
                     ws.send(JSON.stringify({
                         status: true,
