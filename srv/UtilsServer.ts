@@ -33,7 +33,6 @@ export class MapsDatabase {
                 console.error("Se ha producido un error intentando abrir la BD!");
                 callback(err);
             } else {
-                console.log(mapData);
                 // Preparamos el guardado del mapa
                 let statement = MapsDatabase.connection.prepare("DELETE FROM map WHERE id=$id");
                 // Y lo ejecutamos con los valores obtenidos del mapa
@@ -66,7 +65,6 @@ export class MapsDatabase {
                 callback(err);
             } else {
                 if(mapData.id==null||mapData.id==0){
-                    console.log(mapData);
                     // Preparamos el guardado del mapa
                     let statement = MapsDatabase.connection.prepare("INSERT INTO map(rows, cols, name, googleId) VALUES ($rows, $cols, $name, $googleId)");
                     // Y lo ejecutamos con los valores obtenidos del mapa
@@ -120,7 +118,6 @@ export class MapsDatabase {
                     // Indicamos que hemos terminado de añadir elementos
                     statement.finalize();
                 }else{
-                    console.log(mapData);
                     // Preparamos el guardado del mapa
                     let statement = MapsDatabase.connection.prepare("UPDATE map SET name = $name WHERE id = $id;");
                     // Y lo ejecutamos con los valores obtenidos del mapa
@@ -197,27 +194,22 @@ export class MapsDatabase {
                         callback({ status: false, error: "Error trying to get rows and cols", map: null });
                     } else {
                         if(Number(rows1['id'])===Number(mapData)){
-                            console.log("entra en el if");
                             // En este caso, tendremos los datos
                             row = rows1['rows'];
                             columns = rows1['cols'];
                             name = rows1['name'];
                             MapsDatabase.connection.each("SELECT name, image, movement_penalty, position_row, position_cols, defense_weak, defense_strong, attack_weak, attack_strong FROM terrain where id_map = $mapId;", {$mapId: mapData}, (err: Error, rows2: any) => {
                                 // Si hay error
-                                console.log(JSON.stringify(err));
                                 if(err) {
                                     console.log("Error trying to get the map");
                                     callback({ status: false, error: "Error trying to get the map", map: null });
                                 } else {
                                     // En este caso, tendremos los datos
-                                    console.log("Aqui "+rows2['name']);
-                                    console.log(rows2['image']);
                                     terrains.push({name: rows2['name'].toString(), image: rows2['image'].toString(), movement_penalty: Number(rows2['movement_penalty']), position_row: Number(rows2['position_row']),
                                         position_cols: Number(rows2['position_cols']), defense_weak: Number(rows2['defense_weak']), defense_strong: Number(rows2['defense_strong']), attack_weak: Number(rows2['attack_weak']),
                                         attack_strong: Number(rows2['attack_strong'])});
                                 }
                             }, () => {
-                                console.log(JSON.stringify(terrains));
                                 callback({status: true, error: "Success", map:{rows: row, columns: columns, mapName: name, terrains: terrains}});
                             });
                         }
@@ -282,7 +274,6 @@ export class ProfileDatabase {
                 callback({ status: false, error: "Can't connect to DB" });
             } else {
                 var i = 0;
-                console.log("valor del armyclient: "+userId);
                 let result = { status: true, error: "Success" };
                 ProfileDatabase.connection.serialize(() => {
                     // Iniciamos el statement con los datos del perfil
@@ -292,7 +283,6 @@ export class ProfileDatabase {
                     statement.run({
                         $userId: userId
                     }, (runResult: sqlite.RunResult, error: Error) => {
-                        console.log(error);
                         // Comprobamos si hay error
                         if(err) {
                             // En el caso de que haya, cambiamos result
@@ -319,7 +309,6 @@ export class ProfileDatabase {
                 var i = 0;
                 let armyId : number[] = [];
                 let armyName : string[] = [];
-                console.log("valor del armyclient: "+armyclient.userId);
                 ProfileDatabase.connection.each("SELECT id, name FROM army WHERE id_profile = $userId", {$userId: armyclient.userId}, (err: Error, rows: any) => {
                     // Si hay error
                     if(err) {
@@ -348,7 +337,6 @@ export class ProfileDatabase {
             } else {
                 var i = 0;
                 let units : {type: string, number: number}[] = [];
-                console.log("valor del armyclient: "+armyId);
                 ProfileDatabase.connection.each("SELECT type, number FROM unit_pair WHERE id_army = $armyId", {$armyId: armyId}, (err: Error, rows: any) => {
                     // Si hay error
                     if(err) {
@@ -375,7 +363,6 @@ export class ProfileDatabase {
                 callback({ status: false, error: "Can't connect to DB", id: null });
             } else {
                 let id: number = null;
-                console.log("antes de la query");
                 //ProfileDatabase.connection.get("SELECT name, games_won, games_lost FROM profile WHERE googleId = '$googleId';", {$googleId: profile.googleId}, (err: Error, rows: any) => {
                 ProfileDatabase.connection.each("SELECT id, googleId FROM profile;", (err: Error, rows: any) => {
                     // Si hay error
@@ -384,14 +371,11 @@ export class ProfileDatabase {
                         callback({ status: false, error: "Error trying to get the ID", id: null });
                     } else {
                         // En este caso, tendremos los datos
-                        console.log("valor 1 = "+Number(rows['googleId'])+" , valor 2 = "+profile.googleId);
                         if(Number(rows['googleId'])==Number(profile.googleId)){
-                            console.log("entra en este if");
                             id = Number(rows['id']);
                         }
                     }
                 }, () => {
-                        console.log("valor del id en el callback profileId "+id);
 			            callback({ status: true, error: "Success", id: id });
 		        });
             }
@@ -410,7 +394,6 @@ export class ProfileDatabase {
                 let name : string = null;
                 let gamesWon : number = null;
                 let gamesLost : number = null;
-                console.log("antes de la query");
                 //ProfileDatabase.connection.get("SELECT name, games_won, games_lost FROM profile WHERE googleId = '$googleId';", {$googleId: profile.googleId}, (err: Error, rows: any) => {
                 ProfileDatabase.connection.each("SELECT name, games_won, games_lost, googleId FROM profile;", (err: Error, rows: any) => {
                     // Si hay error
@@ -419,25 +402,20 @@ export class ProfileDatabase {
                         callback({ status: false, error: "Error trying to get the ID", name: null, gamesWon: null, gamesLost: null });
                     } else {
                         // En este caso, tendremos los datos
-                        console.log("valor 1 = "+Number(rows['googleId'])+" , valor 2 = "+profile.googleId);
                         if(Number(rows['googleId'])==Number(profile.googleId)){
-                            console.log("entra en este if");
                             name = rows['name'].toString();
                             gamesWon = Number(rows['games_won']);
                             gamesLost = Number(rows['games_lost']);
                         }
                     }
                 }, () => {
-                        console.log("valor del  en el callback "+name);
 			            callback({ status: true, error: "Success", name: name, gamesWon: gamesWon, gamesLost: gamesLost });
 		        });
             }
         });
     }
 
-    //TODO tampoco funciona por la misma razón del método anterior ya que no filtra correctamente por googleId, en caso de que no funcionara se podría hacer
-    //un bucle recorriendo para obtener todos los id y con un if se obtiene el id que corresponde a la fila del usuario y editar los valores de ese id,
-    //ya que no debería haber problemas raros con el where indicando a un id ya que se ha hecho muchas veces
+    //Guarda el perfil
     public static saveProfileGame(profile: { gamesWon: number, gamesLost: number, googleId: number}, callback: (statusCode: StatusCode) => void) {
         // Definimos el resultado de la transacción
         let result = { status: true, error: "Success" };
@@ -460,7 +438,6 @@ export class ProfileDatabase {
                         $gamesLost: profile.gamesLost,
                         $googleId: profile.googleId
                     }, (runResult: sqlite.RunResult, error: Error) => {
-                        console.log(error);
                         // Comprobamos si hay error
                         if(err) {
                             // En el caso de que haya, cambiamos result
@@ -497,7 +474,6 @@ export class ProfileDatabase {
                         $name: profile.name,
                         $googleId: profile.googleId
                     }, (runResult: sqlite.RunResult, error: Error) => {
-                        console.log(error);
                         // Comprobamos si hay error
                         if(err) {
                             // En el caso de que haya, cambiamos result
@@ -532,7 +508,6 @@ export class ProfileDatabase {
                         $type: pair.type,
                         $number: pair.number
                     }, (runResult: sqlite.RunResult, error: Error) => {
-                        console.log(error);
                         // Comprobamos si hay error
                         if(err) {
                             // En el caso de que haya, cambiamos result
@@ -574,7 +549,6 @@ export class ProfileDatabase {
                     });
                     // Obtenemos el id del ejército creado:
                     ProfileDatabase.connection.get("SELECT last_insert_rowid() FROM army", (runResult: sqlite.RunResult, armyId: number, err: Error) => {
-                        console.log(armyId);
                         if(err) {
                             // Cambiamos el resultado
                             result = { status: false, error: err.message };
@@ -690,7 +664,6 @@ export class ProfileDatabase {
             } else {
                 // En el caso de poder establecer la conexión, primero insertamos el perfil del usuario
                 // Iniciamos el bloque serializado
-                console.log("no hay primer error en updateProfile");
                 ProfileDatabase.connection.serialize(() => {
                     // Iniciamos la transacción
                     ProfileDatabase.connection.run("BEGIN TRANSACTION");
@@ -701,7 +674,6 @@ export class ProfileDatabase {
                             result = { status: false, error: err.message };
                         } else {
                             if(Number(profile.googleId)==Number(row['googleId'])){
-                                console.log("entra en el if de googleid");
                                 // Teniendo el id, podremos crear los ejércitos del perfil
                                 let profileIndex = row['id'] as number;
                                 ProfileDatabase.deleteArmy(profileIndex,(statusCode: StatusCode) => {

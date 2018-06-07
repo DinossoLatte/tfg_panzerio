@@ -6,9 +6,7 @@ export class Army {
     name : string;
 
     constructor(army: Array<{ type: string, number: number }>, name: string) {
-        console.log(army+" - "+name);
         this.unitList = army;
         this.name = name;
-        console.log(this.name);
     }
 }

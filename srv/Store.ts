@@ -23,7 +23,6 @@ export class GameStore {
 
     saveState(act: Redux.AnyAction) {
         this.store.dispatch(act);
-        console.log(JSON.stringify(this.store.getState()));
         // Refresca el mapa y el resto de variables del estado
         var turn: number = this.store.getState().turn;
         var actualState: number = this.store.getState().actualState;

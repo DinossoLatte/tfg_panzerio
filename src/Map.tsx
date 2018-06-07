@@ -139,37 +139,7 @@ export class Map extends React.Component<any, any> {
         // indicador de la izquierda
         this.unitStats.setState({ unit: store.getState().units[selectedIndex], terrain: null });
     }
-/*
-    onClickNextUnit(mouseEvent: MouseEvent) {
-        // Obtenemos el índice
-        let selectedIndex = store.getState().selectedUnit;
-        console.log("Index: "+selectedIndex);
-        // Si no está definido
-        if(selectedIndex == null
-            || (// O en el caso de estarlo, es posible incrementar el índice
-                // O sobrepasa el límite de la lista
-                store.getState().units.length <= selectedIndex + 1 ||
-                // Si la próxima unidad no es del jugador
-                !store.getState().units[selectedIndex + 1].player == (store.getState().turn%2 == 0)
 
-        )) {
-            console.log("Entra en no definido");
-            // Entonces debemos encontrar el índice de una unidad del jugador
-            selectedIndex = store.getState().units.indexOf(store.getState().units.find((unit) => unit.player == (store.getState().turn%2 == 0)));
-        } else {
-            console.log("Entra en ya definido");
-            // En otro caso ya está definido y es válido el incremento
-            selectedIndex = selectedIndex + 1;
-        }
-        console.log("Resutado "+selectedIndex);
-
-        // Ejecutamos la selección de unidad
-        store.dispatch(Actions.generateMove(selectedIndex, store.getState().turn%2 == 0));
-        // Y, para indicar al jugador de la unidad seleccionada, cambiamos el
-        // indicador de la izquierda
-        this.unitStats.setState({ unit: store.getState().units[selectedIndex], terrain: null });
-    }
-*/
     onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
         let keyCode = keyEvent.key;
         let cursorPosition, newCursorPosition : Pair;
@@ -268,8 +238,6 @@ export class Map extends React.Component<any, any> {
 
     clickAction(row: number, column: number) {
         // Si es el turno de este jugador
-        console.log("Turno: "+store.getState().turn);
-        console.log("Jugador: "+store.getState().isPlayer);
         if((store.getState().isPlayer && store.getState().turn%2 == 0) || (!store.getState().isPlayer && store.getState().turn%2 == 1)) {
             let newPosition: Pair = new Pair(row,column);
             let side : boolean = store.getState().turn%2 == 0; // Representa el bando del jugador actual
@@ -314,7 +282,6 @@ export class Map extends React.Component<any, any> {
                     )){
                     let selectedUnit = store.getState().selectedUnit; // Índice de la unidad seleccionada
                     let actualPosition = store.getState().units[selectedUnit].position; //Obtenemos la posición actual
-                    console.log("Unidad seleccionada: "+selectedUnit);
                     //Primero se comprueba si es un ataque (si selecciona a un enemigo durante el movimiento)
                     if(unitIndex != -1 && unitEnemy && store.getState().units[selectedUnit].action == 1 && !store.getState().units[selectedUnit].hasAttacked
                         // Nos aseguramos también que el turno sea mayor a 2

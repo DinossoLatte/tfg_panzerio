@@ -50,13 +50,11 @@ export class EditMap extends React.Component<any, any> {
     /** Renderiza el mapa **/
     render() {
         if(this.props.selected!=null){
-            console.log("--------------->Entra en el else: valor del selected: "+this.props.selected);
             //Solo se ejecutara una vez
             if(this.state.request<2){
                 this.getMapFromServer({id: Number(this.props.selected)},(error: { status: boolean, errorCode: string, retmap: Array<Terrain> })=>{});
                 this.state.request++;
             }
-            console.log(storeEdit.getState().terrains.length);
         }
         // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
         return (
@@ -97,7 +95,6 @@ export class EditMap extends React.Component<any, any> {
         connection.onmessage = function(event: MessageEvent) {
             // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
             // el comando se haya entendido
-            console.log("Datos "+JSON.stringify(event.data));
             let data = Network.parseMapServer(event.data);
             if(event.data == "Command not understood") {
                 // Lanzamos un error
@@ -111,7 +108,6 @@ export class EditMap extends React.Component<any, any> {
                     name: data.mapName,
                     selected: mapData.id
                 });
-                console.log("------------->"+JSON.stringify(data.terrains)+"; "+data.terrains.length);
                 saveState(EditActions.saveState(game, data.terrains, storeEdit.getState().cursorPosition, storeEdit.getState().selected, "SAVE"));
                 if(callback) {
                     callback({ status: true, errorCode: "Success", retmap: data.terrains});
@@ -188,7 +184,6 @@ export class EditMap extends React.Component<any, any> {
     onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
         let keyCode = keyEvent.key;
         let cursorPosition, newCursorPosition : Pair;
-        console.log("KeyCode: "+keyCode);
         switch(keyCode) {
             case 'Escape':
                 this.props.parentObject.changeGameState(0); // Retornamos al menu.
@@ -274,27 +269,8 @@ export class EditMap extends React.Component<any, any> {
         let terrain: Terrain;
         let array = storeEdit.getState().terrains;
         // Obtenemos el nuevo terreno a reemplazar/crear
-        /*switch(storeEdit.getState().selected) {
-            case "Plains":
-                terrain = Plains.create(newPosition);
-                break;
-            case "Mountains":
-                terrain = ImpassableMountain.create(newPosition);
-                break;
-            case "Hills":
-                terrain = Hills.create(newPosition);
-                break;
-            case "Forest":
-                terrain = Forest.create(newPosition);
-                break;
-            case "River":
-                terrain = River.create(newPosition);
-            default:
-        };*/
-        //if(storeEdit.getState().selected!=null&&storeEdit.getState().selected!=undefined){
         const sel : keyof TERR_CREATE = storeEdit.getState().selected;
         terrain = TERRAINS_CREATE[sel].create(newPosition);
-        //}
 
         // Comprobamos si la posición está ocupada
         if(terrainIndex > -1) {

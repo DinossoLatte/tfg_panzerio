@@ -26,7 +26,6 @@ var games : Map<string, Game> = new Map<string, Game>();
 
 server.on('connection', function connect(ws: webSocket) {
     // Este será el inicio del servidor, por ahora nos encargaremos de mostrarle el estado
-    console.log("Conected with client");
     ws.on("close", () => {
         let gameId = null;
         for(let gameIndex in games) {
@@ -51,7 +50,6 @@ server.on('connection', function connect(ws: webSocket) {
         }
     })
     ws.on("message", function getInitialState(data) {
-        console.log("Got following action: " + data);
         // Dependiendo del estado, retornaremos una cosa u otra
         let message = JSON.parse(data as string);
         // Debido a la forma de compilar el programa, es necesario declarar aqui el id del mensaje, aun cuando este no deba aparecer en el mensaje.
@@ -71,10 +69,8 @@ server.on('connection', function connect(ws: webSocket) {
                 break;
             case "joinGame":
                 if(games[gameId]) {
-                    console.log(games[gameId]);
                     // Primero, vemos si la sala está vacia
                     if(!games[gameId].player1URL && !games[gameId].player2URL) {
-                        console.log("El jugador 1 es el actual");
                         // En cuyo caso, el jugador actual será el primero
                         games[gameId].player1URL = ws;
                         ws.send(JSON.stringify({ status: true, id: gameId }));
@@ -86,12 +82,10 @@ server.on('connection', function connect(ws: webSocket) {
                             ws.send(JSON.stringify({ status: false, error: "Game is over or in progress" }));
                         } else {
                             if (!games[gameId].player2URL) {
-                                console.log("El jugador 2 es el actual");
                                 // Jugador actual es el jugador 2:
                                 games[gameId].player2URL = ws;
                                 ws.send(JSON.stringify({ status: true, id: gameId }));
                             } else {
-                                console.log("La partida está completa");
                                 // En caso contrario, avisamos de que la sala está ocupada
                                 ws.send(JSON.stringify({ status: false, error: "Game is full" }));
                             }
@@ -405,7 +399,6 @@ server.on('connection', function connect(ws: webSocket) {
                             googleId: token
                         };
                         UtilsServer.ProfileDatabase.saveProfile(initialprofile, (status: UtilsServer.StatusCode) => {
-                            console.log("statusCode "+status.status);
                         });
                     }
                 });
@@ -429,7 +422,6 @@ server.on('connection', function connect(ws: webSocket) {
                 let getprofileid = message.profile;
                 UtilsServer.ProfileDatabase.getProfileId(getprofileid, (statusCode: { status: boolean, error: string, id: number }) => {
                     // Devolveremos el contenido de la petición
-                    console.log("valor del name en server: "+statusCode.id);
                     ws.send(JSON.stringify(statusCode));
                 });
                 break;
@@ -503,7 +495,6 @@ server.on('connection', function connect(ws: webSocket) {
                     status: true,
                     games: games
                 });
-                console.log(result);
                 // Obtenemos los juegos que estén en funcionamiento.
                 ws.send(Utils.Parsers.stringifyCyclicObject({
                     status: true,
@@ -539,8 +530,6 @@ server.on('connection', function connect(ws: webSocket) {
                             width: code.map.columns,
                             terrains: terrains
                         });
-                        console.log("---------->"+terrains+";"+terrains.length);
-                        console.log("---------->"+JSON.stringify(code.map.terrains)+";"+code.map.terrains.length);
                         ws.send(JSON.stringify({
                             status: true,
                             error: "Got successfully",
@@ -577,7 +566,6 @@ server.on('connection', function connect(ws: webSocket) {
                 });
                 break;
             default:
-                console.warn("Action sent not understood! Type is " + message.tipo);
                 ws.send("Command not understood");
                 break;
         }

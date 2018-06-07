@@ -486,6 +486,12 @@ export class Network {
                     case "Tank":
                         units.push(Units.Tank.create(new Pair(-1, -1), side));
                         break;
+                    case "Paratrooper":
+                        units.push(Units.Paratrooper.create(new Pair(-1, -1), side));
+                        break;
+                    case "Artillery":
+                        units.push(Units.Artillery.create(new Pair(-1, -1), side));
+                        break;
                 }
                 // Finalmente, indicamos que hemos creado la unidad de este tipo
                 --unitsLeft;
@@ -535,7 +541,6 @@ export class Network {
             name: ""
         };
         // Primero, convertimos el objeto en un mapa
-        console.log("EN Parse: "+JSON.stringify(data));
         let json = JSON.parse(data);
         // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
         // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
@@ -550,7 +555,6 @@ export class Network {
                 terrain.attackWeak, terrain.attackStrong));
         }
         // Retornamos el estado final
-        console.log("RESULTADO "+JSON.stringify(result));
         return result;
     }
 
@@ -566,7 +570,6 @@ export class Network {
         let connection = Network.getConnection();
         // Definimos el evento de recepción de mensaje
         connection.onmessage = function(event: MessageEvent) {
-            console.log(event.data);
             // Comprobamos cuál ha sido la respuesta
             if(event.data == "Command not understood") {
                 // Retornamos al callback el fallo de la conexión

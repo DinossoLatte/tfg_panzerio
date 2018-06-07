@@ -30,11 +30,8 @@ export var InitialState: State = undefined;
 export function getInitialState(id: string, callback: (height: number, width: number) => void) {
     // Creamos la petición al servidor
     var connection = Network.getConnection();
-    console.log("Connection established with server");
     // Establecemos la conexión
     connection.onmessage = function (event: MessageEvent) {
-        console.log("Receiving data ...");
-        console.log("Message: " + event.data);
         if (event.data == "Command not understood") {
             // Enviamos un error, algo ha pasado con el servidor
             throw new Error;
@@ -44,15 +41,13 @@ export function getInitialState(id: string, callback: (height: number, width: nu
         // Una vez tengamos el estado, llamamos al callback aportado, que permitirá saber con certeza que el estado está disponible
         callback(JSON.parse(event.data).height, JSON.parse(event.data).width);
     };
-    
-    console.log("Connection available for sending action");
+
     // Enviamos la solicitud de estado inicial (se ha modificado a tipo para hacer el menor número de cambios posibles al código)
     // La variable tipo indica el tipo de la acción
     connection.send(JSON.stringify({
         tipo: "getInitialState",
         id: id
     }));
-    console.log("Action sent.");
 }
 
 export class Actions {
@@ -330,7 +325,6 @@ export var Reducer: Redux.Reducer<State> =
                 //Si no está el general del jugador entonces se considerará victoria o derrota (esto ya incluye también que no queden más unidades)
                 if (state.units.filter(x => !state.isPlayer == x.player && x.name == "General").length == 0) {
                     Network.sendWaitTurn((statusCode) => {
-                        console.log(JSON.stringify(statusCode));
                         // Comprobamos el resultado
                         if (statusCode.status) {
                             // Si ha salido bien, llamaremos al nuevo estado
@@ -338,7 +332,6 @@ export var Reducer: Redux.Reducer<State> =
                             // TODO Comprobación del estado
                         } else {
                             // En caso contrario avisaremos al cliente
-                            console.log(statusCode.error);
                             // Y indicaremos que la conexión ha fallado y que debe reiniciar la pestaña
                             window.alert("No se ha podido enviar la información al servidor, por favor, recargue esta pestaña para continuar");
                         }
@@ -357,7 +350,6 @@ export var Reducer: Redux.Reducer<State> =
                             console.log("No se ha podido obtener correctamente el perfil");
                         } else {
                             // En caso contrario, indicamos el guardado correcto
-                            console.log("Se ha obtenido correctamente el perfil, valor de lost: "+statusCode.gamesLost);
                             let profileupdated: {
                                 gamesWon: number,
                                 gamesLost: number,
@@ -373,16 +365,12 @@ export var Reducer: Redux.Reducer<State> =
                                 if(!status.status) {
                                     // Si ha salido mal, alertamos al usuario
                                     console.log("No se ha podido actualizar correctamente el perfil");
-                                } else {
-                                    // En caso contrario, indicamos el guardado correcto
-                                    console.log("Se ha actualizado correctamente el perfil");
                                 }
                             });
                         }
                     });
                 } else if (state.units.filter(x => state.isPlayer == x.player && x.name == "General").length == 0) {
                     Network.sendWaitTurn((statusCode) => {
-                        console.log(JSON.stringify(statusCode));
                         // Comprobamos el resultado
                         if (statusCode.status) {
                             // Si ha salido bien, llamaremos al nuevo estado
@@ -390,7 +378,6 @@ export var Reducer: Redux.Reducer<State> =
                             // TODO Comprobación del estado
                         } else {
                             // En caso contrario avisaremos al cliente
-                            console.log(statusCode.error);
                             // Y indicaremos que la conexión ha fallado y que debe reiniciar la pestaña
                             window.alert("No se ha podido enviar la información al servidor, por favor, recargue esta pestaña para continuar");
                         }
@@ -409,7 +396,6 @@ export var Reducer: Redux.Reducer<State> =
                             console.log("No se ha podido obtener correctamente el perfil");
                         } else {
                             // En caso contrario, indicamos el guardado correcto
-                            console.log("Se ha obtenido correctamente el perfil");
                             let profileupdated: {
                                 gamesWon: number,
                                 gamesLost: number,
@@ -425,9 +411,6 @@ export var Reducer: Redux.Reducer<State> =
                                 if(!status.status) {
                                     // Si ha salido mal, alertamos al usuario
                                     console.log("No se ha podido actualizar correctamente el perfil");
-                                } else {
-                                    // En caso contrario, indicamos el guardado correcto
-                                    console.log("Se ha actualizado correctamente el perfil");
                                 }
                             });
                         }
@@ -459,7 +442,6 @@ export var Reducer: Redux.Reducer<State> =
                 }
                 // Como el turno es del enemigo, el jugador no podrá realizar nuevos movimientos, por lo que no necesitamos evitar movimientos del jugador.
                 Network.sendWaitTurn((statusCode) => {
-                    console.log(JSON.stringify(statusCode));
                     // Comprobamos el resultado
                     if (statusCode.status) {
                         // Si ha salido bien, llamaremos al nuevo estado
@@ -467,7 +449,6 @@ export var Reducer: Redux.Reducer<State> =
                         // TODO Comprobación del estado
                     } else {
                         // En caso contrario avisaremos al cliente
-                        console.log(statusCode.error);
                         // Y indicaremos que la conexión ha fallado y que debe reiniciar la pestaña
                         window.alert("No se ha podido enviar la información al servidor, por favor, recargue esta pestaña para continuar");
                     }
@@ -543,7 +524,6 @@ export var Reducer: Redux.Reducer<State> =
                 }
             case "NEW_STATE_FROM_SERVER":
                 // Retornamos el estado de la acción
-                console.log(JSON.stringify(action.state.units));
                 let newActualState = state.actualState;
                 if(action.state.units.filter((unit: any) => state.isPlayer == unit.player && unit.name == "General").length == 0) {
                     // Hemos perdido la partida, avisamos al jugador

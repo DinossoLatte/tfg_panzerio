@@ -19,7 +19,7 @@ const identifierText = "Identificador";
 const numberUsersText = "Número de usuarios";
 const createGameText = "Crear partida";
 const joinGameText = "Unirse a partida";
-const gameFullText = "La partida seleccionada está completa";
+const gameFullText = "La partida seleccionada está completa o en progreso";
 const editMapMenuButton = "Acceder a la edición del mapa";
 const loginAlertText = "Necesita iniciar sesión para acceder a esta funcionalidad";
 const profileMenuButton = "Acceder al perfil personal";
@@ -274,7 +274,7 @@ class MainPanelMenu extends React.Component<any, any> {
                 });
             } else {
                 // Vemos el código de error
-                if(result.message == "Game is full") {
+                if(result.message == "Game is full" || result.message == "Game is over or in progress") {
                     // Avisamos con un warning de que la sala está ocupada
                     window.alert(gameFullText);
                 }
@@ -288,7 +288,6 @@ class MainPanelMenu extends React.Component<any, any> {
 
     updateGameList() {
         Network.sendGetGameList((status: { status: boolean, games: any[] }) => {
-            console.dir(status.games);
             if(status.status) {
                 this.setState({ games: status.games });
             }
@@ -365,44 +364,9 @@ class OptionsMenu extends React.Component<any, any> {
     }
 }
 
-/*class SideOptionMenu extends React.Component<any, any> {
-    constructor(props: any) {
-        super(props);
-        this.state = { player: props.player };
-    }
-
-    render() {
-        return (
-            <div className={"sideOption"+this.state.player?"Player":"Enemy"}>
-                <p>Introduce en el siguiente campo el código de ejército: </p>
-
-                <textarea id={"army_"+this.props.player} onChange={this.onChangeArmy.bind(this)} placeholder="Introduzca aqui el código de ejército" />
-            </div>
-        );
-    }
-
-    onChangeArmy(mouseEvent: React.MouseEvent<HTMLElement>) {
-        console.log("Changed for "+this.props.player);
-        // Obtenemos el dato de entrada
-        let textArea: HTMLTextAreaElement = document.getElementById("army_"+this.props.player) as HTMLTextAreaElement;
-        let unitsJSON = textArea.value;
-        // Lo transformamos en el tipo requerido
-        let unitsPair: Array<{ type: string, number: number }> = JSON.parse(unitsJSON);
-        console.log()
-        // Cambiamos el estado del padre
-        this.props.parentObject.setState({
-            custom: this.props.parentObject.state.custom,
-            // Dependiendo de que sea el jugador o no, cambiamos el elemento del estado
-            playerArmy: this.props.player?unitsPair:this.props.parentObject.state.playerArmy,
-            enemyArmy: !this.props.player?unitsPair:this.props.parentObject.state.enemyArmy
-        })
-    }
-}*/
-
 class PreGameMenu extends React.Component<any, any> {
     constructor(props: any) {
         super(props);
-        console.debug("Entra en constructor de PreGameMenu");
         this.state = {
             playerArmy: [] as Array<{type: string, number: number}>,
             enemyArmy: [] as Array<{type: string, number: number}>,
@@ -442,7 +406,6 @@ class PreGameMenu extends React.Component<any, any> {
     }
 
     selectUnits(){
-        console.log(this.state.armyId);
         let army = null;
         if(this.state.armyId) {
             army = [<option selected value={null}>{selectText}</option>];
@@ -454,7 +417,6 @@ class PreGameMenu extends React.Component<any, any> {
     }
 
     selectMaps(){
-        console.log(this.state.mapId);
         let map = null;
         if(this.state.mapId){
             map = [<option selected value={null}>{selectText}</option>];
@@ -527,13 +489,11 @@ class PreGameMenu extends React.Component<any, any> {
         connection.onmessage = function(event: MessageEvent) {
             // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
             // el comando se haya entendido
-            console.log("recepción de la información del servidor "+JSON.stringify(event));
             if(event.data == "Command not understood") {
                 // Lanzamos un error
                 console.log("Error when attempting to save, server didn't understood request");
                 //No es necesario llamar al callback porque este ya es el nivel final (cliente)
             } else {
-                console.log(event.data);
                 let data = JSON.parse(event.data);
                 game.setState({
                     mapId: game.state.mapId,
@@ -556,13 +516,11 @@ class PreGameMenu extends React.Component<any, any> {
                 connection.onmessage = function(event: MessageEvent) {
                     // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
                     // el comando se haya entendido
-                    console.log("recepción de la información del servidor "+JSON.stringify(event));
                     if(event.data == "Command not understood") {
                         // Lanzamos un error
                         console.log("Error when attempting to save, server didn't understood request");
                         //No es necesario llamar al callback porque este ya es el nivel final (cliente)
                     } else {
-                        console.log(event.data);
                         let data = JSON.parse(event.data);
                         game.setState({
                             armyId: game.state.armyId,
@@ -607,7 +565,6 @@ class PreGameMenu extends React.Component<any, any> {
                 console.log("Error when attempting to save, server didn't understood request");
             } else {
                 // En caso contrario, ejecutamos el callback sin errores
-                console.log("Terrenos en estado: "+data.terrains);
                 if(callback) {
                     callback({ status: true, errorCode: "Success", map: null});
                 }
@@ -630,14 +587,12 @@ class PreGameMenu extends React.Component<any, any> {
         connection.onmessage = function(event: MessageEvent) {
             // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
             // el comando se haya entendido
-            console.log("Datos "+JSON.stringify(event.data));
             if(event.data == "Command not understood") {
                 // Lanzamos un error
                 console.log("Error when attempting to save, server didn't understood request");
             } else {
                 let data = JSON.parse(event.data);
                 let units = new Array<Unit>();
-                console.log("Unidades aliadas "+JSON.stringify(data.units));
                 units = units.concat(Network.parseArmy(data.units, true));
                 callback({status: data.status, errorCode: data.error, units: units});
             }
@@ -660,14 +615,12 @@ class PreGameMenu extends React.Component<any, any> {
         connection.onmessage = function(event: MessageEvent) {
             // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
             // el comando se haya entendido
-            console.log("Datos "+JSON.stringify(event.data));
             if(event.data == "Command not understood") {
                 // Lanzamos un error
                 console.log("Error when attempting to save, server didn't understood request");
             } else {
                 let data = JSON.parse(event.data);
                 let units = new Array<Unit>();
-                console.log("Unidades enemigas "+JSON.stringify(data.units));
                 units = units.concat(Network.parseArmy(data.units, false));
                 callback({status: data.status, errorCode: data.error, units: units});
             }
@@ -683,23 +636,18 @@ class PreGameMenu extends React.Component<any, any> {
 
     startGame(event: MouseEvent) {
         if((this.state.selected!=null || !this.state.isPlayer) && (this.state.selectedPlayer!=null || !this.state.isPlayer) && (this.state.selectedEnemy!=null || this.state.isPlayer)){
-            console.log("Valor de selected en Game = "+ this.state.selected+" Valor de selectedPlayer en game= "+this.state.selectedPlayer+ " y de enemy= "+this.state.selectedEnemy);
             //Por ahora se hará este triple callback pero si hubiera multijugador no sería necesario, solo uno
             var game= this;
             // Definimos objetos que nos servirán para hacer el polling del inicio del juego
             var parentObject = this.props.parentObject;
             let pollingStart = function pollingStart() {
-                console.log("Polling pre game state from server");
                 Network.sendSyncState((statusCode, height, width) => {
-                    console.debug("Height: "+height);
-                    console.debug("Width: "+width);
                     if (statusCode.status == false) {
                         console.error("Ha fallado la sincronización con el servidor");
                         window.alert(userGoneText);
                         throw new Error("error");
                     } else {
                         // Cuando salga bien, emitiremos un guardado de estado y cambiamos al inicio del juego
-                        console.dir(statusCode.state);
                         saveState(statusCode.state);
                         parentObject.setState({
                             gameState: 2,
@@ -773,13 +721,11 @@ class CreateMenu extends React.Component<any, any> {
         connection.onmessage = function(event: MessageEvent) {
             // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
             // el comando se haya entendido
-            console.log("recepción de la información del servidor "+JSON.stringify(event));
             if(event.data == "Command not understood") {
                 // Lanzamos un error
                 console.log("Error when attempting to save, server didn't understood request");
                 //No es necesario llamar al callback porque este ya es el nivel final (cliente)
             } else {
-                console.log(event.data);
                 let data = JSON.parse(event.data);
                 game.setState({mapId: data.mapId, mapName: data.mapName});
             }
@@ -866,7 +812,6 @@ class CreateMenu extends React.Component<any, any> {
             connection.onmessage = function(event: MessageEvent) {
                 // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
                 // el comando se haya entendido
-                console.log("Datos "+JSON.stringify(event.data));
                 let data = Network.parseMapServer(event.data);
                 if(event.data == "Command not understood") {
                     // Lanzamos un error
@@ -994,7 +939,6 @@ class Game extends React.Component<any, any> {
     onLogIn(response: GoogleLoginResponse) {
         // Enviamos al servidor los datos del login
         Network.sendLogInInfo(() => {
-            console.log("Datos de login enviados");
             // También cambiamos el estado de este objeto para tener en cuenta eso
             this.setState({
                 gameState: this.state.gameState,
@@ -1003,14 +947,12 @@ class Game extends React.Component<any, any> {
                 clientId: Number(response.getBasicProfile().getId()),
                 clientAvatar: response.getBasicProfile().getImageUrl()
             });
-            console.log(this.state.clientId);
         }, Number(response.getBasicProfile().getId()));
     }
 
     onLogOut() {
         // Enviamos el cerrado de sesión al servidor
         Network.sendLogOut(() => {
-            console.log("Enviado logout");
             // También cambiamos el estado de este objeto para tener en cuenta eso
             this.setState({
                 gameState: this.state.gameState,

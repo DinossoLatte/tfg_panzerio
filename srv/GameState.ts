@@ -40,9 +40,7 @@ export function parseActionMap(data: any) {
     };
     // Primero, convertimos el objeto en un mapa
     let json = data;
-    console.log("Height (parse): " + json.height);
     result.width = json.width;
-    console.log("Width (parse): " + json.width);
     result.height = json.height;
     // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
     // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
@@ -70,7 +68,6 @@ export function parseActionMap(data: any) {
     }
     // Ahora vamos con los terrenos:
     let terrains: Array<{ name: string, image: string, movement_penalty: number, position: { row: number, column: number }, defenseWeak: number, defenseStrong: number, attackWeak: number, attackStrong: number }> = json.terrains;
-    console.log("Terrenos: " + terrains);
     // Para cada uno, crearemos una unidad con esos datos.
     if (terrains) {
         result.terrains = terrains.map(terrain => new Terrain(terrain.name, terrain.image, terrain.movement_penalty, new Pair(terrain.position.row, terrain.position.column),
@@ -359,8 +356,6 @@ export class GameState {
                         type: state.type
                     }
                 case "UPDATE_MAP":
-                    console.log("Height: "+action.height);
-                    console.log("Width: "+action.width);
                     return {
                         turn: state.turn,
                         actualState: state.actualState,

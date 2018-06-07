@@ -1,5 +1,7 @@
 import { Pair } from './Utils';
 
+//Para crear un nuevo terreno se crea una nueva clase para que sea llamada para la creación del terreno y se añade en las constantes que se encuentra al final de este código
+
 export class Terrain {
     name: string;
     image: string; // Imagen del terreno
@@ -54,7 +56,7 @@ export class River extends Terrain {
     }
 }
 
-//Una vez añadida una nueva clase de terreno es necesario añadir aquí el nombre (en estas tres constantes) para que se refleje en todos los select
+//Una vez creada una nueva clase para un terreno es necesario añadirlo en estas constante e interfaz para que se refleje en toda la aplicación
 export const TERRAINS = [
     "Plains", "Mountains", "Hills",
     "Forest", "River"

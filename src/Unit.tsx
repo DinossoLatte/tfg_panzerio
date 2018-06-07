@@ -1,6 +1,8 @@
 import { Pair } from './Utils';
 import { Terrain } from './Terrains';
 
+//Para crear una nueva unidad se crea una nueva clase para que sea llamada para la creación de la unidad y se añade en las constantes que se encuentra al final de este código
+
 export class Unit {
     name: string;
     type: string; // Imagen de la unidad
@@ -153,7 +155,7 @@ export class Artillery extends Unit {
     }
 }
 
-//Una vez creada una nueva clase para una unidad es necesario añadirlo aquí para que se refleje en todos los select
+//Una vez creada una nueva clase para una unidad es necesario añadirlo en estas constante e interfaz para que se refleje en toda la aplicación
 export const UNITS = [
     "General", "Infantry", "Tank",
     "Artillery", "Paratrooper"

@@ -347,7 +347,6 @@ export class Network {
     public static getConnection() {
         // Retornamos la conexión
         if(this.connection == undefined) {
-            console.log("Nueva conexión");
             this.connection = new WebSocket("ws://"+location.hostname+":8080");
         }
         return this.connection;
@@ -376,9 +375,7 @@ export class Network {
         result.isTurn = json.isTurn;
         result.isPlayer = json.isPlayer;
         result.height = json.height;
-        console.debug("Height: "+result.height);
         result.width = json.width;
-        console.debug("Width: "+result.width);
         // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
         // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
         result.turn = json.turn;
@@ -469,7 +466,6 @@ export class Network {
              attackWeak: number, attackStrong: number }
         >): Terrain[] {
         let result: Terrain[] = [];
-        console.dir(terrains);
         if(terrains) {
             result = terrains.map(terrain => new Terrain(terrain.name, terrain.image, terrain.movement_penalty,
                 new Pair(terrain.position.row, terrain.position.column), terrain.defenseWeak ,terrain.defenseStrong,
@@ -496,27 +492,6 @@ export class Network {
             while(unitsLeft > 0) {
                 // Dependiendo del tipo, se creará una unidad u otra
                 // Todas las unidades se crearán en la posición (-1, -1)
-                /*switch(pair.type) {
-                    case "General":
-                        units.push(Units.General.create(new Pair(-1, -1), side));
-                        break;
-                    case "Infantry":
-                        units.push(Units.Infantry.create(new Pair(-1, -1), side));
-                        break;
-                    case "Tank":
-                        units.push(Units.Tank.create(new Pair(-1, -1), side));
-                        break;
-                    case "Paratrooper":
-                        units.push(Units.Paratrooper.create(new Pair(-1, -1), side));
-                        break;
-                    case "Artillery":
-                        units.push(Units.Artillery.create(new Pair(-1, -1), side));
-                        break;
-                    default:
-                        // Avisamos al desarrollador
-                        console.error("Unit type not recognized: "+pair.type);
-                        break;
-                }*/
                 const sel : keyof UNIT_CREATE = pair.type;
                 units.push(UNITS_CREATE[sel].create(new Pair(-1, -1), side));
                 // Finalmente, indicamos que hemos creado la unidad de este tipo
@@ -651,7 +626,6 @@ export class Network {
             mapName: ""
         };
         // Primero, convertimos el objeto en un mapa
-        console.log("EN Parse: "+JSON.stringify(data));
         let json = JSON.parse(data);
         // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
         // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
@@ -666,7 +640,6 @@ export class Network {
                 terrain.attackWeak, terrain.attackStrong));
         }
         // Retornamos el estado final
-        console.log("RESULTADO "+JSON.stringify(result));
         return result;
     }
 
@@ -682,7 +655,6 @@ export class Network {
         let connection = Network.getConnection();
         // Definimos el evento de recepción de mensaje
         connection.onmessage = function(event: MessageEvent) {
-            console.log(event.data);
             // Comprobamos cuál ha sido la respuesta
             if(event.data == "Command not understood") {
                 // Retornamos al callback el fallo de la conexión
@@ -695,7 +667,7 @@ export class Network {
                     callback({ status: true, errorCode: statusCode.error });
                 } else {
                     // Avisamos por pantalla y emitiremos el resultado
-                    console.warn("Ha fallado la petición de guardado del perfil al servidor!");
+                    console.warn("¡Ha fallado la petición de guardado del perfil al servidor!");
                     console.warn("Error: "+statusCode.error);
                     callback({ status: false, errorCode: statusCode.error });
                 }
@@ -715,7 +687,6 @@ export class Network {
         let connection = Network.getConnection();
         // Definimos el evento de recepción de mensaje
         connection.onmessage = function(event: MessageEvent) {
-            console.log(event.data);
             // Comprobamos cuál ha sido la respuesta
             if(event.data == "Command not understood") {
                 // Retornamos al callback el fallo de la conexión
@@ -748,7 +719,6 @@ export class Network {
         let connection = Network.getConnection();
         // Definimos el evento de recepción de mensaje
         connection.onmessage = function(event: MessageEvent) {
-            console.log(event.data);
             // Comprobamos cuál ha sido la respuesta
             if(event.data == "Command not understood") {
                 // Retornamos al callback el fallo de la conexión
@@ -783,7 +753,6 @@ export class Network {
         let connection = Network.getConnection();
         // Definimos el evento de recepción de mensaje
         connection.onmessage = function(event: MessageEvent) {
-            console.log(event.data);
             // Comprobamos cuál ha sido la respuesta
             if(event.data == "Command not understood") {
                 // Retornamos al callback el fallo de la conexión
@@ -817,7 +786,6 @@ export class Network {
         let connection = Network.getConnection();
         // Definimos el evento de recepción de mensaje
         connection.onmessage = function(event: MessageEvent) {
-            console.log(event.data);
             // Comprobamos cuál ha sido la respuesta
             if(event.data == "Command not understood") {
                 // Retornamos al callback el fallo de la conexión
@@ -851,13 +819,11 @@ export class Network {
         let connection = Network.getConnection();
         // Definimos el evento de recepción de mensaje
         connection.onmessage = function(event: MessageEvent) {
-            console.log("Entra en el onmessage");
             // Comprobamos cuál ha sido la respuesta
             if(event.data == "Command not understood") {
                 // Retornamos al callback el fallo de la conexión
                 callback({ status: false, error: event.data});
             } else {
-                console.log("Se ha entendido el mensaje");
                 // En caso contrario, el comando se entendió. Comprobamos ahora si el mensaje contiene éxito de la operación
                 let statusCode: { status: boolean, error: string } = JSON.parse(event.data);
                 if(statusCode.status) {
@@ -951,7 +917,6 @@ export class Network {
             let connection = Network.getConnection();
 
             connection.onmessage = (message: MessageEvent) => {
-                console.dir(JSON.parse(message.data));
                 if (message.data == "Command not understood") {
                     callback({ status: false, state: null });
                 } else {

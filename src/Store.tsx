@@ -25,7 +25,6 @@ export function saveState(act: Redux.AnyAction) {
     var type: string = store.getState().type;
     // Si map está definido, lo actualizamos
     if(map) {
-        console.log("actualiza el mapa");
         map.setState({});
     }
 }
@@ -41,11 +40,8 @@ export var actualState: State = undefined;
 
 export function saveStateServer(callback: () => void, act: Redux.AnyAction){
     var connection = Network.getConnection();
-    console.log("Connection established with server");
     // Establecemos la conexión
     connection.onmessage = function(event: MessageEvent) {
-        console.log("Receiving data ...");
-        console.log("Message: "+event.data);
         if(event.data == "Command not understood") {
             // Enviamos un error, algo ha pasado con el servidor
             throw new Error;
@@ -55,10 +51,8 @@ export function saveStateServer(callback: () => void, act: Redux.AnyAction){
         // Una vez tengamos el estado, llamamos al callback aportado, que permitirá saber con certeza que el estado está disponible
         callback();
     };
-    console.log("Connection available for sending action");
     // Enviamos la solicitud
     let actionWithId = act;
     actionWithId.id = Network.gameId;
     connection.send(JSON.stringify(actionWithId));
-    console.log("Action sent.");
 }

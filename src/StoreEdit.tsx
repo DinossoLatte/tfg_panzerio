@@ -30,11 +30,8 @@ export var actualState: StateEdit = undefined;
 
 export function saveStateServer(callback: () => void, act: Redux.AnyAction){
     var connection = Network.getConnection();
-    console.log("Connection established with server");
     // Establecemos la conexión
     connection.onmessage = function(event: MessageEvent) {
-        console.log("Receiving data ...");
-        console.log("Message: "+event.data);
         if(event.data == "Command not understood") {
             // Enviamos un error, algo ha pasado con el servidor
             throw new Error;
@@ -44,9 +41,6 @@ export function saveStateServer(callback: () => void, act: Redux.AnyAction){
         // Una vez tengamos el estado, llamamos al callback aportado, que permitirá saber con certeza que el estado está disponible
         callback();
     };
-
-    console.log("Connection available for sending action");
     // Enviamos la solicitud
     connection.send(Parsers.stringifyCyclicObject(act));
-    console.log("Action sent.");
 }

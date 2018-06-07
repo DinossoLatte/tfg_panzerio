@@ -64,7 +64,6 @@ export class Profile extends React.Component<any, any> {
             // Incluimos el id del usuario de Google
             googleId: this.props.parentObject.state.clientId
         };
-        console.log("en profile"+this.props.parentObject.state.clientId);
         var prof = this;
         Network.receiveProfileFromServer(getprofile,(statusCode: { status: boolean, error: string, name: string, gamesWon: number, gamesLost: number }) => {
             // Vemos cómo ha salido la operación
@@ -72,7 +71,6 @@ export class Profile extends React.Component<any, any> {
                 // Si ha salido mal, alertamos al usuario
                 console.log("No se ha podido obtener correctamente el perfil");
             } else {
-                console.log("name="+statusCode.name+" ,gameswon="+statusCode.gamesWon);
                 this.setState({
                     username: statusCode.name,
                     gameswon: statusCode.gamesWon,
@@ -90,18 +88,14 @@ export class Profile extends React.Component<any, any> {
                             prof.getUnitsFromServer(errorarmy.armyId[i], errorarmy.armyName, errorarmy.armyId,(errorunits: { status: boolean, errorCode: string, units: Array<{type: string, number: number}>, name: string[], armies: number[], army: number }) =>{
                                 for(var j=0; j<errorunits.name.length; j++){
                                     //Se hace esto porque tiene problemas a la hora de trabajar con un for exterior a la llamada al servidor asi que trabajamos desde dentro del callback con otro for
-                                    console.log("Valores del bucle for "+errorunits.armies[j]+" y "+errorunits.name[j]+" y el valor de errorarmyID es "+errorunits.army);
                                     if(errorunits.army==errorunits.armies[j]){
-                                        console.log("Valor que busco "+errorunits.name[j]);
                                         arm = new Army(errorunits.units,errorunits.name[j]);
-                                        console.log(JSON.stringify(arm));
                                         unit.push(arm);
                                         this.setState({units: unit});
                                     }
                                 }
                             });
                         }
-                        console.log("Valor final de units "+JSON.stringify(this.state.units));
                         saveState(ProfileActions.save(prof, this.state.units, storeProfile.getState().selectedArmy, storeProfile.getState().selected, storeProfile.getState().type));
                         this.forceUpdate();
                     });
@@ -118,7 +112,6 @@ export class Profile extends React.Component<any, any> {
         connection.onmessage = function(event: MessageEvent) {
             // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
             // el comando se haya entendido
-            console.log("Datos "+JSON.stringify(event.data));
             if(event.data == "Command not understood") {
                 // Lanzamos un error
                 console.log("Error when attempting to save, server didn't understood request");
@@ -165,13 +158,11 @@ export class Profile extends React.Component<any, any> {
         connection.onmessage = function(event: MessageEvent) {
             // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
             // el comando se haya entendido
-            console.log("recepción de la información del servidor "+JSON.stringify(event));
             if(event.data == "Command not understood") {
                 // Lanzamos un error
                 console.log("Error when attempting to save, server didn't understood request");
                 //No es necesario llamar al callback porque este ya es el nivel final (cliente)
             } else {
-                console.log(event.data);
                 let data = JSON.parse(event.data);
                 callback({status: errorCode.status, errorCode: errorCode.errorCode, armyId: data.armyId, armyName: data.armyName});
             }
@@ -347,7 +338,6 @@ export class Profile extends React.Component<any, any> {
         let armies = [];
         // Iteramos por cada ejército
         for (var index = 0; index < storeProfile.getState().armies.length; index++) {
-            console.log("En el render "+JSON.stringify(storeProfile.getState().armies[index]));
             armies.push(<div id="bold">{storeProfile.getState().armies[index].name}</div>);
             // Por cada ejército mostraremos también las unidades que lo contienen
             var unitLists = this.renderArmyContent(index)
@@ -405,7 +395,6 @@ export class Profile extends React.Component<any, any> {
         let armies = storeProfile.getState().armies;
         // Obtenemos el ejército a eliminar
         let army = armies[storeProfile.getState().selectedArmy];
-        console.log(JSON.stringify(army));
         // Filtramos el ejército de la lista
         armies = armies.filter(armyList => armyList.name != army.name);
         // Finalmente guardamos el conjunto de ejércitos
@@ -546,7 +535,6 @@ export class Profile extends React.Component<any, any> {
             name: this.state.username,
             googleId: this.props.parentObject.state.clientId
         };
-        console.log(profile.googleId);
         // Una vez tengamos el perfil convertido, procedemos a guardarlo
         Network.saveProfileNameToServer(profile, (statusCode: { status: boolean, error: string }) => {
             // Vemos cómo ha salido la operación
@@ -591,7 +579,6 @@ export class Profile extends React.Component<any, any> {
         } = {
             armies: storeProfile.getState().armies // Iteramos por los ejércitos
                 .map(army => { // Lo convertiremos en un map que almacena los datos
-                    console.log("Valor del nombre del batallon en el perfil actual "+army.name);
                     return {
                         id: 0, // Los ids de los ejércitos serán 0, al estar creandose
                         name: army.name,
@@ -601,7 +588,6 @@ export class Profile extends React.Component<any, any> {
             // Incluimos el id del usuario de Google
             googleId: this.props.parentObject.state.clientId
         };
-        console.log(profile.googleId);
         // Una vez tengamos el perfil convertido, procedemos a guardarlo
         Network.saveProfileToServer(profile, (error: { status: boolean, error: string }) => {
             // Vemos cómo ha salido la operación
