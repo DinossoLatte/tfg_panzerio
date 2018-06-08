@@ -29,7 +29,7 @@ server.on('connection', function connect(ws: webSocket) {
     ws.on("close", () => {
         let gameId = null;
         for(let gameIndex in games) {
-            if(games[gameIndex] && ws == games[gameIndex].player1URL || ws == games[gameIndex].player2URL) {
+            if(games[gameIndex] && (ws == games[gameIndex].player1URL || ws == games[gameIndex].player2URL)) {
                 // Encontramos el juego del que ha salido un jugador
                 gameId = gameIndex;
                 break;
@@ -38,12 +38,12 @@ server.on('connection', function connect(ws: webSocket) {
         if(gameId != null) {
             if(games[gameId].player1URL == ws) {
                 games[gameId].player1URL = undefined;
-                if(games[gameId].player1FinishedSelection || games[gameId].player2FinishedSelection) {
+                if((games[gameId].player1FinishedSelection || games[gameId].player2FinishedSelection) && games[gameId].player2URL) {
                     games[gameId].player2URL.send(JSON.stringify({ status: false }));
                 }
             } else {
                 games[gameId].player2URL = undefined;
-                if(games[gameId].player1FinishedSelection || games[gameId].player2FinishedSelection) {
+                if((games[gameId].player1FinishedSelection || games[gameId].player2FinishedSelection) && games[gameId].player1URL) {
                     games[gameId].player1URL.send(JSON.stringify({ status: false }));
                 }
             }

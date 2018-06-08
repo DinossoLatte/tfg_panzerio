@@ -862,8 +862,11 @@ export class Network {
                 } else {
                     // Se comprueba la respuesta, generalmente será correcta
                     let result = JSON.parse(message.data);
+                    console.dir(result);
                     // Vemos el resultado
-                    if(result.status) {
+                    if(result.status == false) {
+                        callback({ status: false, error: "Disconnected", state: store.getState() });
+                    } else {
                         // Si es correcto, obtenemos el estado y llamamos al callback
                         let newState = Network.parseStateFromServer(JSON.stringify(result.state));
                         callback({ status: true, error: "Success", state: newState });

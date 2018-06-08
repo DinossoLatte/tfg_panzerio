@@ -333,7 +333,7 @@ export var Reducer: Redux.Reducer<State> =
                         } else {
                             // En caso contrario avisaremos al cliente
                             // Y indicaremos que la conexión ha fallado y que debe reiniciar la pestaña
-                            window.alert("No se ha podido enviar la información al servidor, por favor, recargue esta pestaña para continuar");
+                            window.alert("El otro jugador se ha desconectado de la partida");
                         }
                     })
                     actualstate = 1;
@@ -375,11 +375,10 @@ export var Reducer: Redux.Reducer<State> =
                         if (statusCode.status) {
                             // Si ha salido bien, llamaremos al nuevo estado
                             saveState(Actions.generateNewStateFromServer(statusCode.state));
-                            // TODO Comprobación del estado
                         } else {
                             // En caso contrario avisaremos al cliente
                             // Y indicaremos que la conexión ha fallado y que debe reiniciar la pestaña
-                            window.alert("No se ha podido enviar la información al servidor, por favor, recargue esta pestaña para continuar");
+                            window.alert("Se ha producido un error al intentar enviar la información.");
                         }
                     })
                     actualstate = 2;
@@ -450,7 +449,7 @@ export var Reducer: Redux.Reducer<State> =
                     } else {
                         // En caso contrario avisaremos al cliente
                         // Y indicaremos que la conexión ha fallado y que debe reiniciar la pestaña
-                        window.alert("No se ha podido enviar la información al servidor, por favor, recargue esta pestaña para continuar");
+                        window.alert("El oponente ha salido de la partida. La partida ha finalizado.");
                     }
                 })
                 return {
