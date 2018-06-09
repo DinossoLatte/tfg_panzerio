@@ -11,7 +11,20 @@ import { Pair, Cubic, myIndexOf, CUBIC_DIRECTIONS, myIndexOfCubic, Pathfinding, 
 import { UnitCell } from './UnitCell';
 import { UnitStats } from './UnitStats';
 import { EditStats } from './EditStats';
-import { Terrain, Plains, ImpassableMountain, Hills, Forest, River, TERRAINS, TERRAINS_ESP } from './Terrains';
+import { Terrain, Plains, ImpassableMountain, Hills, Forest, River, TERRAINS, TERRAINS_ESP, TERRAINS_CREATE, TERR_CREATE} from './Terrains';
+
+const editMapText = "Edición del mapa";
+const nameText = "Nombre";
+const backText = "Volver atrás";
+const createTerrainText = "Crear terreno";
+const selectTypeText = "Selecciona el tipo del terreno: ";
+const selectedTerrain = "Terreno seleccionado:";
+const selectText = "--Selecciona--";
+const noneText = "Ninguno";
+const saveText = "Guardar mapa";
+const terrainListText = TERRAINS_ESP;
+const mapWithoutName = "Mapa sin nombre";
+const saveAlertText = "Se ha guardado correctamente el mapa";
 
 export class EditMap extends React.Component<any, any> {
     editStats: EditStats = null;
@@ -37,7 +50,6 @@ export class EditMap extends React.Component<any, any> {
     /** Renderiza el mapa **/
     render() {
         if(this.props.selected!=null){
-            console.log("Entra en el else: valor del selected: "+this.props.selected);
             //Solo se ejecutara una vez
             if(this.state.request<2){
                 this.getMapFromServer({id: Number(this.props.selected)},(error: { status: boolean, errorCode: string, retmap: Array<Terrain> })=>{});
@@ -47,19 +59,19 @@ export class EditMap extends React.Component<any, any> {
         // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
         return (
             <div className="jumbotron text-center">
-                <h4> Edición del mapa <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>Volver atrás</button></h4>
-                <label> Nombre: <input className="form-control" type="text" value={this.state.name} onChange={evt => this.updateInput(evt.target.value)} /></label>
+                <h4> {editMapText} <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>{backText}</button></h4>
+                <label> {nameText} <input className="form-control" type="text" value={this.state.name} onChange={evt => this.updateInput(evt.target.value)} /></label>
                 <div>
-                    {storeEdit.getState().type!=1?<button className="btn btn-primary btn-sm" id="terrainButton" name="terrainButton" onClick={this.onClickCreateTerrain.bind(this)}>Crear terreno</button>:""}
+                    {storeEdit.getState().type!=1?<button className="btn btn-primary btn-sm" id="terrainButton" name="terrainButton" onClick={this.onClickCreateTerrain.bind(this)}>{createTerrainText}</button>:""}
                     {storeEdit.getState().type==1?<div>
-                        <label> Selecciona el tipo de terreno:
+                        <label> {selectTypeText}
                             <select className="form-control" defaultValue={null} value={storeEdit.getState().selected} onChange={evt => this.selected(evt.target.value)}>
                                 {this.selectOptionsTerrains()}
                             </select>
                         </label>
-                        {storeEdit.getState().type==1?<p id="bold">Terreno seleccionado: {storeEdit.getState().selected!=null&&storeEdit.getState().selected!="--Selecciona--"?storeEdit.getState().selected:"Ninguno"} </p>:""}
+                        {storeEdit.getState().type==1?<p id="bold">{selectedTerrain} {storeEdit.getState().selected!=null&&storeEdit.getState().selected!=selectText?storeEdit.getState().selected:noneText} </p>:""}
                     </div>:""}
-                    <button className="btn btn-primary btn-sm" id="generateButton" name="generateButton" onClick={this.onClickGenerateMap.bind(this)}>Guardar mapa</button>
+                    <button className="btn btn-primary btn-sm" id="generateButton" name="generateButton" onClick={this.onClickGenerateMap.bind(this)}>{saveText}</button>
                 </div>
                 <div className="row">
                     <EditStats map={this}/>
@@ -83,8 +95,7 @@ export class EditMap extends React.Component<any, any> {
         connection.onmessage = function(event: MessageEvent) {
             // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
             // el comando se haya entendido
-            console.log("Datos "+JSON.stringify(event.data));
-            let data = Network.parseMapServer(event.data);
+            let data = Network.parseMapServerEdit(event.data);
             if(event.data == "Command not understood") {
                 // Lanzamos un error
                 console.log("Error when attempting to save, server didn't understood request");
@@ -104,7 +115,7 @@ export class EditMap extends React.Component<any, any> {
             }
         };
         connection.send(JSON.stringify({
-            tipo: "getMap",
+            tipo: "getMapEdit",
             mapData: mapData.id
         }));
     }
@@ -115,9 +126,9 @@ export class EditMap extends React.Component<any, any> {
     }
 
     selectOptionsTerrains(){
-        let army = [<option selected value={null}>--Selecciona--</option>];
+        let army = [<option selected value={null}>{selectText}</option>];
         for(var i = 0; i < TERRAINS.length; i++){
-            army.push(<option value={TERRAINS[i]}>{TERRAINS_ESP[i]}</option>);
+            army.push(<option value={TERRAINS[i]}>{terrainListText[i]}</option>);
         }
         return army;
     }
@@ -142,7 +153,7 @@ export class EditMap extends React.Component<any, any> {
         let terrains = storeEdit.getState().terrains;
         let name =  this.state.name.trim();
         if(name.trim()==""){
-            name = "Mapa sin nombre";
+            name = {mapWithoutName};
         }
         let jsonResult = {
             id: this.state.selected,
@@ -166,14 +177,13 @@ export class EditMap extends React.Component<any, any> {
             name: name,
             selected: this.state.selected
         });
-        window.alert("Se ha guardado correctamente el perfil");
+        window.alert(saveAlertText);
     }
 
     //Igual que en Map solo que se actualiza el cursor del estado de edición
     onKey(keyEvent : React.KeyboardEvent<HTMLElement>) {
         let keyCode = keyEvent.key;
         let cursorPosition, newCursorPosition : Pair;
-        console.log("KeyCode: "+keyCode);
         switch(keyCode) {
             case 'Escape':
                 this.props.parentObject.changeGameState(0); // Retornamos al menu.
@@ -259,23 +269,8 @@ export class EditMap extends React.Component<any, any> {
         let terrain: Terrain;
         let array = storeEdit.getState().terrains;
         // Obtenemos el nuevo terreno a reemplazar/crear
-        switch(storeEdit.getState().selected) {
-            case "Plains":
-                terrain = Plains.create(newPosition);
-                break;
-            case "Mountains":
-                terrain = ImpassableMountain.create(newPosition);
-                break;
-            case "Hills":
-                terrain = Hills.create(newPosition);
-                break;
-            case "Forest":
-                terrain = Forest.create(newPosition);
-                break;
-            case "River":
-                terrain = River.create(newPosition);
-            default:
-        };
+        const sel : keyof TERR_CREATE = storeEdit.getState().selected;
+        terrain = TERRAINS_CREATE[sel].create(newPosition);
 
         // Comprobamos si la posición está ocupada
         if(terrainIndex > -1) {

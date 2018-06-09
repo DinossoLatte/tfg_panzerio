@@ -8,6 +8,9 @@ import { UnitCell } from './UnitCell';
 import { Pair, myIndexOf } from './Utils';
 import * as Terrain from './Terrains';
 
+const baseRoute = "imgs/hex_base";
+const numpadRoute = baseRoute+"_numpad";
+
 /**
     Esta clase consiste en la representación de una casilla dentro del mapa
     @constructor Incluye los atributos HTML: horizontal y vertical.
@@ -47,16 +50,16 @@ class Cell extends React.Component<any, any> {
                 <div className="div_cell">
                     <img className="cell" id={"hex"+this.props.row+"_"+this.props.column}
                         src={
-                            cursor?isUnitUsed?"imgs/hex_base_numpad_used.png"
-                                :isUnitSelected?"imgs/hex_base_numpad_actual.png"
-                                :isUnitAttackable?"imgs/hex_base_numpad_attack.png"
-                                :isCellVisitable?"imgs/hex_base_numpad_selected.png"
-                                :"imgs/hex_base_numpad.png"
-                            :isUnitUsed?"imgs/hex_base_used.png"
-                            :isUnitSelected?"imgs/hex_base_actual.png"
-                            :isUnitAttackable?"imgs/hex_base_attack.png"
-                            :isCellVisitable?"imgs/hex_base_selected.png"
-                            :"imgs/hex_base.png"} />
+                            cursor?isUnitUsed?numpadRoute+"_used.png"
+                                :isUnitSelected?numpadRoute+"_actual.png"
+                                :isUnitAttackable?numpadRoute+"_attack.png"
+                                :isCellVisitable?numpadRoute+"_selected.png"
+                                :numpadRoute+".png"
+                            :isUnitUsed?baseRoute+"_used.png"
+                            :isUnitSelected?baseRoute+"_actual.png"
+                            :isUnitAttackable?baseRoute+"_attack.png"
+                            :isCellVisitable?baseRoute+"_selected.png"
+                            :baseRoute+".png"} />
                     <TerrainCell terrain={this.state.terrain} />
                     {unit!=null?<UnitCell unit={unit} />:""}
                 </div>

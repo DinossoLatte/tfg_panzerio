@@ -8,132 +8,171 @@ import * as Units from '../src/Unit';
 import * as Utils from '../src/Utils';
 import * as Terrains from '../src/Terrains';
 import * as GameState from './GameState';
-import * as Store from './Store';
 import * as GameEditState from './GameEditState';
 import * as StoreEdit from './StoreEdit';
 import * as GameProfileState from './GameProfileState';
 import * as StoreProfile from './StoreProfile';
 import * as UtilsServer from './UtilsServer';
+import * as StoreMenu from './StoreMenu';
+
 import { Actions } from '../src/GameState';
 import { Pair } from './Utils';
 import { Terrain } from '../src/Terrains';
-import { resetInitialState } from './GameState';
+import { getInitialState } from './GameState';
+import { Game } from './Game';
 
 var server = new webSocket.Server({ port: 8080 });
-var player1URL, player2URL;
-var firstPlayer = undefined;
-var player1FinishedSelection = false;
-var player2FinishedSelection = false;
+var games : Map<string, Game> = new Map<string, Game>();
 
-server.on('connection', function connect(ws) {
+server.on('connection', function connect(ws: webSocket) {
     // Este será el inicio del servidor, por ahora nos encargaremos de mostrarle el estado
-    console.log("Conected with client");
-    // Inicialización del servidor
-    if(player1URL == undefined) {
-        console.log("Conecta user 1");
-        player1URL = ws;
-    } else if(player2URL == undefined) {
-        console.log("Conecta user 2");
-        player2URL = ws;
-    }
     ws.on("close", () => {
-        if(player1URL == ws) {
-            player1URL = undefined;
-            if(player1FinishedSelection || player2FinishedSelection) {
-                player2URL.send(JSON.stringify({ status: false }));
+        let gameId = null;
+        for(let gameIndex in games) {
+            if(games[gameIndex] && (ws == games[gameIndex].player1URL || ws == games[gameIndex].player2URL)) {
+                // Encontramos el juego del que ha salido un jugador
+                gameId = gameIndex;
+                break;
             }
-        } else {
-            player2URL = undefined;
-            if(player1FinishedSelection || player2FinishedSelection) {
-                player1URL.send(JSON.stringify({ status: false }));
+        }
+        if(gameId != null) {
+            if(games[gameId].player1URL == ws) {
+                games[gameId].player1URL = undefined;
+                if((games[gameId].player1FinishedSelection || games[gameId].player2FinishedSelection) && games[gameId].player2URL) {
+                    games[gameId].player2URL.send(JSON.stringify({ status: false }));
+                }
+            } else {
+                games[gameId].player2URL = undefined;
+                if((games[gameId].player1FinishedSelection || games[gameId].player2FinishedSelection) && games[gameId].player1URL) {
+                    games[gameId].player1URL.send(JSON.stringify({ status: false }));
+                }
             }
         }
     })
     ws.on("message", function getInitialState(data) {
-        console.log("Got following action: " + data);
         // Dependiendo del estado, retornaremos una cosa u otra
         let message = JSON.parse(data as string);
+        // Debido a la forma de compilar el programa, es necesario declarar aqui el id del mensaje, aun cuando este no deba aparecer en el mensaje.
+        let gameId = message.id;
+        let game;
         switch (message.tipo) {
-            case "getInitialState":
-                var state;
-                console.log("Primer jugador: "+firstPlayer);
-                if(firstPlayer == undefined) {
-                    firstPlayer = ws;
-                    // Retornaremos el estado inicial
-                    state = {
-                        turn: 0,
-                        actualState: 0,
-                        units: [],
-                        visitables: null,
-                        terrains: [Terrains.ImpassableMountain.create(new Utils.Pair(2, 2)), Terrains.ImpassableMountain.create(new Utils.Pair(3, 2)), Terrains.Hills.create(new Utils.Pair(2, 3)), Terrains.Forest.create(new Utils.Pair(3, 3))],
-                        cursorPosition: new Utils.Pair(0, 0),
-                        map: null,
-                        selectedUnit: null,
-                        width: 0,
-                        heigth: 0,
-                        type: "SET_LISTENER",
-                        // Como es el primero en conectar, es el 1er jugador
-                        isPlayer: true
-                    };
+            case "createGame":
+                // Creamos la partida con la conexión entrante
+                let game: Game = new Game(ws, GameState.getInitialState());
+                // Importante, las posibilidades de que el Id coincida son bajas, pero
+                // TODO Hacer un if para evitar sobreescribir la partida
+                let id = Game.generateRandomIdentifier();
+                games[id] = game;
+                ws.send(JSON.stringify({
+                    id: id
+                }));
+                break;
+            case "joinGame":
+                if(games[gameId]) {
+                    // Primero, vemos si la sala está vacia
+                    if(!games[gameId].player1URL && !games[gameId].player2URL) {
+                        // En cuyo caso, el jugador actual será el primero
+                        games[gameId].player1URL = ws;
+                        ws.send(JSON.stringify({ status: true, id: gameId }));
+                    } else {
+                        // Hemos encontrado el juego, vemos si hay posición disponible
+                        // Comprobamos si la partida ha finalizado
+                        if(games[gameId].currentState == 2 || games[gameId].currentState == 1) {
+                            // Si es el caso, avisamos que la partida está finalizada
+                            ws.send(JSON.stringify({ status: false, error: "Game is over or in progress" }));
+                        } else {
+                            if (!games[gameId].player2URL) {
+                                // Jugador actual es el jugador 2:
+                                games[gameId].player2URL = ws;
+                                ws.send(JSON.stringify({ status: true, id: gameId }));
+                            } else {
+                                // En caso contrario, avisamos de que la sala está ocupada
+                                ws.send(JSON.stringify({ status: false, error: "Game is full" }));
+                            }
+                        }
+                    }
                 } else {
-                    // Retorna el estado de la partida
-                    let storeState = Store.store.getState();
-                    state = {
-                        turn: storeState.turn,
-                        actualState: storeState.actualState,
-                        units: storeState.units,
-                        visitables: storeState.visitables,
-                        terrains: storeState.terrains,
-                        cursorPosition: storeState.cursorPosition,
-                        map: storeState.map,
-                        selectedUnit: storeState.selectedUnit,
-                        width: storeState.width,
-                        heigth: storeState.height,
-                        type: storeState.type,
-                        // Este es el segundo jugador
-                        isPlayer: false
-                    };
+                    // Enviamos error
+                    ws.send(JSON.stringify({ status: false, error: "Game not found" }));
                 }
-                ws.send(JSON.stringify(state));
+                break;
+            case "getInitialState":
+                if(gameId) {
+                    var state;
+                    if(games[gameId].firstPlayer == undefined) {
+                        games[gameId].firstPlayer = ws;
+                        // Retornaremos el estado inicial
+                        state = {
+                            turn: 0,
+                            actualState: 0,
+                            units: [],
+                            visitables: null,
+                            terrains: [Terrains.ImpassableMountain.create(new Utils.Pair(2, 2)), Terrains.ImpassableMountain.create(new Utils.Pair(3, 2)), Terrains.Hills.create(new Utils.Pair(2, 3)), Terrains.Forest.create(new Utils.Pair(3, 3))],
+                            cursorPosition: new Utils.Pair(0, 0),
+                            map: null,
+                            selectedUnit: null,
+                            width: 0,
+                            heigth: 0,
+                            type: "SET_LISTENER",
+                            // Como es el primero en conectar, es el 1er jugador
+                            isPlayer: true,
+                            id: gameId
+                        };
+                    } else {
+                        // Retorna el estado de la partida
+                        let storeState = games[gameId].getState();
+                        state = {
+                            turn: storeState.turn,
+                            actualState: storeState.actualState,
+                            units: storeState.units,
+                            visitables: storeState.visitables,
+                            terrains: storeState.terrains,
+                            cursorPosition: storeState.cursorPosition,
+                            map: storeState.map,
+                            selectedUnit: storeState.selectedUnit,
+                            width: storeState.width,
+                            heigth: storeState.height,
+                            type: storeState.type,
+                            // Este es el segundo jugador
+                            isPlayer: false,
+                            id: gameId
+                        };
+                        games[gameId].currentState = 1; // Cambiamos el estado del juego a en progreso.
+                    }
+                    // Creamos la partida
+                    ws.send(JSON.stringify(state));
+                }
+
                 break;
             // Este se llamará cuando se quiera sincronizar el estado del cliente con el servidor
             case "SYNC_STATE":
                 // Nos aseguramos de que el estado es el final para ambos
-                if(player1FinishedSelection && player2FinishedSelection) {
-                    player1URL.send(JSON.stringify({
-                        status: true,
-                        state: Store.store.getState()
-                    }));
-                    player2URL.send(JSON.stringify({
-                        status: true,
-                        state: Store.store.getState()
-                    }));
+                if(gameId) {
+                    game = games[gameId];
+                    if(game.player1FinishedSelection && game.player2FinishedSelection) {
+                        game.player1URL.send(JSON.stringify({
+                            status: true,
+                            state: game.getState()
+                        }));
+                        game.player2URL.send(JSON.stringify({
+                            status: true,
+                            state: game.getState()
+                        }));
+                    }
+                } else {
+                    // En este caso, el mensaje no contiene Id, debería informarse al cliente del error.
                 }
                 break;
             case "SAVE_MAP":
-                let actmap = GameState.parseActionMap(message);
-                console.dir(actmap);
-                //Guardamos el estado
-                Store.saveState(actmap);
-                //Enviamos el nuevo estado
-                ws.send(JSON.stringify(Store.store.getState()));
+                if(gameId) {
+                    let actmap = GameState.parseActionMap(message);
+                    //Guardamos el estado
+                    games[gameId].store.saveState(actmap);
+                    //Enviamos el nuevo estado
+                    ws.send(JSON.stringify(games[gameId].getState()));
+                    break;
+                }
                 break;
-            /* TODO temporalmente lo quito ya que se guardará en servidor el estado, no lo veo necesario aqui
-            case "SAVE_EDIT":
-                let actedit = GameEditState.parseActionMap(message);
-                //Guardamos el estado
-                StoreEdit.saveState(actedit);
-                //Enviamos el nuevo estado
-                ws.send(JSON.stringify(StoreEdit.storeEdit.getState()));
-                break;
-
-            case "SAVE_PROFILE":
-                let actprofile = GameProfileState.parseActionMap(message);
-                //Guardamos el estado
-                StoreProfile.saveState(actprofile);
-                //Enviamos el nuevo estado
-                ws.send(JSON.stringify(StoreProfile.storeProfile.getState()));
-                break;*/
             //Borrado del mapa
             case "deleteMap":
                 // Obtenemos los datos de la petición
@@ -182,12 +221,10 @@ server.on('connection', function connect(ws) {
                 // Obtenemos los datos de la petición
                 let getMapvar = message.mapData;
                 // Obtenemos el mapa
-                console.log(JSON.stringify(getMapvar));
                 UtilsServer.MapsDatabase.getMap(getMapvar, (code: { status: boolean, error: string,  map: { rows: number, columns: number, mapName: string,
                     terrains: {name: string, image: string, movement_penalty: number, position_row: number, position_cols: number,
                          defense_weak: number, defense_strong: number, attack_weak: number, attack_strong: number}[]} }) => {
                     // Si hay error
-                    console.log("server: "+code.status+","+code.error+","+JSON.stringify(code.map));
                     if(!code.status) {
                         // Entonces indicamos al receptor la obtención incorrecta del mapa
                         ws.send(JSON.stringify({
@@ -195,16 +232,15 @@ server.on('connection', function connect(ws) {
                             error: "Couldn't get map. Error: "+code.error,
                             map: null
                         }));
-                    } else {
+                    } else if(gameId) {
                         // En caso contrario, avisamos de la obtención correcta
-                        console.log("Mapa: "+code.map);
                         // Convertimos los terrenos en una interpretación válida de terrenos
                         let terrains = new Array();
                         for(let index in code.map.terrains) {
                             let terrainJson = code.map.terrains[index];
                             terrains.push(new Terrain(terrainJson.name, terrainJson.image, terrainJson.movement_penalty, new Pair(terrainJson.position_row, terrainJson.position_cols), terrainJson.defense_weak, terrainJson.defense_strong, terrainJson.attack_weak, terrainJson.attack_strong));
                         }
-                        Store.saveState({
+                        games[gameId].store.saveState({
                             type: "UPDATE_MAP",
                             height: code.map.rows,
                             width: code.map.columns,
@@ -219,11 +255,9 @@ server.on('connection', function connect(ws) {
                 });
                 break;
             case "getMapId":
-                console.log("mapclient: "+JSON.stringify(message.mapclient));
                 // Obtenemos los id de los mapas
                 UtilsServer.MapsDatabase.getMapId(message.mapclient, (code: { status: boolean, error: string,  mapId: number[], mapName: string[] }) => {
                     // Si hay error
-                    console.log("server: "+code.status+","+code.error+","+code.mapId);
                     if(!code.status) {
                         // Entonces indicamos al receptor que se han obtenido mal
                         ws.send(JSON.stringify({
@@ -247,7 +281,6 @@ server.on('connection', function connect(ws) {
                 // Obtenemos los id de los mapas
                 UtilsServer.ProfileDatabase.getArmyId(message.armyclient, (code: { status: boolean, error: string,  armyId: number[], armyName: string[] }) => {
                     // Si hay error
-                    console.log("server: "+code.status+","+code.error+","+code.armyId);
                     if(!code.status) {
                         // Entonces indicamos al receptor que se han obtenido mal
                         ws.send(JSON.stringify({
@@ -269,10 +302,8 @@ server.on('connection', function connect(ws) {
                 break;
             case "getUnits":
                 // Obtenemos los id de los mapas
-                console.log("--- Valor del armyclient en servidor: "+ message.armyclient);
                 UtilsServer.ProfileDatabase.getUnits(message.armyclient, (code: { status: boolean, error: string,  units: {type: string, number: number}[], armyId: number }) => {
                     // Si hay error
-                    console.log("server: "+code.status+","+code.error+","+code.units);
                     if(!code.status) {
                         // Entonces indicamos al receptor que se han obtenido mal
                         ws.send(JSON.stringify({
@@ -281,17 +312,16 @@ server.on('connection', function connect(ws) {
                             units: null,
                             armyId: null
                         }));
-                    } else {
-                        console.dir(Utils.Network.parseArmy(code.units, message.side));
-                        Store.saveState({
+                    } else if(gameId) {
+                        games[gameId].store.saveState({
                             type: "UPDATE_UNITS",
-                            units: Store.store.getState().units.concat(Utils.Network.parseArmy(code.units, message.side))
+                            units: games[gameId].getState().units.concat(Utils.Network.parseArmy(code.units, message.side))
                         });
                         // Actualizamos el estado del jugador
                         if(message.side) {
-                            player1FinishedSelection = true;
+                            games[gameId].player1FinishedSelection = true;
                         } else {
-                            player2FinishedSelection = true;
+                            games[gameId].player2FinishedSelection = true;
                         }
                         // En caso contrario, avisamos de que se han obtenido correctamente
                         ws.send(JSON.stringify({
@@ -300,6 +330,8 @@ server.on('connection', function connect(ws) {
                             units: code.units,
                             armyId: code.armyId
                         }));
+                    } else {
+                        // TODO Añadir tratamiento de no Id en el mensaje.
                     }
                 });
                 break;
@@ -315,15 +347,25 @@ server.on('connection', function connect(ws) {
                 // Confirma que el jugador ha terminado su turno.
                 // Devolveremos el estado final, para sincronizarlo con el jugador
                 // Primero, comprobamos la conexión actual
-                if(player1URL == ws) {
-                    // Entonces, esperamos al jugador 2
-                    // Avisamoa al usuario 2
-                    player2URL.send(JSON.stringify({ status: true, state: Store.store.getState() }));
-                } else {
-                    // Es el jugador 2, le enviamos al 1 el estado
-                    player1URL.send(JSON.stringify({ status: true, state: Store.store.getState() }));
+                if(gameId) {
+                    if(games[gameId].player1URL == ws) {
+                        // Entonces, esperamos al jugador 2
+                        // Comprobamos que el usuario 2 no se haya ido de la partida
+                        if(games[gameId].player2URL == undefined) {
+                            games[gameId].player1URL.send(JSON.stringify({ status: false, state: games[gameId].getState() }));
+                        } else {
+                            // En caso contrario, esperamos al usuario 2
+                            games[gameId].player2URL.send(JSON.stringify({ status: true, state: games[gameId].getState() }));
+                        }
+                    } else {
+                        // Misma comprobación del jugador 1
+                        if(games[gameId].player1URL == undefined) {
+                            games[gameId].player1URL.send(JSON.stringify({ status: false, state: games[gameId].getState() }));
+                        } else {
+                            games[gameId].player1URL.send(JSON.stringify({ status: true, state: games[gameId].getState() }));
+                        }
+                    }
                 }
-
                 break;
             case "logIn":
                 // Este caso se llamará cuando el cliente haga inicio de sesión
@@ -338,10 +380,8 @@ server.on('connection', function connect(ws) {
                 };
                 //Obtenemos el perfil
                 UtilsServer.ProfileDatabase.getProfile(logprofile, (statusCode: { status: boolean, error: string, name: string, gamesWon: number, gamesLost: number }) => {
-                    console.log("valor de error y name "+statusCode.error+", "+statusCode.name);
                     //Sino existe entonces se crea un nuevo perfil
                     if(statusCode.name==null){
-                        console.log("entra en el primer if");
                         let initialprofile: {
                             id: number,
                             name: string,
@@ -359,7 +399,6 @@ server.on('connection', function connect(ws) {
                             googleId: token
                         };
                         UtilsServer.ProfileDatabase.saveProfile(initialprofile, (status: UtilsServer.StatusCode) => {
-                            console.log("statusCode "+status.status);
                         });
                     }
                 });
@@ -375,7 +414,6 @@ server.on('connection', function connect(ws) {
                 let getprofile = message.profile;
                 UtilsServer.ProfileDatabase.getProfile(getprofile, (statusCode: { status: boolean, error: string, name: string, gamesWon: number, gamesLost: number }) => {
                     // Devolveremos el contenido de la petición
-                    console.log("valor del name en server: "+statusCode.name);
                     ws.send(JSON.stringify(statusCode));
                 });
                 break;
@@ -384,7 +422,6 @@ server.on('connection', function connect(ws) {
                 let getprofileid = message.profile;
                 UtilsServer.ProfileDatabase.getProfileId(getprofileid, (statusCode: { status: boolean, error: string, id: number }) => {
                     // Devolveremos el contenido de la petición
-                    console.log("valor del name en server: "+statusCode.id);
                     ws.send(JSON.stringify(statusCode));
                 });
                 break;
@@ -399,7 +436,6 @@ server.on('connection', function connect(ws) {
             case "saveProfileName":
                 // Extraemos el perfil
                 let saveprofilename = message.profile;
-                console.log("<=====> Llama a saveProfileName");
                 UtilsServer.ProfileDatabase.saveProfileName(saveprofilename, (statusCode: UtilsServer.StatusCode) => {
                     // Devolveremos el contenido de la petición
                     ws.send(JSON.stringify(statusCode));
@@ -408,39 +444,128 @@ server.on('connection', function connect(ws) {
             case "updateProfile":
                 // Extraemos el perfil
                 let updateprofile = message.profile;
-                console.log("llega a updateprofile");
                 UtilsServer.ProfileDatabase.updateProfile(updateprofile, (statusCode: UtilsServer.StatusCode) => {
-                    console.log("ejecuta el updateprofile");
                     // Devolveremos el contenido de la petición
                     ws.send(JSON.stringify(statusCode));
                 });
                 break;
             case "exitPreGame":
-                // Primero vemos quién ha enviado la salida
-                if(ws == player1URL) {
-                    // Quitamos todo lo relacionado con este jugador
-                    player1FinishedSelection = false;
-                    // Si el primer jugador no ha salido de la partida, se convierte en el primer jugador
-                    player2URL.send(JSON.stringify({ status: false }));
-                } else {
-                    // Igual que el caso anterior
-                    player2FinishedSelection = false;
-                    // Avisamos al otro usuario
-                    player1URL.send(JSON.stringify({ status: false }));
+                if(gameId) {
+                    // Primero vemos quién ha enviado la salida
+                    if(ws == games[gameId].player1URL) {
+                        // Quitamos todo lo relacionado con este jugador
+                        games[gameId].player1FinishedSelection = false;
+                        games[gameId].player1URL = undefined;
+                        // Reiniciamos el estado inicial
+                        games[gameId].firstPlayer = games[gameId].player2URL;
+                        // Si el primer jugador no ha salido de la partida, se convierte en el primer jugador
+                        if(games[gameId].player2URL) {
+                            games[gameId].player2URL.send(JSON.stringify({ status: false }));
+                        } else {
+                            // Eliminamos la partida, ya que no habrá más usuarios
+                            games[gameId] = undefined;
+                        }
+                    } else {
+                        // Igual que el caso anterior
+                        games[gameId].player2FinishedSelection = false;
+                        games[gameId].player2URL = undefined;
+                        // Reiniciamos el estado inicial
+                        games[gameId].firstPlayer = games[gameId].player1URL;
+                        // Avisamos al otro usuario
+                        if(games[gameId].player1URL) {
+                            games[gameId].player1URL.send(JSON.stringify({ status: false }));
+                        } else {
+                            // Eliminamos la partida, ya que no habrá más usuarios
+                            games[gameId] = undefined;
+                        }
+                    }
+                    // Actualizamos el estado, si no hay jugadores el juego ha terminado
+                    if(games[gameId]) {
+                        games[gameId].currentState = 2;
+                    }
+                    // Y Confirmamos la realización correcta
+                    ws.send(JSON.stringify({
+                        status: true,
+                        message: "Success"
+                    }));
                 }
-                // Reiniciamos el estado inicial
-                firstPlayer = undefined;
-                Store.store.dispatch({
-                    type: "resetState"
-                })
-                // Y Confirmamos la realización correcta
-                ws.send(JSON.stringify({
+                break;
+            case "getGames":
+                let result = Utils.Parsers.stringifyCyclicObject({
                     status: true,
-                    message: "Success"
+                    games: games
+                });
+                // Obtenemos los juegos que estén en funcionamiento.
+                ws.send(Utils.Parsers.stringifyCyclicObject({
+                    status: true,
+                    games: games
                 }));
                 break;
+            case "getMapEdit":
+                // Obtenemos los datos de la petición
+                let getMapvarMenu = message.mapData;
+                // Obtenemos el mapa
+                UtilsServer.MapsDatabase.getMap(getMapvarMenu, (code: { status: boolean, error: string,  map: { rows: number, columns: number, mapName: string,
+                    terrains: {name: string, image: string, movement_penalty: number, position_row: number, position_cols: number,
+                         defense_weak: number, defense_strong: number, attack_weak: number, attack_strong: number}[]} }) => {
+                    // Si hay error
+                    if(!code.status) {
+                        // Entonces indicamos al receptor la obtención incorrecta del mapa
+                        ws.send(JSON.stringify({
+                            status: false,
+                            error: "Couldn't get map. Error: "+code.error,
+                            map: null
+                        }));
+                    } else {
+                        // En caso contrario, avisamos de la obtención correcta
+                        // Convertimos los terrenos en una interpretación válida de terrenos
+                        let terrains = new Array();
+                        for(let index in code.map.terrains) {
+                            let terrainJson = code.map.terrains[index];
+                            terrains.push(new Terrain(terrainJson.name, terrainJson.image, terrainJson.movement_penalty, new Pair(terrainJson.position_row, terrainJson.position_cols), terrainJson.defense_weak, terrainJson.defense_strong, terrainJson.attack_weak, terrainJson.attack_strong));
+                        }
+                        StoreMenu.saveState({
+                            type: "UPDATE_MAP",
+                            height: code.map.rows,
+                            width: code.map.columns,
+                            terrains: terrains
+                        });
+                        ws.send(JSON.stringify({
+                            status: true,
+                            error: "Got successfully",
+                            map: code.map
+                        }))
+                    }
+                });
+                break;
+            case "getUnitsMenu":
+                // Obtenemos los id de los mapas
+                UtilsServer.ProfileDatabase.getUnits(message.armyclient, (code: { status: boolean, error: string,  units: {type: string, number: number}[], armyId: number }) => {
+                    // Si hay error
+                    if(!code.status) {
+                        // Entonces indicamos al receptor que se han obtenido mal
+                        ws.send(JSON.stringify({
+                            status: false,
+                            error: "Couldn't get map. Error: "+code.error,
+                            units: null,
+                            armyId: null
+                        }));
+                    } else {
+                        StoreMenu.saveState({
+                            type: "UPDATE_UNITS",
+                            units: StoreMenu.store.getState().units.concat(Utils.Network.parseArmy(code.units, message.side))
+                        })
+                        // En caso contrario, avisamos de que se han obtenido correctamente
+                        ws.send(JSON.stringify({
+                            status: true,
+                            error: "Got successfully",
+                            units: code.units,
+                            armyId: code.armyId
+                        }));
+                    }
+                });
+                break;
             default:
-                console.warn("Action sent not understood! Type is " + message.tipo);
                 ws.send("Command not understood");
                 break;
         }

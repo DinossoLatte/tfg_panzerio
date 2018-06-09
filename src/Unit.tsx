@@ -1,6 +1,8 @@
 import { Pair } from './Utils';
 import { Terrain } from './Terrains';
 
+//Para crear una nueva unidad se crea una nueva clase para que sea llamada para la creación de la unidad y se añade en las constantes que se encuentra al final de este código
+
 export class Unit {
     name: string;
     type: string; // Imagen de la unidad
@@ -65,6 +67,8 @@ export class Unit {
         return healthRemoved;
     }
 }
+
+
 
 export class Infantry extends Unit {
     static create(position: Pair, player: boolean) : Unit {
@@ -151,6 +155,7 @@ export class Artillery extends Unit {
     }
 }
 
+//Una vez creada una nueva clase para una unidad es necesario añadirlo en estas constante e interfaz para que se refleje en toda la aplicación
 export const UNITS = [
     "General", "Infantry", "Tank",
     "Artillery", "Paratrooper"
@@ -160,3 +165,20 @@ export const UNITS_ESP = [
     "General", "Infantería", "Tanque",
     "Artillería", "Paracaidista"
 ];
+
+export interface UNIT_CREATE {
+    [sel: string]: any;
+    General: typeof General;
+    Infantry: typeof Infantry;
+    Tank: typeof Tank;
+    Artillery: typeof Artillery;
+    Paratrooper: typeof Paratrooper;
+}
+
+export const UNITS_CREATE : UNIT_CREATE = {
+    General : General,
+    Infantry: Infantry,
+    Tank: Tank,
+    Artillery: Artillery,
+    Paratrooper: Paratrooper,
+}

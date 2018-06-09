@@ -1,5 +1,7 @@
 import { Pair } from './Utils';
 
+//Para crear un nuevo terreno se crea una nueva clase para que sea llamada para la creación del terreno y se añade en las constantes que se encuentra al final de este código
+
 export class Terrain {
     name: string;
     image: string; // Imagen del terreno
@@ -54,6 +56,7 @@ export class River extends Terrain {
     }
 }
 
+//Una vez creada una nueva clase para un terreno es necesario añadirlo en estas constante e interfaz para que se refleje en toda la aplicación
 export const TERRAINS = [
     "Plains", "Mountains", "Hills",
     "Forest", "River"
@@ -63,3 +66,20 @@ export const TERRAINS_ESP = [
     "Llanura", "Montaña", "Colina",
     "Bosque", "Río"
 ];
+
+export interface TERR_CREATE {
+    [sel: string]: any;
+    Plains: typeof Plains;
+    Mountains: typeof ImpassableMountain;
+    Hills: typeof Hills;
+    Forest: typeof Forest;
+    River: typeof River;
+}
+
+export const TERRAINS_CREATE : TERR_CREATE = {
+    Plains : Plains,
+    Mountains: ImpassableMountain,
+    Hills: Hills,
+    Forest: Forest,
+    River: River,
+}

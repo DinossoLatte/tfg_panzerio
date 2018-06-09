@@ -1,6 +1,6 @@
 import * as sqlite from 'sqlite3';
 
-import { Unit } from './Unit';
+import { Unit, UNITS_CREATE, UNIT_CREATE} from './Unit';
 import { store } from './Store';
 import { Terrain } from './Terrains';
 import { Army } from './Army';
@@ -11,6 +11,8 @@ import { State, Actions } from './GameState';
 import { StateEdit } from './GameEditState';
 import { StateProfile } from './GameProfileState';
 import * as Units from './Unit';
+
+//Aquí se encuentran clases útiles para todo el proyecto, desde el pair hasta conexión al servidor o parseadores de json, etc.
 
 export class Pair {
     row : any;
@@ -339,13 +341,13 @@ export class Pathfinding {
 // Esta clase contendrán métodos auxiliares con respecto a la conexión entre cliente y servidor
 export class Network {
     private static connection: WebSocket = undefined;
+    public static gameId: string = undefined;
 
     /// Esta función permitirá crear la conexión, con la idea de cambiar los parametros en el caso de cambio
     public static getConnection() {
         // Retornamos la conexión
         if(this.connection == undefined) {
-            console.log("Nueva conexión");
-            this.connection = new WebSocket("ws://localhost:8080");
+            this.connection = new WebSocket("ws://"+location.hostname+":8080");
         }
         return this.connection;
     }
@@ -365,7 +367,8 @@ export class Network {
             height: 5,
             width: 5,
             isTurn: true,
-            isPlayer: true
+            isPlayer: true,
+            id: ""
         };
         // Primero, convertimos el objeto en un mapa
         let json = JSON.parse(data);
@@ -398,6 +401,7 @@ export class Network {
         }
         // Finalmente, nos quedan los terrenos, mismo proceso
         result.terrains = this.parseMap(json.terrains);
+        result.id = json.id;
         // Retornamos el estado final
         return result;
     }
@@ -462,7 +466,6 @@ export class Network {
              attackWeak: number, attackStrong: number }
         >): Terrain[] {
         let result: Terrain[] = [];
-        console.dir(terrains);
         if(terrains) {
             result = terrains.map(terrain => new Terrain(terrain.name, terrain.image, terrain.movement_penalty,
                 new Pair(terrain.position.row, terrain.position.column), terrain.defenseWeak ,terrain.defenseStrong,
@@ -489,33 +492,73 @@ export class Network {
             while(unitsLeft > 0) {
                 // Dependiendo del tipo, se creará una unidad u otra
                 // Todas las unidades se crearán en la posición (-1, -1)
-                switch(pair.type) {
-                    case "General":
-                        units.push(Units.General.create(new Pair(-1, -1), side));
-                        break;
-                    case "Infantry":
-                        units.push(Units.Infantry.create(new Pair(-1, -1), side));
-                        break;
-                    case "Tank":
-                        units.push(Units.Tank.create(new Pair(-1, -1), side));
-                        break;
-                    case "Paratrooper":
-                        units.push(Units.Paratrooper.create(new Pair(-1, -1), side));
-                        break;
-                    case "Artillery":
-                        units.push(Units.Artillery.create(new Pair(-1, -1), side));
-                        break;
-                    default: 
-                        // Avisamos al desarrollador
-                        console.error("Unit type not recognized: "+pair.type);
-                        break;
-                }
+                const sel : keyof UNIT_CREATE = pair.type;
+                units.push(UNITS_CREATE[sel].create(new Pair(-1, -1), side));
                 // Finalmente, indicamos que hemos creado la unidad de este tipo
                 --unitsLeft;
             }
         }
         // Retornamos el conjunto de unidades del bando
         return units;
+    }
+
+    public static createGame(callback: (error: { status: boolean, message: string, gameId: string }) => void) {
+        let connection = Network.getConnection();
+
+        connection.onmessage = (event: MessageEvent) => {
+            if(event.data == "Command not understood") {
+                console.log("Error attempting to create the game");
+                callback({ status: false, message: event.data, gameId: undefined });
+            } else {
+                let json = JSON.parse(event.data);
+                callback({ status: true, message: undefined, gameId: json.id });
+            }
+        }
+
+        connection.send(JSON.stringify({
+            tipo: "createGame"
+        }));
+    }
+
+    public static joinGame(gameId: string, callback: (error: { status: boolean, message: string, gameId: string }) => void) {
+        let connection = Network.getConnection();
+
+        connection.onmessage = (event: MessageEvent) => {
+            if(event.data == "Command not understood") {
+                console.log("Error attempting to join game");
+                callback({ status: false, message: event.data, gameId: undefined });
+            } else {
+                let json = JSON.parse(event.data);
+                if(json.status) {
+                    callback({ status: true, message: undefined, gameId: json.id });
+                } else {
+                    callback({ status: false, message: json.error, gameId: undefined });
+                }
+            }
+        }
+
+        connection.send(JSON.stringify({
+            tipo: "joinGame",
+            id: gameId
+        }))
+    }
+
+    public static sendGetGameList(callback: (status: { status: boolean, games: any[] }) => void) {
+        let connection = Network.getConnection();
+
+        connection.onmessage = (event: MessageEvent) => {
+            if(event.data == "Command not understood") {
+                console.log("Error attempting to join game");
+                callback({ status: false, games: [] });
+            } else {
+                let json = JSON.parse(event.data);
+                callback({ status: true, games: json.games });
+            }
+        }
+
+        connection.send(JSON.stringify({
+            tipo: "getGames"
+        }))
     }
 
     // Este método se encargará de enviar los datos del mapa al servidor, para que se guarden en BD
@@ -583,7 +626,34 @@ export class Network {
             mapName: ""
         };
         // Primero, convertimos el objeto en un mapa
-        console.log("EN Parse: "+JSON.stringify(data));
+        let json = JSON.parse(data);
+        // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
+        // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
+        result.rows = json.map.rows;
+        result.columns = json.map.columns;
+        result.mapName = json.map.mapName;
+        // Finalmente, nos quedan los terrenos, mismo proceso
+        for(var i = 0; i < json.map.terrains.length; i++){
+            let terrain = json.map.terrains[i];
+            console.log("------>"+JSON.stringify(terrain));
+            result.terrains.push(new Terrain(terrain.name, terrain.image, terrain.movement_penalty,
+                new Pair(terrain.position_row, terrain.position_cols), terrain.defenseWeak ,terrain.defenseStrong,
+                terrain.attackWeak, terrain.attackStrong));
+        }
+        // Retornamos el estado final
+        return result;
+    }
+
+    public static parseMapServerEdit(data: string): {terrains: {name: string, image: string, movement_penalty: number,
+            position: Pair, defenseWeak: number, defenseStrong: number, attackWeak: number, attackStrong: number}[], rows: number, columns: number, mapName: string} {
+        // Definimos la salida, un mapa, y lo populamos con datos por defecto
+        let result = {
+            terrains: [] as Array<Terrain>,
+            rows: 0,
+            columns: 0,
+            mapName: ""
+        };
+        // Primero, convertimos el objeto en un mapa
         let json = JSON.parse(data);
         // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
         // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
@@ -594,11 +664,10 @@ export class Network {
         for(var i = 0; i < json.map.terrains.length; i++){
             let terrain = json.map.terrains[i];
             result.terrains.push(new Terrain(terrain.name, terrain.image, terrain.movement_penalty,
-                new Pair(terrain.position_row, terrain.position_cols), terrain.defenseWeak ,terrain.defenseStrong,
-                terrain.attackWeak, terrain.attackStrong));
+                new Pair(terrain.position_row, terrain.position_cols), terrain.defense_weak ,terrain.defense_strong,
+                terrain.attack_weak, terrain.attack_strong));
         }
         // Retornamos el estado final
-        console.log("RESULTADO "+JSON.stringify(result));
         return result;
     }
 
@@ -614,7 +683,6 @@ export class Network {
         let connection = Network.getConnection();
         // Definimos el evento de recepción de mensaje
         connection.onmessage = function(event: MessageEvent) {
-            console.log(event.data);
             // Comprobamos cuál ha sido la respuesta
             if(event.data == "Command not understood") {
                 // Retornamos al callback el fallo de la conexión
@@ -627,7 +695,7 @@ export class Network {
                     callback({ status: true, errorCode: statusCode.error });
                 } else {
                     // Avisamos por pantalla y emitiremos el resultado
-                    console.warn("Ha fallado la petición de guardado del perfil al servidor!");
+                    console.warn("¡Ha fallado la petición de guardado del perfil al servidor!");
                     console.warn("Error: "+statusCode.error);
                     callback({ status: false, errorCode: statusCode.error });
                 }
@@ -647,7 +715,6 @@ export class Network {
         let connection = Network.getConnection();
         // Definimos el evento de recepción de mensaje
         connection.onmessage = function(event: MessageEvent) {
-            console.log(event.data);
             // Comprobamos cuál ha sido la respuesta
             if(event.data == "Command not understood") {
                 // Retornamos al callback el fallo de la conexión
@@ -680,7 +747,6 @@ export class Network {
         let connection = Network.getConnection();
         // Definimos el evento de recepción de mensaje
         connection.onmessage = function(event: MessageEvent) {
-            console.log(event.data);
             // Comprobamos cuál ha sido la respuesta
             if(event.data == "Command not understood") {
                 // Retornamos al callback el fallo de la conexión
@@ -715,7 +781,6 @@ export class Network {
         let connection = Network.getConnection();
         // Definimos el evento de recepción de mensaje
         connection.onmessage = function(event: MessageEvent) {
-            console.log(event.data);
             // Comprobamos cuál ha sido la respuesta
             if(event.data == "Command not understood") {
                 // Retornamos al callback el fallo de la conexión
@@ -749,7 +814,6 @@ export class Network {
         let connection = Network.getConnection();
         // Definimos el evento de recepción de mensaje
         connection.onmessage = function(event: MessageEvent) {
-            console.log(event.data);
             // Comprobamos cuál ha sido la respuesta
             if(event.data == "Command not understood") {
                 // Retornamos al callback el fallo de la conexión
@@ -783,13 +847,11 @@ export class Network {
         let connection = Network.getConnection();
         // Definimos el evento de recepción de mensaje
         connection.onmessage = function(event: MessageEvent) {
-            console.log("Entra en el onmessage");
             // Comprobamos cuál ha sido la respuesta
             if(event.data == "Command not understood") {
                 // Retornamos al callback el fallo de la conexión
                 callback({ status: false, error: event.data});
             } else {
-                console.log("Se ha entendido el mensaje");
                 // En caso contrario, el comando se entendió. Comprobamos ahora si el mensaje contiene éxito de la operación
                 let statusCode: { status: boolean, error: string } = JSON.parse(event.data);
                 if(statusCode.status) {
@@ -812,23 +874,31 @@ export class Network {
 
     public static sendWaitTurn(callback: (statusCode: { status: boolean, error: string, state: State }) => void) {
         // Como siempre, iniciamos la conexión
-        let connection = Network.getConnection();
+        if(Network.gameId == undefined) {
+            callback({ status: false, error: "Game id not defined", state: null });
+        } else {
+            let connection = Network.getConnection();
 
-        connection.send(JSON.stringify({
-            tipo: "waitTurn"
-        }));
+            connection.send(JSON.stringify({
+                tipo: "waitTurn",
+                id: Network.gameId
+            }));
 
-        connection.onmessage = function(message: MessageEvent) {
-            if(message.data == "Command not understood") {
-                callback({ status: false, error: message.data, state: null });
-            } else {
-                // Se comprueba la respuesta, generalmente será correcta
-                let result = JSON.parse(message.data);
-                // Vemos el resultado
-                if(result.status) {
-                    // Si es correcto, obtenemos el estado y llamamos al callback
-                    let newState = Network.parseStateFromServer(JSON.stringify(result.state));
-                    callback({ status: true, error: "Success", state: newState });
+            connection.onmessage = function(message: MessageEvent) {
+                if(message.data == "Command not understood") {
+                    callback({ status: false, error: message.data, state: null });
+                } else {
+                    // Se comprueba la respuesta, generalmente será correcta
+                    let result = JSON.parse(message.data);
+                    console.dir(result);
+                    // Vemos el resultado
+                    if(result.status == false) {
+                        callback({ status: false, error: "Disconnected", state: store.getState() });
+                    } else {
+                        // Si es correcto, obtenemos el estado y llamamos al callback
+                        let newState = Network.parseStateFromServer(JSON.stringify(result.state));
+                        callback({ status: true, error: "Success", state: newState });
+                    }
                 }
             }
         }
@@ -871,47 +941,53 @@ export class Network {
         }
     }
 
-    public static sendSyncState(state: State, height: number, width: number,
-         callback: (statusCode: { status: boolean, state: any }) => void) {
+    public static sendSyncState(callback: (statusCode: { status: boolean, state: any }, height?: number, width?: number) => void) {
+        if(Network.gameId == undefined) {
+            callback({ status: false, state: null });
+        } else {
+            let connection = Network.getConnection();
 
-        let connection = Network.getConnection();
-
-        let terrains = state.terrains;
-        let units = state.units;
-        connection.onmessage = (message: MessageEvent) => {
-            console.dir(JSON.parse(message.data));
-            if(message.data == "Command not understood") {
-                callback({ status: false, state: null });
-            } else {
-                let result = JSON.parse(message.data);
-                if(result.status == true) {
-                    // Para facilitar el traspaso de los datos de servidor, necesitamos realizar una conversión a string y pasarlo a estado compatible
-                    let stateString = JSON.stringify(result.state);
-                    let state = Network.parseStateFromServer(stateString);
+            connection.onmessage = (message: MessageEvent) => {
+                if (message.data == "Command not understood") {
+                    callback({ status: false, state: null });
+                } else {
+                    let result = JSON.parse(message.data);
+                    let state;
+                    if (result.status == true) {
+                        // Para facilitar el traspaso de los datos de servidor, necesitamos realizar una conversión a string y pasarlo a estado compatible
+                        let stateString = JSON.stringify(result.state);
+                        state = Network.parseStateFromServer(stateString);
+                    }
+                    callback({ status: result.status, state: state}, result.state.height, result.state.width);
                 }
-                callback({ status: result.status, state: state });
             }
+            connection.send(JSON.stringify({
+                tipo: "SYNC_STATE",
+                id: Network.gameId
+            }));
         }
-        connection.send(JSON.stringify({
-            tipo: "SYNC_STATE"
-        }));
     }
 
     public static sendExitPreGame(callback: (statusCode: { status: boolean, message: string}) => void) {
-        let connection = Network.getConnection();
-        connection.onmessage = (message: MessageEvent) => {
-            // Comprobamos el tipo de mensaje
-            let data = message.data;
-            if(data == "Command not understood") {
-                callback({ status: false, message: data });
-            } else {
-                // Asumimos que ha salido bien
-                callback({ status: true, message: "Success" });
+        if(Network.gameId == undefined) {
+            callback({ status: false, message: "Game id not defined" });
+        } else {
+            let connection = Network.getConnection();
+            connection.onmessage = (message: MessageEvent) => {
+                // Comprobamos el tipo de mensaje
+                let data = message.data;
+                if (data == "Command not understood") {
+                    callback({ status: false, message: data });
+                } else {
+                    // Asumimos que ha salido bien
+                    callback({ status: true, message: "Success" });
+                }
             }
+            connection.send(JSON.stringify({
+                tipo: "exitPreGame",
+                id: Network.gameId
+            }));
         }
-        connection.send(JSON.stringify({
-            tipo: "exitPreGame"
-        }));
     }
 }
 
