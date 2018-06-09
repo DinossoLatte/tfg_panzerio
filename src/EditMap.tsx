@@ -14,7 +14,7 @@ import { EditStats } from './EditStats';
 import { Terrain, Plains, ImpassableMountain, Hills, Forest, River, TERRAINS, TERRAINS_ESP, TERRAINS_CREATE, TERR_CREATE} from './Terrains';
 
 const editMapText = "Edición del mapa";
-const nameText = "Nombre";
+const nameText = "Nombre:";
 const backText = "Volver atrás";
 const createTerrainText = "Crear terreno";
 const selectTypeText = "Selecciona el tipo del terreno: ";
@@ -59,7 +59,7 @@ export class EditMap extends React.Component<any, any> {
         // El mapa se renderizará en un div con estilo, por ello debemos usar className="map"
         return (
             <div className="jumbotron text-center">
-                <h4> {editMapText} <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>{backText}</button></h4>
+                <h2> {editMapText} <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>{backText}</button></h2>
                 <label> {nameText} <input className="form-control" type="text" value={this.state.name} onChange={evt => this.updateInput(evt.target.value)} /></label>
                 <div>
                     {storeEdit.getState().type!=1?<button className="btn btn-primary btn-sm" id="terrainButton" name="terrainButton" onClick={this.onClickCreateTerrain.bind(this)}>{createTerrainText}</button>:""}
@@ -69,7 +69,7 @@ export class EditMap extends React.Component<any, any> {
                                 {this.selectOptionsTerrains()}
                             </select>
                         </label>
-                        {storeEdit.getState().type==1?<p id="bold">{selectedTerrain} {storeEdit.getState().selected!=null&&storeEdit.getState().selected!=selectText?storeEdit.getState().selected:noneText} </p>:""}
+                        {storeEdit.getState().type==1?<h4 id="bold">{selectedTerrain} {storeEdit.getState().selected!=null&&storeEdit.getState().selected!=selectText?storeEdit.getState().selected:noneText} </h4>:""}
                     </div>:""}
                     <button className="btn btn-primary btn-sm" id="generateButton" name="generateButton" onClick={this.onClickGenerateMap.bind(this)}>{saveText}</button>
                 </div>

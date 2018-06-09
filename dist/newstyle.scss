@@ -1,0 +1,73 @@
+$color_1: red;
+$background_color_1: #e9ecef;
+$background_color_2: white;
+
+@import "bootstrap-sass/assets/stylesheets/_bootstrap.scss";
+
+body {
+	background-color: $background_color_1;
+}
+.map {
+	user-select: none;
+	background-color: $background_color_2;
+	padding: 10px;
+	border-style: ridge;
+	border-width: 2px;
+	padding-bottom: 84px;
+	overflow: scroll;
+	transform: scale(1);
+	transform-origin: 0% 0%;
+}
+.cellRow {
+	display: flex;
+	.div_cell {
+		* {
+			width: auto;
+			display: inline-block;
+			margin-bottom: -39px;
+			padding-right: 40px;
+		}
+		width: auto;
+		display: inline-block;
+		margin-bottom: -39px;
+		padding-right: 50px;
+	}
+}
+.cellRowOdd {
+	margin-left: 135px;
+}
+.unit {
+	margin-left: -220px;
+	margin-right: -40px;
+	z-index: 1;
+}
+.obstacle {
+	position: relative;
+	margin-left: -220px;
+	margin-right: -40px;
+	z-index: -1;
+}
+.selector {
+	display: block;
+	position: relative;
+	left: -220px;
+	top: -1px;
+	margin-right: -223.7px;
+}
+.leftPanel {
+	float: left;
+	width: 400px;
+	padding: 25px;
+}
+#error {
+	.alert {
+		color: $color_1;
+	}
+}
+.avatar {
+	width: 200px;
+	height: 200px;
+}
+#bold {
+	font-weight: bold;
+}

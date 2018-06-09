@@ -43,7 +43,7 @@ export class EditStats extends React.Component<any, any> {
 
         return (
         <div className="col-sm-3 text-left">
-                <h4>{contText}</h4>
+                <h3>{contText}</h3>
                 {terrainStats}
                 {!terrainStats?<div className="alert alert-info" id="error">{infoText}</div>:null}
         </div>

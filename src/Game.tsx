@@ -179,7 +179,7 @@ const manualText = (<div><br />
     <div><p id="bold">Creación del mapa</p>
     Para crear un mapa se accede a "Edición de mapa" y se selecciona el tamaño del mapa, una vez hecho se pueden ir colocando terrenos sobre el mapa y una vez el resultado sea el deseado se hace clic sobre "Guardar" para guardar dicho mapa.
     Para editar un mapa se accede también a "Edición de mapa" pero esta vez se selecciona el mapa concreto y se edita de la misma forma que se creó el mapa, también hay posibilidad de eliminado.
-    </div><br /> 
+    </div><br />
     <div><p id="bold">Perfil del jugador</p>
     Al acceder al perfil personal desde el menú se podrá ver el nombre del jugador, el contador de victorias y derrotas y los batallones del jugador que podrán ser editados añadiendo nuevos batallones o modificando los existentes.
     Al crear un batallón se elije un nombre y se van añadiendo unidades (el general se añade automáticamente). Al finalizar dichos cambios aparecerán en la lista de batallones en "Mostrar batallones" y podrán ser guardados dándole al botón "Guardar batallones" ya que los cambios son almacenados en local y deberán ser guardados en servidor una vez el jugador realice todos los cambios que vea oportuno.
@@ -388,7 +388,7 @@ class PreGameMenu extends React.Component<any, any> {
     render() {
         return (
         <div className="jumbotron text-center">
-            <h1>{gameIdentifierText+this.state.id}</h1>
+            <h2 id="bold">{gameIdentifierText+this.state.id}</h2>
             <h2>{selectMenuText} <button className="btn btn-primary btn-sm" onClick={this.exitPreGame.bind(this)}>{backText}</button></h2>
             {this.showPlayerMenu()}
             <button className="btn btn-primary btn-sm" onClick={this.startGame.bind(this)}>{startGameText}</button><br/>

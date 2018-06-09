@@ -15,7 +15,7 @@ const saveAlert1 = "Se ha guardado correctamente el perfil";
 const saveAlert2 = "No se ha podido guardar correctamente el perfil";
 const personalProfileText = "Perfil personal";
 const backText = "Volver atrás";
-const editNameText = "Modifique aquí su nombre";
+const editNameText = "Modifique aquí su nombre: ";
 const editNameButton = "Editar nombre";
 const winText = "Partidas ganadas: ";
 const loseText = "Partidas perdidas: ";
@@ -25,13 +25,13 @@ const editArmyTitle = "Editar batallón";
 const saveArmy = "Guardar batallones";
 const saveInfo = "Los cambios serán almacenados en la lista de batallones por guardar";
 const editArmy = "Edición del batallón";
-const selectArmy = "Selecciona el batallón";
+const selectArmy = "Selecciona el batallón:";
 const editNameArmy = "Editar nombre del batallón";
 const addUnit = "Añadir una nueva unidad";
 const deleteUnitTitle = "Eliminar una unidad";
 const deleteArmy = "Eliminar batallón";
 const noArmies = "No hay batallones para seleccionar";
-const selectUnitText = "Selecciona el tipo de unidad";
+const selectUnitText = "Selecciona el tipo de unidad:";
 const createArmy = "Creación del batallón";
 const addOtherUnit = "Añadir unidad";
 const armyNameText = "Nombre del batallón: ";
@@ -338,7 +338,7 @@ export class Profile extends React.Component<any, any> {
         let armies = [];
         // Iteramos por cada ejército
         for (var index = 0; index < storeProfile.getState().armies.length; index++) {
-            armies.push(<div id="bold">{storeProfile.getState().armies[index].name}</div>);
+            armies.push(<h3 id="bold">{storeProfile.getState().armies[index].name}</h3>);
             // Por cada ejército mostraremos también las unidades que lo contienen
             var unitLists = this.renderArmyContent(index)
             // Y los introducimos a la lista
@@ -639,8 +639,8 @@ export class Profile extends React.Component<any, any> {
                 <button id="saveProfile" name="saveProfile" className="btn btn-primary btn-sm" onClick={this.onClickSaveProfile.bind(this)}>{saveArmy}</button>
                 {storeProfile.getState().type >= "2" && storeProfile.getState().armies.length > 0 ? <div>
                     <div className="alert alert-info" id="error">{saveInfo}</div>
-                    <h4> {editArmy} </h4>
-                    <label> <p>{selectArmy}</p>
+                    <h2> {editArmy} </h2>
+                    <label> {selectArmy}
                         <select className="form-control" defaultValue={null} value={storeProfile.getState().selectedArmy} onChange={evt => this.selectArmy(evt.target.value)}>
                             {this.renderSelectOptionsArmy()}
                         </select>
@@ -652,7 +652,7 @@ export class Profile extends React.Component<any, any> {
                 </div> : storeProfile.getState().type >= "2" && storeProfile.getState().armies.length == 0 ? <div className="alert alert-warning" id="error">{noArmies}</div> : ""}
                 {storeProfile.getState().type == "1" || storeProfile.getState().type == "4" ? <div>
                     <div className="alert alert-info" id="error">{saveInfo}</div>
-                    <h4> {createArmy} </h4>
+                    <h2> {createArmy} </h2>
                     <label> {selectUnitText}
                         <select className="form-control" defaultValue={null} value={storeProfile.getState().selected} onChange={evt => this.selectUnit(evt.target.value)}>
                             {this.selectOptionsUnits()}
@@ -681,7 +681,7 @@ export class Profile extends React.Component<any, any> {
                 </div> : ""}
                 {storeProfile.getState().type == "0" ? <div>
                     <div className="alert alert-info" id="error">{saveArmyInfo}</div>
-                    <h4> {armyListText} </h4>
+                    <h2> {armyListText} </h2>
                     <div>
                         {this.renderArmyList()}
                     </div>
