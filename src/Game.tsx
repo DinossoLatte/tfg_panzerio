@@ -47,13 +47,13 @@ const deleteAlertText = "Se ha eliminado correctamente el mapa";
 const selectMapAlertText = "Se debe seleccionar un mapa";
 const userGoneText = "Un jugador ha dejado la partida";
 
-const manualText = (<div>
+const manualText = (<div><br />
     <div><p id="bold">Introducción</p>
     PanzergIO es un videojuego de estrategia por turnos en la que dos jugadores luchan con batallones personalizados en un mapa que también es personalizable.
-    </div>
+    </div><br />
     <div><p id="bold">Historia</p>
     La historia se basa en un universo alternativo donde la humanidad se encuentra en una Tercera Guerra Mundial en la que todos los paises están en una guerra en la que no existen aliados, solamente enemigos.
-    </div>
+    </div><br />
     <div><p id="bold">Unidades</p>
     Hay un total de 5 unidades que pueden agruparse de forma personalizada como el jugador desee formando batallones, cada batallón debe contar obligatoriamente con un General. Cada unidad cuenta con una serie de estadísticas las cuales son:
     <ul>
@@ -118,7 +118,7 @@ const manualText = (<div>
         <li> Defensa débil: 1</li>
       </ul>
     </ul>
-    </div>
+    </div><br />
     <div><p id="bold">Terrenos</p>
     Hay diferentes tipos de terrenos que pueden ser colocados al crear un nuevo mapa. Cada terreno posee las siguientes características:
     <ul>
@@ -168,18 +168,18 @@ const manualText = (<div>
         <li> Defensa débil: -1</li>
       </ul>
     </ul>
-    </div>
+    </div><br />
     <div><p id="bold">¿Cómo empezar?</p>
     Una vez iniciado el juego y el jugador se encuentre en el menú de inicio, deberá iniciar sesión con su cuenta de Google de forma que podrá acceder al resto de opciones que dispone el juego.
     Para poder jugador en multijugador bastará con que el jugador cree una partida en el menú y otro jugador abra una pestaña en el mismo navegador y acceda al menú, inicie sesión y se una a la partida que está creando el primer jugador.
-    </div>
+    </div><br />
     <div><p id="bold">Mecánicas del juego</p>
     Para empezar una partida deberán enfrentarse dos jugadores A (host) y B. Al empezar el jugador A elige mapa (de los que haya creado) y su batallón mientras que el jugador B solo elije su batallón, tras darle a empezar ambos jugadores comenzará el primer turno de colocación de unidades en la que A coloca todas sus unidades del batallón y cuando de a pasar turno podrá colocarlas B (en caso de que se equivoque al colocar una unidad podrá editar su posición seleccionándola de nuevo). Cuando ambos jugadores terminen de colocarlas empezará la partida en la que cada jugador en su turno podrá ir moviendo sus unidades y decidiendo a qué unidad atacar (primero deberá elegir movimiento y luego ataque, en caso de equivocarse podrá cancelar la acción o pasar sino desea realizar movimiento o ataque). La partida termina cuando el General de uno de los jugadores muere.
-    </div>
+    </div><br />
     <div><p id="bold">Creación del mapa</p>
     Para crear un mapa se accede a "Edición de mapa" y se selecciona el tamaño del mapa, una vez hecho se pueden ir colocando terrenos sobre el mapa y una vez el resultado sea el deseado se hace clic sobre "Guardar" para guardar dicho mapa.
     Para editar un mapa se accede también a "Edición de mapa" pero esta vez se selecciona el mapa concreto y se edita de la misma forma que se creó el mapa, también hay posibilidad de eliminado.
-    </div>
+    </div><br /> 
     <div><p id="bold">Perfil del jugador</p>
     Al acceder al perfil personal desde el menú se podrá ver el nombre del jugador, el contador de victorias y derrotas y los batallones del jugador que podrán ser editados añadiendo nuevos batallones o modificando los existentes.
     Al crear un batallón se elije un nombre y se van añadiendo unidades (el general se añade automáticamente). Al finalizar dichos cambios aparecerán en la lista de batallones en "Mostrar batallones" y podrán ser guardados dándole al botón "Guardar batallones" ya que los cambios son almacenados en local y deberán ser guardados en servidor una vez el jugador realice todos los cambios que vea oportuno.
@@ -353,7 +353,7 @@ class OptionsMenu extends React.Component<any, any> {
     }
 
     render() {
-        return <div className="jumbotron text-center">
+        return <div className="jumbotron text-left">
             <h2>{userManualText} <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClick.bind(this)}>{backText}</button></h2>
             {manualText}
             </div>;

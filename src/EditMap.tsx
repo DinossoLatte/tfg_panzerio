@@ -95,7 +95,7 @@ export class EditMap extends React.Component<any, any> {
         connection.onmessage = function(event: MessageEvent) {
             // Generalmente, no esperaremos una respuesta, por lo que simplemente aseguramos que
             // el comando se haya entendido
-            let data = Network.parseMapServer(event.data);
+            let data = Network.parseMapServerEdit(event.data);
             if(event.data == "Command not understood") {
                 // Lanzamos un error
                 console.log("Error when attempting to save, server didn't understood request");

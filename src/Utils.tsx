@@ -635,9 +635,37 @@ export class Network {
         // Finalmente, nos quedan los terrenos, mismo proceso
         for(var i = 0; i < json.map.terrains.length; i++){
             let terrain = json.map.terrains[i];
+            console.log("------>"+JSON.stringify(terrain));
             result.terrains.push(new Terrain(terrain.name, terrain.image, terrain.movement_penalty,
                 new Pair(terrain.position_row, terrain.position_cols), terrain.defenseWeak ,terrain.defenseStrong,
                 terrain.attackWeak, terrain.attackStrong));
+        }
+        // Retornamos el estado final
+        return result;
+    }
+
+    public static parseMapServerEdit(data: string): {terrains: {name: string, image: string, movement_penalty: number,
+            position: Pair, defenseWeak: number, defenseStrong: number, attackWeak: number, attackStrong: number}[], rows: number, columns: number, mapName: string} {
+        // Definimos la salida, un mapa, y lo populamos con datos por defecto
+        let result = {
+            terrains: [] as Array<Terrain>,
+            rows: 0,
+            columns: 0,
+            mapName: ""
+        };
+        // Primero, convertimos el objeto en un mapa
+        let json = JSON.parse(data);
+        // Después iteramos por cada uno de los atributos y crearemos el objeto cuando sea necesario
+        // Para empezar, asignamos las variables primitivas, al no necesitar inicializarlas
+        result.rows = json.map.rows;
+        result.columns = json.map.columns;
+        result.mapName = json.map.mapName;
+        // Finalmente, nos quedan los terrenos, mismo proceso
+        for(var i = 0; i < json.map.terrains.length; i++){
+            let terrain = json.map.terrains[i];
+            result.terrains.push(new Terrain(terrain.name, terrain.image, terrain.movement_penalty,
+                new Pair(terrain.position_row, terrain.position_cols), terrain.defense_weak ,terrain.defense_strong,
+                terrain.attack_weak, terrain.attack_strong));
         }
         // Retornamos el estado final
         return result;
