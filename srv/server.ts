@@ -47,6 +47,11 @@ server.on('connection', function connect(ws: webSocket) {
                     games[gameId].player1URL.send(JSON.stringify({ status: false }));
                 }
             }
+            // Comprobamos si no hay jugadores en la partida
+            if(!games[gameId].player1URL && !games[gameId].player2URL) {
+                // Si es el caso, debemos eliminar la partida
+                games[gameId] = undefined;
+            }
         }
     })
     ws.on("message", function getInitialState(data) {
