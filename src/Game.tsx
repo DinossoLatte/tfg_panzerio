@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as Redux from 'redux';
-import { GoogleLogin, GoogleLogout, GoogleLoginResponse } from 'react-google-login'
+import { GoogleLogin, GoogleLoginResponse } from 'react-google-login'
 
 import { Map } from './Map';
 import { Actions, getInitialState } from './GameState';
@@ -839,6 +839,14 @@ class CreateMenu extends React.Component<any, any> {
     }
 }
 
+class GoogleLogout extends GoogleLogin {
+    // Para evitar que aparezca el menú de inicio de sesión, se sobreescribe la acción de Login
+    signIn(e: any) {
+        // Se llamará a la propiedad de onSuccess siempre
+        this.props.onSuccess(null);
+    }
+}
+
 class Game extends React.Component<any, any> {
     constructor(props : any) {
         super(props);
@@ -879,7 +887,7 @@ class Game extends React.Component<any, any> {
             default:
                 let loginInfo = null;
                 if(this.state.clientId != null) { // Si el usuario ha iniciado sesión
-                    loginInfo = <GoogleLogout clientId="637676591689-hqqsmqkfh446ot5klmul2tr8q8v1dsq6" onLogoutSuccess={this.onLogOut.bind(this)} />// La sección de registro contendrá el cierre de sesión
+                    loginInfo = <GoogleLogout clientId="637676591689-hqqsmqkfh446ot5klmul2tr8q8v1dsq6" buttonText="Logout" onSuccess={this.onLogOut.bind(this)} onFailure={(e) => console.error(e)} />// La sección de registro contendrá el cierre de sesión
                 } else {
                     loginInfo = <GoogleLogin clientId="637676591689-hqqsmqkfh446ot5klmul2tr8q8v1dsq6" onSuccess={this.onLogIn.bind(this)} onFailure={(e) => console.error(e)}  /> // En otro caso, contendrá el inicio de sesión
                 }
