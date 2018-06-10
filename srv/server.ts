@@ -155,6 +155,7 @@ server.on('connection', function connect(ws: webSocket) {
                 if(gameId) {
                     game = games[gameId];
                     if(game.player1FinishedSelection && game.player2FinishedSelection) {
+                        game.currentState = 1;
                         game.player1URL.send(JSON.stringify({
                             status: true,
                             state: game.getState()
@@ -483,11 +484,7 @@ server.on('connection', function connect(ws: webSocket) {
                             games[gameId] = undefined;
                         }
                     }
-                    // Actualizamos el estado, si no hay jugadores el juego ha terminado
-                    if(games[gameId]) {
-                        games[gameId].currentState = 2;
-                    }
-                    // Y Confirmamos la realización correcta
+                    // Confirmamos la realización correcta
                     ws.send(JSON.stringify({
                         status: true,
                         message: "Success"
