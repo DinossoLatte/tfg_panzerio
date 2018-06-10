@@ -69,3 +69,6 @@ srv/server.js
 
 # IDEs
 .vscode
+
+# Bootstrap + Sass
+dist/.sass*
