@@ -38,8 +38,8 @@ class Cell extends React.Component<any, any> {
         let isUnitUsed = unit == null?false:unit.used;
         // Comprobación de la unidad seleccionada es la de la celda
         let isUnitSelected = anyUnitSelected && store.getState().units[store.getState().selectedUnit].position.equals(this.state.terrain.position);
-        // Comprobación de que la casilla actual sea visitable o atacable por la unidad seleccionada
-        let isCellVisitable = anyUnitSelected && myIndexOf(store.getState().visitables, this.state.terrain.position) > -1;
+        // Comprobación de que la casilla actual sea visitable o atacable por la unidad seleccionada y que el turno actual no es en pre-juego
+        let isCellVisitable = anyUnitSelected && myIndexOf(store.getState().visitables, this.state.terrain.position) > -1 && store.getState().turn > 1;
         // Compobación de la unidad en nuestra posición es atacable
         let isUnitAttackable = (isCellVisitable && unit != null)&& ((unit.player && store.getState().turn%2!=0) || (!unit.player && store.getState().turn%2==0));
         // Comprobamos si la casilla actual contiene el cursor, primero obteniendo su posición
