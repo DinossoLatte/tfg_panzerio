@@ -371,7 +371,6 @@ server.on('connection', function connect(ws: webSocket) {
                 // Este caso se llamará cuando el cliente haga inicio de sesión
                 // Del cliente obtendremos su ID del perfil, suficiente para identificarlo
                 let token = message.token;
-                // TODO NO SE VA A ELIMINAR PORQUE DEBERÍA SER NECESARIO ALGUNA FORMA DE CREAR UNA CUENTA TRAS INICIAR SESIÓN Y NO TEENER CUENTA
                 let logprofile: {
                     googleId: number
                 } = {
