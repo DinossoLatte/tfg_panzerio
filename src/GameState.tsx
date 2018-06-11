@@ -184,15 +184,18 @@ export var Reducer: Redux.Reducer<State> =
         switch (action.type) {
             case "CHANGE_UNIT_POS":
                 let visitables = state.visitables;
-                // Si la unidad la tiene el jugador
-                if (action.player == state.units[action.unit_id].player) {
+                // Primero, obtenemos si hay una unidad en esta posición
+                let newPosition = new Pair(action.new_position.row, action.new_position.column);
+                let occupyingUnit = state.units.filter(unit => unit.position.equals(newPosition));
+                // Si la unidad la tiene el jugador y la posición no está ocupada por una unidad, enemiga o aliada
+                if (action.player == state.units[action.unit_id].player && occupyingUnit.length == 0) {
                     let lastPosition = state.units[action.unit_id].position;
                     // Actualiza la posición
-                    state.units[action.unit_id].position = action.new_position;
+                    state.units[action.unit_id].position = newPosition;
                     // En el caso de estar fuera de la fase de pre juego, donde posicionamos las unidades sin causar turnos
                     if (state.turn >= 2) {
                         //Si es paracaidista pasa directamente a estado usado
-                        if (state.units[action.unit_id].name == "Paratrooper" && !lastPosition.equals(action.new_position)) {
+                        if (state.units[action.unit_id].name == "Paratrooper" && !lastPosition.equals(newPosition)) {
                             state.units[action.unit_id].used = true;
                             state.units[action.unit_id].hasAttacked = true;
                             state.units[action.unit_id].action = 2;

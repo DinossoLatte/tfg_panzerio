@@ -47,6 +47,11 @@ server.on('connection', function connect(ws: webSocket) {
                     games[gameId].player1URL.send(JSON.stringify({ status: false }));
                 }
             }
+            // Comprobamos si no hay jugadores en la partida
+            if(!games[gameId].player1URL && !games[gameId].player2URL) {
+                // Si es el caso, debemos eliminar la partida
+                games[gameId] = undefined;
+            }
         }
     })
     ws.on("message", function getInitialState(data) {
@@ -150,6 +155,7 @@ server.on('connection', function connect(ws: webSocket) {
                 if(gameId) {
                     game = games[gameId];
                     if(game.player1FinishedSelection && game.player2FinishedSelection) {
+                        game.currentState = 1;
                         game.player1URL.send(JSON.stringify({
                             status: true,
                             state: game.getState()
@@ -371,7 +377,6 @@ server.on('connection', function connect(ws: webSocket) {
                 // Este caso se llamará cuando el cliente haga inicio de sesión
                 // Del cliente obtendremos su ID del perfil, suficiente para identificarlo
                 let token = message.token;
-                // TODO NO SE VA A ELIMINAR PORQUE DEBERÍA SER NECESARIO ALGUNA FORMA DE CREAR UNA CUENTA TRAS INICIAR SESIÓN Y NO TEENER CUENTA
                 let logprofile: {
                     googleId: number
                 } = {
@@ -479,11 +484,7 @@ server.on('connection', function connect(ws: webSocket) {
                             games[gameId] = undefined;
                         }
                     }
-                    // Actualizamos el estado, si no hay jugadores el juego ha terminado
-                    if(games[gameId]) {
-                        games[gameId].currentState = 2;
-                    }
-                    // Y Confirmamos la realización correcta
+                    // Confirmamos la realización correcta
                     ws.send(JSON.stringify({
                         status: true,
                         message: "Success"
