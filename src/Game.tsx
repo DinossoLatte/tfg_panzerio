@@ -46,6 +46,7 @@ const deleteMapText = "Eliminar mapa";
 const deleteAlertText = "Se ha eliminado correctamente el mapa";
 const selectMapAlertText = "Se debe seleccionar un mapa";
 const userGoneText = "Un jugador ha dejado la partida";
+const playInfo = "Deberá darle a empezar partida y esperar que otro jugador entre a la partida";
 
 const manualText = (<div><br />
     <div><p id="bold">Introducción</p>
@@ -391,6 +392,7 @@ class PreGameMenu extends React.Component<any, any> {
             <h2 id="bold">{gameIdentifierText+this.state.id}</h2>
             <h2>{selectMenuText} <button className="btn btn-primary btn-sm" onClick={this.exitPreGame.bind(this)}>{backText}</button></h2>
             {this.showPlayerMenu()}
+            <div className="alert alert-info" id="error">{playInfo}</div>
             <button className="btn btn-primary btn-sm" onClick={this.startGame.bind(this)}>{startGameText}</button><br/>
         </div>);
     }
