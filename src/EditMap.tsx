@@ -63,8 +63,8 @@ export class EditMap extends React.Component<any, any> {
                 <hr/>
                 <br/>
                 <label> {nameText} <input className="form-control" type="text" value={this.state.name} onChange={evt => this.updateInput(evt.target.value)} /></label>
+                <br/>
                 <div>
-                    {storeEdit.getState().type!=1?<button className="btn btn-primary btn-sm" id="terrainButton" name="terrainButton" onClick={this.onClickCreateTerrain.bind(this)}>{createTerrainText}</button>:""}
                     {storeEdit.getState().type==1?<div>
                         <label> {selectTypeText}
                             <select className="form-control" defaultValue={null} value={storeEdit.getState().selected} onChange={evt => this.selected(evt.target.value)}>
@@ -73,8 +73,12 @@ export class EditMap extends React.Component<any, any> {
                         </label>
                         {storeEdit.getState().type==1?<h4 id="bold">{selectedTerrain} {storeEdit.getState().selected!=null&&storeEdit.getState().selected!=selectText?storeEdit.getState().selected:noneText} </h4>:""}
                     </div>:""}
-                    <button className="btn btn-primary btn-sm" id="generateButton" name="generateButton" onClick={this.onClickGenerateMap.bind(this)}>{saveText}</button>
+                    <br/>
+                    {storeEdit.getState().type!=1?<button className="btn btn-primary btn-sm" id="terrainButton" name="terrainButton" onClick={this.onClickCreateTerrain.bind(this)}>{createTerrainText}</button>:""}
+                    <button className="btn btn-success btn-sm" id="generateButton" name="generateButton" onClick={this.onClickGenerateMap.bind(this)}>{saveText}</button>
+                    <br/>
                 </div>
+                <br/>
                 <div className="row">
                     <EditStats map={this}/>
                     <div className="col-sm-9">

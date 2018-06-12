@@ -220,8 +220,6 @@ class MainPanelMenu extends React.Component<any, any> {
         return (
             <div className="jumbotron text-center">
                 <h2>{roomListText} <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>{backText}</button></h2>
-                <hr/>
-                <br/>
                 <table className="table" id="gameList">
                     <tbody>
                         <tr>
@@ -399,7 +397,6 @@ class PreGameMenu extends React.Component<any, any> {
         <div className="jumbotron text-center">
             <h2>{selectMenuText} <button className="btn btn-primary btn-sm" onClick={this.exitPreGame.bind(this)}>{backText}</button></h2>
             <hr/>
-            <br/>
             <h2 id="bold">{gameIdentifierText+this.state.id}</h2>
             {this.showPlayerMenu()}
             <div className="alert alert-info" id="error">{playInfo}</div>
