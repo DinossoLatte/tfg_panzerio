@@ -44,6 +44,8 @@ const saveArmyInfo = 'Para guardar los cambios deberá darle al botón de Guarda
 const armyListText = "Batallones del jugador: ";
 const unitListText = UNITS_ESP;
 const nameUserText = "Nombre: ";
+const alertUnitNumberHigherLimit = "El número de unidades de un mismo tipo no puede ser superior a 10";
+const alertArmyNumberHigherLimit = "El número de unidades en un ejército no puede ser superior a 25";
 
 export class Profile extends React.Component<any, any> {
 
@@ -230,8 +232,19 @@ export class Profile extends React.Component<any, any> {
                 let pairTypeNumberOfSelected = army.unitList.find(unitType => unitType.type == storeProfile.getState().selected);
                 // Comprobamos si el par existe
                 if(pairTypeNumberOfSelected) {
-                    // En el caso de que exista, cambiaremos el valor del número en el índice del seleccionado
-                    army.unitList[army.unitList.indexOf(pairTypeNumberOfSelected)].number = pairTypeNumberOfSelected.number + 1;
+                    // Comprobamos también que el número de unidades no supere el límite
+                    if(pairTypeNumberOfSelected.number <= 10) {
+                        // Comprobamos también que el número de unidades totales no supere el límite
+                        let totalNumberUnits = army.unitList.map((value) => value.number).reduce((val1, val2) => val1 + val2);
+                        if(totalNumberUnits <= 25) {
+                            // En el caso de que exista, cambiaremos el valor del número en el índice del seleccionado
+                            army.unitList[army.unitList.indexOf(pairTypeNumberOfSelected)].number = pairTypeNumberOfSelected.number + 1;
+                        } else {
+                            window.alert(alertArmyNumberHigherLimit);
+                        }
+                    } else {
+                        window.alert(alertUnitNumberHigherLimit);
+                    }
                 } else {
                     // En otro caso, estamos iniciando el par tipo y número
                     army.unitList.push({ type: storeProfile.getState().selected, number: 1});
