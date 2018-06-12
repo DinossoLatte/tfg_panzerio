@@ -951,15 +951,15 @@ export class Network {
         }
     }
 
-    public static sendSyncState(callback: (statusCode: { status: boolean, state: any }, height?: number, width?: number) => void) {
+    public static sendSyncState(callback: (statusCode: { status: boolean, state: any, message: string }, height?: number, width?: number) => void) {
         if(Network.gameId == undefined) {
-            callback({ status: false, state: null });
+            callback({ status: false, state: null, message: null });
         } else {
             let connection = Network.getConnection();
 
             connection.onmessage = (message: MessageEvent) => {
                 if (message.data == "Command not understood") {
-                    callback({ status: false, state: null });
+                    callback({ status: false, state: null, message: null });
                 } else {
                     let result = JSON.parse(message.data);
                     let state;
@@ -967,8 +967,10 @@ export class Network {
                         // Para facilitar el traspaso de los datos de servidor, necesitamos realizar una conversión a string y pasarlo a estado compatible
                         let stateString = JSON.stringify(result.state);
                         state = Network.parseStateFromServer(stateString);
+                        callback({ status: result.status, state: state, message: result.message}, result.state.height, result.state.width);
+                    } else {
+                        callback({ status: false, state: null, message: result.message }, 0, 0);
                     }
-                    callback({ status: result.status, state: state}, result.state.height, result.state.width);
                 }
             }
             connection.send(JSON.stringify({

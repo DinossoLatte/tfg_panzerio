@@ -47,6 +47,7 @@ const deleteAlertText = "Se ha eliminado correctamente el mapa";
 const selectMapAlertText = "Se debe seleccionar un mapa";
 const userGoneText = "Un jugador ha dejado la partida";
 const playInfo = "Deberá darle a empezar partida y esperar que otro jugador entre a la partida";
+const alertArmyUnitMax = "El número de unidades en el ejército elegido es demasiado grande.";
 
 const manualText = (<div><br />
     <div><p id="bold">Introducción</p>
@@ -680,9 +681,15 @@ class PreGameMenu extends React.Component<any, any> {
             let pollingStart = function pollingStart() {
                 Network.sendSyncState((statusCode, height, width) => {
                     if (statusCode.status == false) {
-                        console.error("Ha fallado la sincronización con el servidor");
-                        window.alert(userGoneText);
-                        throw new Error("error");
+                        // Comprobamos si la respuesta es que nuestro ejército es inválido
+                        if(statusCode.message == "UNIT_LIMIT_REACHED") {
+                            // Avisamos al jugador de que su ejército es inválido
+                            window.alert(alertArmyUnitMax);
+                        } else {
+                            console.error("Ha fallado la sincronización con el servidor");
+                            window.alert(userGoneText);
+                        }
+                        
                     } else {
                         // Cuando salga bien, emitiremos un guardado de estado y cambiamos al inicio del juego
                         saveState(statusCode.state);

@@ -154,16 +154,42 @@ server.on('connection', function connect(ws: webSocket) {
                 // Nos aseguramos de que el estado es el final para ambos
                 if(gameId) {
                     game = games[gameId];
-                    if(game.player1FinishedSelection && game.player2FinishedSelection) {
-                        game.currentState = 1;
-                        game.player1URL.send(JSON.stringify({
-                            status: true,
-                            state: game.getState()
-                        }));
-                        game.player2URL.send(JSON.stringify({
-                            status: true,
-                            state: game.getState()
-                        }));
+                    if (game.player1FinishedSelection && game.player2FinishedSelection) {
+                        // Antes de empezar, se comprobará si se ha seleccionado un mapa
+
+                        // Si es el caso, debemos ver si algún ejército supera el límite
+                        let map = game.store.store.getState().map;
+                        let unitMaxLimit = (game.store.store.getState().width * 2 + game.store.store.getState().height * 2 - game.store.store.getState().terrains.map(terrain => terrain.name == "Mountain").length) / 2;
+                        console.log(unitMaxLimit);
+                        // Comprobamos primero las unidades del primer jugador
+                        let player1Size = game.store.store.getState().units.filter(unit => unit.player).length;
+                        let player2Size = game.store.store.getState().units.filter(unit => !unit.player).length;
+                        // Comprobamos el tamaño
+                        if (player1Size > unitMaxLimit) {
+                            console.log(player1Size);
+                            // Avisamos al jugador
+                            game.player1URL.send(JSON.stringify({
+                                status: false,
+                                message: "UNIT_LIMIT_REACHED"
+                            }));
+                        } else if (player2Size > unitMaxLimit) {
+                            console.log(player2Size);
+                            game.player2URL.send(JSON.stringify({
+                                status: false,
+                                message: "UNIT_LIMIT_REACHED"
+                            }));
+                        } else {
+                            // Todo ha ido bien, realizamos lo normal:
+                            game.currentState = 1;
+                            game.player1URL.send(JSON.stringify({
+                                status: true,
+                                state: game.getState()
+                            }));
+                            game.player2URL.send(JSON.stringify({
+                                status: true,
+                                state: game.getState()
+                            }));
+                        }
                     }
                 } else {
                     // En este caso, el mensaje no contiene Id, debería informarse al cliente del error.
