@@ -60,6 +60,8 @@ export class EditMap extends React.Component<any, any> {
         return (
             <div className="jumbotron text-center">
                 <h2> {editMapText} <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>{backText}</button></h2>
+                <hr/>
+                <br/>
                 <label> {nameText} <input className="form-control" type="text" value={this.state.name} onChange={evt => this.updateInput(evt.target.value)} /></label>
                 <div>
                     {storeEdit.getState().type!=1?<button className="btn btn-primary btn-sm" id="terrainButton" name="terrainButton" onClick={this.onClickCreateTerrain.bind(this)}>{createTerrainText}</button>:""}

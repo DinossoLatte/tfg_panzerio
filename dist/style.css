@@ -5806,8 +5806,28 @@ button.close {
 @media print {
   .hidden-print {
     display: none !important; } }
+hr {
+  border: 0;
+  clear: both;
+  display: block;
+  width: 100%;
+  background-color: grey;
+  height: 1px; }
+
+.buttonli {
+  width: 15%;
+  font-size: 125%;
+  left: 42.5%;
+  border-radius: 5px;
+  border: 1px solid #73AD21;
+  border-color: black;
+  background-color: #337ab7;
+  color: white; }
+  .buttonli:hover {
+    background-color: #286090; }
+
 body {
-  background-color: #e9ecef; }
+  background-color: #eeeeee; }
 
 .map {
   user-select: none;
@@ -5869,4 +5889,4 @@ body {
 #bold {
   font-weight: bold; }
 
-/*# sourceMappingURL=newstyle.css.map */
+/*# sourceMappingURL=style.css.map */

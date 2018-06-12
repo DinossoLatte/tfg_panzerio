@@ -635,7 +635,6 @@ export class Network {
         // Finalmente, nos quedan los terrenos, mismo proceso
         for(var i = 0; i < json.map.terrains.length; i++){
             let terrain = json.map.terrains[i];
-            console.log("------>"+JSON.stringify(terrain));
             result.terrains.push(new Terrain(terrain.name, terrain.image, terrain.movement_penalty,
                 new Pair(terrain.position_row, terrain.position_cols), terrain.defenseWeak ,terrain.defenseStrong,
                 terrain.attackWeak, terrain.attackStrong));
