@@ -915,7 +915,7 @@ class Game extends React.Component<any, any> {
                 break;
         }
 
-        let aud = '<audio src="./sounds/menu.ogg" loop autoplay ></audio>';
+        let aud = '<audio src="./sounds/menu.ogg" loop autoplay preload="none"></audio>';
 
         let res = this.state.gameState!=2?
                     (<div>
