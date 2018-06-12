@@ -375,6 +375,8 @@ class PreGameMenu extends React.Component<any, any> {
             mapName: [] as Array<string>,
             armyId: [] as Array<number>,
             armyName: [] as Array<string>,
+            hasNoArmies: false,
+            hasNoMaps: false,
             selected: null,
             selectedPlayer: null,
             selectedEnemy: null,
@@ -421,6 +423,7 @@ class PreGameMenu extends React.Component<any, any> {
     selectMaps(){
         let map = null;
         if(this.state.mapId){
+            console.log(this.state.mapId.length);
             map = [<option selected value={null}>{selectText}</option>];
             for(var i = 0; i < this.state.mapId.length; i++){
                 map.push(<option value={this.state.mapId[i]}>{this.state.mapName[i]}</option>);
@@ -430,6 +433,16 @@ class PreGameMenu extends React.Component<any, any> {
     }
 
     showPlayerMenu() {
+        let buttonCreateArmy = undefined;
+        let buttonCreateMap = undefined;
+
+        if(this.state.hasNoArmies) {
+            buttonCreateArmy = <button className="form-control" onClick={this.onClickCreateArmy.bind(this)} title="Si no dispone de un ejércio, no podrá crear o unirse a la partida">Crear ejército</button>
+        }
+        if(this.state.hasNoMaps) {
+            buttonCreateMap = <button className="form-control" onClick={this.onClickCreateMap.bind(this)} title="Si no dispone de un mapa, no podrá iniciar la partida">Crear mapa</button>
+        }
+
         if(this.state.isPlayer) {
             return (
             <div>
@@ -438,6 +451,7 @@ class PreGameMenu extends React.Component<any, any> {
                     <select className="form-control" id="player" defaultValue={null} value={this.state.selectedPlayer} onChange={evt => this.updatePlayer(evt.target.value)}>
                         {this.selectUnits()}
                     </select>
+                    {buttonCreateArmy}
                     </label>
                 </div>
                 <div className="form-group">
@@ -445,6 +459,7 @@ class PreGameMenu extends React.Component<any, any> {
                     <select className="form-control" id="map" defaultValue={null} value={this.state.selected} onChange={evt => this.updateMap(evt.target.value)}>
                         {this.selectMaps()}
                     </select>
+                    {buttonCreateMap}
                     </label>
                 </div>
             </div>);
@@ -454,9 +469,27 @@ class PreGameMenu extends React.Component<any, any> {
                 <select className="form-control" id="enemy" defaultValue={null} value={this.state.selectedEnemy} onChange={evt => this.updateEnemy(evt.target.value)}>
                     {this.selectUnits()}
                 </select>
+                {buttonCreateArmy}
                 </label>
             </div>);
         }
+    }
+
+    onClickCreateArmy() {
+        // Redirigimos al usuario a la vista de creación de perfil
+        // Antes de esto, debemos salir de la partida
+        Network.sendExitPreGame((statusCode: { status: boolean, message: string }) => {
+            // Redirigimos al menú de perfil
+            this.props.parentObject.changeGameState(6);
+        });
+    }
+
+    onClickCreateMap() {
+        // Al igual que 'onClickCreateArmy', cerramos la partida y cambiamos el estado
+        Network.sendExitPreGame((statusCode: { status: boolean, message: string }) => {
+            // Redirigimos al menú de creación del mapa
+            this.props.parentObject.changeGameState(3);    
+        });
     }
 
     getUserIdFromServer(callback?: (error: { status: boolean, errorCode: string, userId: number }) => void) {
@@ -507,6 +540,7 @@ class PreGameMenu extends React.Component<any, any> {
                     playerArmy: game.state.playerArmy,
                     enemyArmy: game.state.enemyArmy,
                     armyId: data.armyId,
+                    hasNoArmies: data.armyId.length == 0,
                     armyName: data.armyName});
                     let connection = Network.getConnection();
                 let mapclient: {
@@ -534,6 +568,7 @@ class PreGameMenu extends React.Component<any, any> {
                             playerArmy: game.state.playerArmy,
                             enemyArmy: game.state.enemyArmy,
                             mapId: data.mapId,
+                            hasNoMaps: data.mapId.length == 0,
                             mapName: data.mapName
                         });
                     }
