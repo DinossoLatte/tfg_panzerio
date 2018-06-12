@@ -680,7 +680,6 @@ export class Profile extends React.Component<any, any> {
                 {storeProfile.getState().type == "5" && storeProfile.getState().armies[storeProfile.getState().selectedArmy].unitList.length > 1 ? <div>
                     <label> {selectUnitText}
                         <select className="form-control" defaultValue={null} value={storeProfile.getState().selected} onChange={evt => this.selectUnit(evt.target.value)}>
-                            <option selected value={null}>{selectText}</option>
                             {this.selectOptionsUnitsDelete()}
                         </select>
                     </label>
