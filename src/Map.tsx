@@ -298,7 +298,7 @@ export class Map extends React.Component<any, any> {
                             let targetTerrain: Terrain = store.getState().terrains.find(terrain => terrain.position.equals(newPosition));
                             if(
                                 !targetTerrain || targetTerrain.movement_penalty > -1 // Comprobamos que no se trate de terreno inalcanzable
-                            ){ 
+                            ){
                                 saveState(Actions.generateChangeUnitPos(selectedUnit, newPosition, null, side));
                             } // En caso contrario, se trata de un terreno inalcanzable y no se realizará la operación.
                         }
@@ -382,7 +382,7 @@ export class Map extends React.Component<any, any> {
                     <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>{backText}</button>
                 </h2>
                 <hr/>
-                {(store.getState().actualState==0) && ((store.getState().turn%2 == 0 && store.getState().isPlayer) || (store.getState().turn%2 == 1 && !store.getState().isPlayer))?<button className="btn btn-primary btn-sm" id="nextTurn" name="nextTurn" onClick={this.onClickTurn.bind(this)}>{nextTurnText}</button>:""}
+                {(store.getState().actualState==0) && ((store.getState().turn%2 == 0 && store.getState().isPlayer) || (store.getState().turn%2 == 1 && !store.getState().isPlayer))?<button className="btn btn-success btn-sm" id="nextTurn" name="nextTurn" onClick={this.onClickTurn.bind(this)}>{nextTurnText}</button>:""}
                 {store.getState().selectedUnit!=null && store.getState().turn >= 2?<button className="btn btn-primary btn-sm" id="cancelAction" name="cancelAction" onClick={this.onClickCancelAction.bind(this)}>{cancelText}</button>:""}
                 {store.getState().selectedUnit!=null && store.getState().turn >= 2 && store.getState().units[store.getState().selectedUnit].action<2?<button className="btn btn-primary btn-sm" id="nextAction" name="nextAction" onClick={this.onClickUnitAction.bind(this)}>{nextActionText}</button>:""}
                 <br/>
