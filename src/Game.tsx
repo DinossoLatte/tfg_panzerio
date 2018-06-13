@@ -22,7 +22,7 @@ const joinGameText = "Unirse a partida";
 const gameFullText = "La partida seleccionada está completa o en progreso";
 const editMapMenuButton = "Acceder a la edición del mapa";
 const loginAlertText = "Necesita iniciar sesión para acceder a esta funcionalidad";
-const profileMenuButton = "Acceder al perfil personal";
+const profileMenuButton = "Acceder al la edición de batallones";
 const userManualText = "Manual de usuario";
 const gameIdentifierText = "Id de la partida: ";
 const selectMenuText = "Menú de selección";
@@ -39,7 +39,7 @@ const widthPlaceText = "Anchura";
 const heightPlaceText = "Altura";
 const createMapText = "Crear mapa";
 const numberAlertText = "Deben introducirse valores numéricos mayores a 1";
-const editMapText = "Edición del Mapa";
+const editMapText = "Edición del mapa";
 const selectMapText = "Seleccione el mapa: ";
 const editMapButtonText = "Modificar mapa";
 const deleteMapText = "Eliminar mapa";
@@ -193,7 +193,8 @@ class EnterGameButton extends React.Component<any, any> {
     }
 
     render() {
-        return <button id="enterGame" name="enterGame" className="btn btn-primary btn-sm" onClick={this.onClick.bind(this)}>{playText}</button>
+        //return <button id="enterGame" name="enterGame" className="btn btn-primary btn-sm" onClick={this.onClick.bind(this)}>{playText}</button>
+        return <li id="enterGame" className="buttonli" onClick={this.onClick.bind(this)}>{playText}</li>
     }
 
     onClick() {
@@ -303,7 +304,8 @@ class EditGameButton extends React.Component<any, any> {
     }
 
     render() {
-        return <button id="editGame" name="editGame" className="btn btn-primary btn-sm" onClick={this.onClick.bind(this)}>{editMapMenuButton}</button>
+        //return <button id="editGame" name="editGame" className="btn btn-primary btn-sm" onClick={this.onClick.bind(this)}>{editMapMenuButton}</button>
+        return <li id="editGame" className="buttonli" onClick={this.onClick.bind(this)}>{editMapMenuButton}</li>
     }
 
     onClick() {
@@ -321,7 +323,8 @@ class ProfileButton extends React.Component<any, any> {
     }
 
     render() {
-        return <button id="profileButton" name="profileButton" className="btn btn-primary btn-sm" onClick={this.onClick.bind(this)}>{profileMenuButton}</button>
+        //return <button id="profileButton" name="profileButton" className="btn btn-primary btn-sm" onClick={this.onClick.bind(this)}>{profileMenuButton}</button>
+        return <li id="profileButton" className="buttonli" onClick={this.onClick.bind(this)}>{profileMenuButton}</li>
     }
 
     onClick() {
@@ -340,7 +343,8 @@ class OptionsMenuButton extends React.Component<any, any> {
     }
 
     render() {
-        return <button id="optionsMenu" name="optionsMenu" className="btn btn-primary btn-sm" onClick={this.onClick.bind(this)}>{userManualText}</button>
+        //return <button id="optionsMenu" name="optionsMenu" className="btn btn-primary btn-sm" onClick={this.onClick.bind(this)}>{userManualText}</button>
+        return <li id="optionsMenu" className="buttonli" onClick={this.onClick.bind(this)}>{userManualText}</li>
     }
 
     onClick() {
@@ -356,6 +360,8 @@ class OptionsMenu extends React.Component<any, any> {
     render() {
         return <div className="jumbotron text-left">
             <h2>{userManualText} <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClick.bind(this)}>{backText}</button></h2>
+            <hr/>
+            <br/>
             {manualText}
             </div>;
     }
@@ -391,8 +397,9 @@ class PreGameMenu extends React.Component<any, any> {
     render() {
         return (
         <div className="jumbotron text-center">
-            <h2 id="bold">{gameIdentifierText+this.state.id}</h2>
             <h2>{selectMenuText} <button className="btn btn-primary btn-sm" onClick={this.exitPreGame.bind(this)}>{backText}</button></h2>
+            <hr/>
+            <h2 id="bold">{gameIdentifierText+this.state.id}</h2>
             {this.showPlayerMenu()}
             <div className="alert alert-info" id="error">{playInfo}</div>
             <button className="btn btn-primary btn-sm" onClick={this.startGame.bind(this)}>{startGameText}</button><br/>
@@ -776,22 +783,29 @@ class CreateMenu extends React.Component<any, any> {
     render() {
         return <div className="jumbotron text-center">
             <h2> {createMapTitleText} <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>{backText}</button></h2>
+            <hr/>
+            <br/>
             <label> {widthText}
                 <input type="text" className="form-control" placeholder={widthPlaceText} value={this.props.parentObject.state.editx} onChange={evt => this.updateInput(evt.target.value,this.props.parentObject.state.edity)} />
             </label>
             <label> {heightText}
                 <input type="text" className="form-control" placeholder={heightPlaceText} value={this.props.parentObject.state.edity} onChange={evt => this.updateInput(this.props.parentObject.state.editx,evt.target.value)} />
             </label>
+            <br/>
             <button className="btn btn-primary btn-sm" id="createButton" name="createButton" onClick={this.onClickCreate.bind(this)}>{createMapText}</button><br/>
             {this.state.error?<div className="alert alert-danger" id="error">{numberAlertText}</div>:""}
+            <br/>
             <h2> {editMapText} </h2>
+            <hr/>
+            <br/>
             <label> {selectMapText}
             <select className="form-control" id="map" defaultValue={null} value={this.state.selected} onChange={evt => this.updateMap(evt.target.value)}>
                 {this.selectMaps()}
             </select>
             </label>
+            <br/>
             <button className="btn btn-primary btn-sm" id="createButton" name="createButton" onClick={this.onClick.bind(this)}>{editMapButtonText}</button>
-            <button className="btn btn-primary btn-sm" id="createButton" name="createButton" onClick={this.onClickDelete.bind(this)}>{deleteMapText}</button><br />
+            <button className="btn btn-danger btn-sm" id="createButton" name="createButton" onClick={this.onClickDelete.bind(this)}>{deleteMapText}</button><br />
         </div>
     }
 
@@ -831,7 +845,9 @@ class CreateMenu extends React.Component<any, any> {
     onClickCreate(clickEvent : React.MouseEvent<HTMLElement>) {
         this.props.parentObject.changeSelected(null);
         if(this.props.parentObject.state.editx.match(/^[1-9][0-9]*$/g) && this.props.parentObject.state.edity.match(/^[1-9][0-9]*$/g)
-            && Number(this.props.parentObject.state.editx)>1 && Number(this.props.parentObject.state.edity)>1){
+            && Number(this.props.parentObject.state.editx)>1 && Number(this.props.parentObject.state.edity)>1
+            // También, comprobamos que no se supere el límite superior de 25 casillas
+            && Number(this.props.parentObject.state.editx) < 25 && Number(this.props.parentObject.state.edity) < 25){
             this.setState({ error: false });
             this.props.parentObject.changeGameState(4);
         }else{
@@ -842,6 +858,7 @@ class CreateMenu extends React.Component<any, any> {
 
     onClick(clickEvent : React.MouseEvent<HTMLElement>) {
         if(this.props.parentObject.state.selected!=null){
+            
             this.setState({ error: false });
             //Es necesario porque rows y columns no se actualizan
             let game = this;
@@ -934,13 +951,13 @@ class Game extends React.Component<any, any> {
                         <meta name="google-signin-client_id" content=" 637676591689-00d0rmr0ib1gsidcqtdleva0qkor596k.apps.googleusercontent.com" />
 
                         <div className="jumbotron text-center">
-                            <div className="menu">
-                                <h1> PanzergIO </h1>
+                            <ul className="nav nav-pills nav-stacked">
+                                <h1> PanzergIO </h1><br />
                                 <EnterGameButton parentObject={this} /><br />
                                 <EditGameButton parentObject={this} /><br />
                                 <ProfileButton parentObject={this} /><br />
                                 <OptionsMenuButton parentObject={this} /><br />
-                            </div>
+                            </ul>
                             <div className="loginDiv">
                                 {loginInfo}
                             </div>

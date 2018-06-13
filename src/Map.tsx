@@ -372,10 +372,13 @@ export class Map extends React.Component<any, any> {
                 <h2> {store.getState().turn%2==0?turnText+playerText:turnText+enemyText}. {dayText} {Math.floor(store.getState().turn/2)}{store.getState().actualState==1?". "+victoryText:store.getState().actualState==2?". "+defeatText:""} {store.getState().turn < 2?preGameText:""}
                     <button className="btn btn-primary btn-sm" id="exitButton" name="exitButton" onClick={this.onClickExit.bind(this)}>{backText}</button>
                 </h2>
+                <hr/>
                 {(store.getState().actualState==0) && ((store.getState().turn%2 == 0 && store.getState().isPlayer) || (store.getState().turn%2 == 1 && !store.getState().isPlayer))?<button className="btn btn-primary btn-sm" id="nextTurn" name="nextTurn" onClick={this.onClickTurn.bind(this)}>{nextTurnText}</button>:""}
                 {store.getState().selectedUnit!=null && store.getState().turn >= 2?<button className="btn btn-primary btn-sm" id="cancelAction" name="cancelAction" onClick={this.onClickCancelAction.bind(this)}>{cancelText}</button>:""}
                 {store.getState().selectedUnit!=null && store.getState().turn >= 2 && store.getState().units[store.getState().selectedUnit].action<2?<button className="btn btn-primary btn-sm" id="nextAction" name="nextAction" onClick={this.onClickUnitAction.bind(this)}>{nextActionText}</button>:""}
+                <br/>
                 {(store.getState().isPlayer && store.getState().turn == 0) || (!store.getState().isPlayer && store.getState().turn == 1)?<div>
+                    <br/>
                     <label> {selectUnitText}
                         <select className="form-control" defaultValue={null} value={store.getState().selectedUnit} onChange={evt => this.selectUnit(evt.target.value)}>
                             {this.selectOptions()}
@@ -383,6 +386,7 @@ export class Map extends React.Component<any, any> {
                     </label>
                 </div>:""}
                 {this.state.alertUnitsNotPlaced?<div className="alert alert-danger" id="error"><strong>{cautionText}</strong> {noPlacedText}</div>:""}
+                <br/>
                 <div className="row">
                     <UnitStats />
                     <div className="col-sm-9">
