@@ -233,10 +233,10 @@ export class Profile extends React.Component<any, any> {
                 // Comprobamos si el par existe
                 if(pairTypeNumberOfSelected) {
                     // Comprobamos también que el número de unidades no supere el límite
-                    if(pairTypeNumberOfSelected.number <= 10) {
+                    if(pairTypeNumberOfSelected.number < 10) {
                         // Comprobamos también que el número de unidades totales no supere el límite
                         let totalNumberUnits = army.unitList.map((value) => value.number).reduce((val1, val2) => val1 + val2);
-                        if(totalNumberUnits <= 25) {
+                        if(totalNumberUnits < 25) {
                             // En el caso de que exista, cambiaremos el valor del número en el índice del seleccionado
                             army.unitList[army.unitList.indexOf(pairTypeNumberOfSelected)].number = pairTypeNumberOfSelected.number + 1;
                         } else {
