@@ -10,7 +10,7 @@ const weakDefTerrain = "Bonificación defensa débil: ";
 const strongDefTerrain = "Bonificación defensa fuerte: ";
 const weakAttTerrain = "Bonificación ataque débil: ";
 const strongAttTerrain = "Bonificación ataque fuerte: ";
-const contText = "Cotenido de la posición seleccionada: ";
+const contText = "Contenido de la posición seleccionada: ";
 const infoText = "Haga click derecho para poder obtener información de la unidad y terreno.";
 
 //Esta clase funciona igual que UnitStats pero simplemente obtiene los datos de storeEdit
