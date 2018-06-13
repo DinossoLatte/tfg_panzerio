@@ -159,7 +159,7 @@ server.on('connection', function connect(ws: webSocket) {
 
                         // Si es el caso, debemos ver si algún ejército supera el límite
                         let map = game.store.store.getState().map;
-                        let unitMaxLimit = (game.store.store.getState().width * 2 + game.store.store.getState().height * 2 - game.store.store.getState().terrains.map(terrain => terrain.name == "Mountain").length) / 2;
+                        let unitMaxLimit = (game.store.store.getState().width * game.store.store.getState().height - game.store.store.getState().terrains.map(terrain => terrain.name == "Mountain").length) / 2;
                         console.log(unitMaxLimit);
                         // Comprobamos primero las unidades del primer jugador
                         let player1Size = game.store.store.getState().units.filter(unit => unit.player).length;
@@ -170,13 +170,15 @@ server.on('connection', function connect(ws: webSocket) {
                             // Avisamos al jugador
                             game.player1URL.send(JSON.stringify({
                                 status: false,
-                                message: "UNIT_LIMIT_REACHED"
+                                message: "UNIT_LIMIT_REACHED",
+                                size: unitMaxLimit
                             }));
                         } else if (player2Size > unitMaxLimit) {
                             console.log(player2Size);
                             game.player2URL.send(JSON.stringify({
                                 status: false,
-                                message: "UNIT_LIMIT_REACHED"
+                                message: "UNIT_LIMIT_REACHED",
+                                size: unitMaxLimit
                             }));
                         } else {
                             // Todo ha ido bien, realizamos lo normal:

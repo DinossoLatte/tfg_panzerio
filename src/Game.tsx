@@ -47,7 +47,7 @@ const deleteAlertText = "Se ha eliminado correctamente el mapa";
 const selectMapAlertText = "Se debe seleccionar un mapa";
 const userGoneText = "Un jugador ha dejado la partida";
 const playInfo = "Deberá darle a empezar partida y esperar que otro jugador entre a la partida";
-const alertArmyUnitMax = "El número de unidades en el ejército elegido es demasiado grande.";
+const alertArmyUnitMax = "El número de unidades en el ejército elegido es demasiado grande. Debe ser inferior a ";
 
 const manualText = (<div><br />
     <div><p id="bold">Introducción</p>
@@ -684,7 +684,8 @@ class PreGameMenu extends React.Component<any, any> {
                         // Comprobamos si la respuesta es que nuestro ejército es inválido
                         if(statusCode.message == "UNIT_LIMIT_REACHED") {
                             // Avisamos al jugador de que su ejército es inválido
-                            window.alert(alertArmyUnitMax);
+                            // Reutilizamos state para introducir la cantidad de unidades máximas 
+                            window.alert(alertArmyUnitMax + Number(statusCode.state).toFixed(0));
                         } else {
                             console.error("Ha fallado la sincronización con el servidor");
                             window.alert(userGoneText);

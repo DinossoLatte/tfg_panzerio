@@ -969,7 +969,7 @@ export class Network {
                         state = Network.parseStateFromServer(stateString);
                         callback({ status: result.status, state: state, message: result.message}, result.state.height, result.state.width);
                     } else {
-                        callback({ status: false, state: null, message: result.message }, 0, 0);
+                        callback({ status: false, state: result.size, message: result.message }, 0, 0);
                     }
                 }
             }
