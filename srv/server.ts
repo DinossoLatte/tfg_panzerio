@@ -347,9 +347,11 @@ server.on('connection', function connect(ws: webSocket) {
                             armyId: null
                         }));
                     } else if(gameId) {
+                        // Primero, eliminamos las unidades del jugador que elige las unidades
+                        let initialUnits = games[gameId].getState().units.filter(unit => unit.player != message.side);
                         games[gameId].store.saveState({
                             type: "UPDATE_UNITS",
-                            units: games[gameId].getState().units.concat(Utils.Network.parseArmy(code.units, message.side))
+                            units: initialUnits.concat(Utils.Network.parseArmy(code.units, message.side))
                         });
                         // Actualizamos el estado del jugador
                         if(message.side) {
