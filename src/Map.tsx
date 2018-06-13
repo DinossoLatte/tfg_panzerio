@@ -7,7 +7,7 @@ import { Cell } from './Cell';
 import { TerrainCell } from './TerrainCell';
 import { Pair, Cubic, myIndexOf, myIndexOfCubic, Pathfinding, Network } from './Utils';
 import { Unit, UNITS, UNITS_ESP } from './Unit';
-import { Plains } from './Terrains';
+import { Plains, Terrain } from './Terrains';
 import { UnitCell } from './UnitCell';
 import { UnitStats } from './UnitStats';
 
@@ -291,8 +291,17 @@ export class Map extends React.Component<any, any> {
                         saveState(Actions.generateAttack(unitIndex, side, null, this.props.parentObject.state.clientId));
                     } else {
                         // En caso contrario, se ejecutará el movimiento como siempre
-                        // El valor de null es si se hace que justo tras el movimiento seleccione otra unidad, en este caso no es necesario así que se pondrá null
-                        saveState(Actions.generateChangeUnitPos(selectedUnit, newPosition, null, side));
+                        if(store.getState().turn >= 2) { // Si la posición está calculada en visitables
+                            saveState(Actions.generateChangeUnitPos(selectedUnit, newPosition, null, side));
+                        } else { // Cuando el turno sea de pre-juego, no se calculará las posiciones visitables
+                            // Si la posición a la que se dirige es un terreno alcanzable
+                            let targetTerrain: Terrain = store.getState().terrains.find(terrain => terrain.position.equals(newPosition));
+                            if(
+                                !targetTerrain || targetTerrain.movement_penalty > -1 // Comprobamos que no se trate de terreno inalcanzable
+                            ){ 
+                                saveState(Actions.generateChangeUnitPos(selectedUnit, newPosition, null, side));
+                            } // En caso contrario, se trata de un terreno inalcanzable y no se realizará la operación.
+                        }
                     }
                 }
             } else if(!hasAttacked // En el caso de que tenga posiblidad de atacar y ha hecho click a la unidad enemiga
