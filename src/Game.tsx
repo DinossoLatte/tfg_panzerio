@@ -183,7 +183,7 @@ const manualText = (<div><br />
     Para editar un mapa se accede también a "Edición de mapa" pero esta vez se selecciona el mapa concreto y se edita de la misma forma que se creó el mapa, también hay posibilidad de eliminado.
     </div><br />
     <div><p id="bold">Perfil del jugador</p>
-    Al acceder al perfil personal desde el menú se podrá ver el nombre del jugador, el contador de victorias y derrotas y los batallones del jugador que podrán ser editados añadiendo nuevos batallones o modificando los existentes.
+    Al acceder al perfil personal desde el menú en "Edición de batallones" se podrá ver el nombre del jugador, el contador de victorias y derrotas y los batallones del jugador que podrán ser editados añadiendo nuevos batallones o modificando los existentes.
     Al crear un batallón se elije un nombre y se van añadiendo unidades (el general se añade automáticamente). Al finalizar dichos cambios aparecerán en la lista de batallones en "Mostrar batallones" y podrán ser guardados dándole al botón "Guardar batallones" ya que los cambios son almacenados en local y deberán ser guardados en servidor una vez el jugador realice todos los cambios que vea oportuno.
     La edición se realiza de forma similar a la creación con la excepción de que se debe seleccionar uno de los batallones que disponga el jugador, es importante que tras realizar todos los cambios se le de al botón "Guardar batallones" para que se guarden dichos datos.
     </div></div>);
@@ -496,7 +496,7 @@ class PreGameMenu extends React.Component<any, any> {
         // Al igual que 'onClickCreateArmy', cerramos la partida y cambiamos el estado
         Network.sendExitPreGame((statusCode: { status: boolean, message: string }) => {
             // Redirigimos al menú de creación del mapa
-            this.props.parentObject.changeGameState(3);    
+            this.props.parentObject.changeGameState(3);
         });
     }
 
@@ -691,13 +691,13 @@ class PreGameMenu extends React.Component<any, any> {
                         // Comprobamos si la respuesta es que nuestro ejército es inválido
                         if(statusCode.message == "UNIT_LIMIT_REACHED") {
                             // Avisamos al jugador de que su ejército es inválido
-                            // Reutilizamos state para introducir la cantidad de unidades máximas 
+                            // Reutilizamos state para introducir la cantidad de unidades máximas
                             window.alert(alertArmyUnitMax + Number(statusCode.state).toFixed(0));
                         } else {
                             console.error("Ha fallado la sincronización con el servidor");
                             window.alert(userGoneText);
                         }
-                        
+
                     } else {
                         // Cuando salga bien, emitiremos un guardado de estado y cambiamos al inicio del juego
                         saveState(statusCode.state);
@@ -866,7 +866,7 @@ class CreateMenu extends React.Component<any, any> {
 
     onClick(clickEvent : React.MouseEvent<HTMLElement>) {
         if(this.props.parentObject.state.selected!=null){
-            
+
             this.setState({ error: false });
             //Es necesario porque rows y columns no se actualizan
             let game = this;
