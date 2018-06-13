@@ -845,7 +845,9 @@ class CreateMenu extends React.Component<any, any> {
     onClickCreate(clickEvent : React.MouseEvent<HTMLElement>) {
         this.props.parentObject.changeSelected(null);
         if(this.props.parentObject.state.editx.match(/^[1-9][0-9]*$/g) && this.props.parentObject.state.edity.match(/^[1-9][0-9]*$/g)
-            && Number(this.props.parentObject.state.editx)>1 && Number(this.props.parentObject.state.edity)>1){
+            && Number(this.props.parentObject.state.editx)>1 && Number(this.props.parentObject.state.edity)>1
+            // También, comprobamos que no se supere el límite superior de 25 casillas
+            && Number(this.props.parentObject.state.editx) < 25 && Number(this.props.parentObject.state.edity) < 25){
             this.setState({ error: false });
             this.props.parentObject.changeGameState(4);
         }else{
@@ -856,6 +858,7 @@ class CreateMenu extends React.Component<any, any> {
 
     onClick(clickEvent : React.MouseEvent<HTMLElement>) {
         if(this.props.parentObject.state.selected!=null){
+            
             this.setState({ error: false });
             //Es necesario porque rows y columns no se actualizan
             let game = this;
